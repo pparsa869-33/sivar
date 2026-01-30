@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ئامادەی پیشەی سیڤەر</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Sign-In Library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <style>
+        /* هێڵی گشتی */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --primary-color: #00835a;
+            --secondary-color: #000000;
+            --accent-color: #5669a7;
+            --dark-color: #5669a7;
+            --light-color: #a7a7a7;
+            --text-color: #000000;
+            --google-red: #db4437;
+            --google-blue: #4285f4;
+            --shadow: 0 4px 12px rgba(172, 44, 44, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            background-color: #ffffff;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        /* سەرپەڕە */
+        header {
+            background: linear-gradient(135deg, var(--dark-color), var(--secondary-color));
+            color: rgb(255, 255, 255);
+            padding: 15px 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            color: var(--primary-color);
+            margin-left: 10px;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-right: 25px;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 18px;
+            transition: var(--transition);
+            padding: 8px 12px;
+            border-radius: 5px;
+        }
+        
+        nav ul li a:hover {
+            background-color: var(--primary-color);
+            color: var(--dark-color);
+        }
+        
+        .active {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        /* بەشی سەرەکی */
+        main {
+            padding: 40px 0;
+        }
+        
+        .section {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+            margin-bottom: 40px;
+            border-right: 8px solid var(--primary-color);
+        }
+        
+        .section-title {
+            color: var(--secondary-color);
+            font-size: 32px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-left: 15px;
+            color: var(--accent-color);
+        }
+        
+        /* بەشی تۆمارکردن */
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #f9f9f9, #e6e6e6);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+        
+        .form-group input:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: linear-gradient(to right, var(--secondary-color), var(--accent-color));
+            color: white;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(44, 37, 141, 0.3);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, var(--secondary-color), var(--accent-color));
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(to right, var(--accent-color), var(--secondary-color));
+        }
+        
+        .gmail-login {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .gmail-login p {
+            margin-bottom: 15px;
+            color: var(--text-color);
+        }
+        
+        /* Google Sign-In Button Styles */
+        .google-signin-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .gsi-material-button {
+            background-color: var(--google-blue);
+            background-image: none;
+            border: 0;
+            border-radius: 4px;
+            box-sizing: border-box;
+            color: #fff;
+            cursor: pointer;
+            font-family: 'Roboto', arial, sans-serif;
+            font-size: 14px;
+            height: 40px;
+            letter-spacing: 0.25px;
+            outline: 0;
+            overflow: hidden;
+            padding: 0 12px;
+            position: relative;
+            text-align: center;
+            transition: background-color .218s, border-color .218s, box-shadow .218s;
+            vertical-align: middle;
+            white-space: nowrap;
+            width: auto;
+            max-width: 400px;
+            min-width: min-content;
+        }
+        
+        .gsi-material-button .gsi-material-button-icon {
+            height: 20px;
+            margin-right: 12px;
+            min-width: 20px;
+            width: 20px;
+        }
+        
+        .gsi-material-button .gsi-material-button-content-wrapper {
+            align-items: center;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            height: 100%;
+            justify-content: space-between;
+            position: relative;
+            width: 100%;
+        }
+        
+        .gsi-material-button .gsi-material-button-contents {
+            flex-grow: 1;
+            font-family: 'Roboto', arial, sans-serif;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: top;
+        }
+        
+        .gsi-material-button .gsi-material-button-state {
+            transition: opacity .218s;
+            bottom: 0;
+            left: 0;
+            opacity: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+        
+        .gsi-material-button:disabled {
+            cursor: default;
+            background-color: #ffffff61;
+            border-color: #1a1a1a1a;
+        }
+        
+        .gsi-material-button:disabled .gsi-material-button-contents {
+            opacity: 38%;
+        }
+        
+        .gsi-material-button:disabled .gsi-material-button-icon {
+            opacity: 38%;
+        }
+        
+        .gsi-material-button:not(:disabled):active .gsi-material-button-state, 
+        .gsi-material-button:not(:disabled):focus .gsi-material-button-state {
+            background-color: white;
+            opacity: 12%;
+        }
+        
+        .gsi-material-button:not(:disabled):hover {
+            box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+        }
+        
+        .gsi-material-button:hover {
+            background-color: #3367d6;
+        }
+        
+        /* User Info Display */
+        .user-info {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        
+        .user-info img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            border: 3px solid var(--primary-color);
+        }
+        
+        .user-info h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .user-info p {
+            margin: 5px 0;
+            color: var(--secondary-color);
+        }
+        
+        .logout-btn {
+            background: var(--google-red);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: var(--transition);
+        }
+        
+        .logout-btn:hover {
+            background: #c23321;
+        }
+        
+        /* بەشی وێنە و ڤیدیۆ */
+        .media-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .media-item {
+            background-color: var(--light-color);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+        
+        .media-item:hover {
+            transform: translateY(-10px);
+        }
+        
+        .media-item img, .media-item video {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .media-info {
+            padding: 20px;
+        }
+        
+        .media-info h3 {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+        
+        /* بەشی کۆمێنت */
+        .comment-section {
+            margin-top: 40px;
+        }
+        
+        .comment-form {
+            background-color: var(--light-color);
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .comment-form textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 120px;
+            margin-bottom: 15px;
+        }
+        
+        .comments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .comment {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            border-right: 5px solid var(--primary-color);
+        }
+        
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+        
+        /* بەشی مامۆستایان و خوێندکاران */
+        .teachers-container, .students-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .teacher-card, .student-card {
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            text-align: center;
+            padding-bottom: 20px;
+        }
+        
+        .teacher-card:hover, .student-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .teacher-img, .student-img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-bottom: 5px solid var(--primary-color);
+        }
+        
+        .teacher-info, .student-info {
+            padding: 20px;
+        }
+        
+        .teacher-name, .student-name {
+            color: var(--secondary-color);
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .teacher-subject, .student-level {
+            color: var(--accent-color);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        /*بەشی زانیاری قوتابخانە*/
+        .mehad-section {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+        
+        .mehad-content {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 40px;
+        }
+        
+        .mehad-img {
+            flex: 1;
+            min-width: 300px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        
+        .mehad-img img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .mehad-text {
+            flex: 2;
+            min-width: 300px;
+        }
+        
+        .mehad-text p {
+            margin-bottom: 20px;
+            font-size: 18px;
+            line-height: 1.8;
+        }
+        
+        /* پەڕەوە */
+        footer {
+            background: linear-gradient(135deg, var(--dark-color), var(--secondary-color));
+            color: rgb(255, 255, 255);
+            padding: 40px 0 20px;
+            margin-top: 40px;
+        }
+        
+        .footer-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+        
+        .footer-section {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .footer-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .footer-section p {
+            margin-bottom: 15px;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgb(1, 28, 79);
+            color: rgb(255, 255, 255);
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+        
+        .social-links a:hover {
+            background-color: var(--primary-color);
+            color: var(--dark-color);
+            transform: translateY(-5px);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+        }
+        
+        /* وەڵامی مۆبایل */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            nav ul li {
+                margin: 5px 10px;
+            }
+            
+            .section-title {
+                font-size: 26px;
+            }
+            
+            .mehad-content {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- سەرپەڕە -->
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                ئامادەی پیشەی سیڤەر
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#register" class="active">تۆمارکردن</a></li>
+                    <li><a href="#media">وێنە و ڤیدیۆ</a></li>
+                    <li><a href="#comments">کۆمێنت</a></li>
+                    <li><a href="#about">دەربارەی ئێمە</a></li>
+                    <li><a href="#info">بەشەکانی ئامادەی سیڤەر</a></li>
+                    <li><a href="#mehad"></a>زانیاری</li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- بەشی سەرەکی -->
+    <main class="container">
+        <!-- بەشی تۆمارکردن -->
+        <section id="register" class="section">
+            <h2 class="section-title"><i class="fas fa-user-plus"></i> تۆمارکردنی ئەکاونت</h2>
+            <div class="form-container">
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="name">ناوی تەواو</label>
+                        <input type="text" id="name" placeholder="ناوی تەواوی خۆت بنووسە">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">ئیمەیڵ</label>
+                        <input type="email" id="email" placeholder="example@gmail.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">وشەی نهێنی</label>
+                        <input type="password" id="password" placeholder="وشەی نهێنییەکەت بنووسە">
+                    </div>
+                    <button type="submit" class="btn btn-primary">تۆمارکردنی ئەکاونت</button>
+                </form>
+                
+                <div class="gmail-login">
+                    <p>یان تۆمار بە بەکارهێنانی ئیمەیڵی Gmail</p>
+                    
+                    <!-- Google Sign-In Button -->
+                    <div class="google-signin-container">
+                        <div id="g_id_onload"
+                             data-client_id="123456789-abcdefg.apps.googleusercontent.com"
+                             data-context="signin"
+                             data-ux_mode="popup"
+                             data-callback="handleCredentialResponse"
+                             data-auto_prompt="false">
+                        </div>
+                        <div class="g_id_signin"
+                             data-type="standard"
+                             data-shape="rectangular"
+                             data-theme="outline"
+                             data-text="signin_with"
+                             data-size="large"
+                             data-logo_alignment="left"
+                             data-width="300">
+                        </div>
+                    </div>
+                    
+                    <!-- User Info Display (Hidden by default) -->
+                    <div id="userInfo" class="user-info">
+                        <img id="userImage" src="" alt="User Profile">
+                        <h3 id="userName"></h3>
+                        <p id="userEmail"></p>
+                        <button id="logoutBtn" class="logout-btn">چوونەدەرەوە</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- بەشی وێنە و ڤیدیۆ -->
+        <section id="media" class="section">
+            <h2 class="section-title"><i class="fas fa-photo-video"></i> وێنە و ڤیدیۆ</h2>
+            <p style="margin-bottom: 20px; font-size: 18px;">ئێرە دەتوانیت وێنە و ڤیدیۆ باربکەیت یان سەیری ئەو وێنانە و ڤیدیۆیانە بکەیت کە خەڵکی تر بارکردوون.</p>
+            
+            <div class="media-container">
+                <div class="media-item">
+                    <img src="https://cdn.discordapp.com/attachments/1421616214601629851/1466391584345161813/08ac66b2911a8560.jpg?ex=697c9315&is=697b4195&hm=2b1b6ff8a3744e88a03aa2656c994d3e9a2402fc25544a200dcef61c477a8906&" alt="images">
+                    <div class="media-info">
+                        <h3>بیناسازی</h3>
+                        <p>بەمەبەستی پێشخستنی ئاستی زانیاری قوتابیانمان وە بەستنەوەی وانە تیۆریەکان بە وانە کرداریەکان ئامادەیی پیشەیی سیڤەر گەشتێکی زانستی کرداری بۆ سەر پرۆژەیەکی نیشتەجێبوون بۆ قوتابیانی قۆناغی دەیەم - بەشی تەلارسازی - کچان ڕێکخست .
+بەسەرپەرشتی مامۆستایانی بەڕێز : 
+ئەندازیار : سەپان جەمیل علی
+مامۆستا : دلڤین ڕەشید عبداللە</p>
+                    </div>
+                </div>
+                
+                <div class="media-item">
+                    <video controls>
+                        <source src="https://cdn.discordapp.com/attachments/1421616214601629851/1466391584345161813/08ac66b2911a8560.jpg?ex=697c9315&is=697b4195&hm=2b1b6ff8a3744e88a03aa2656c994d3e9a2402fc25544a200dcef61c477a8906&" type="video/mp4">
+                        وێبگەڕەکەت پشتیوانی ڤیدیۆ ناکات.
+                    </video>
+                    <div class="media-info">
+                        <h3>خوێندکاران وانە دەگرنەوە</h3>
+                        <p>خوێندکاران لە کاتی وانەگرتنەوەدا</p>
+                    </div>
+                </div>
+                
+                <div class="media-item">
+                    <img src="https://cdn.discordapp.com/attachments/1421616214601629851/1465817761799209091/zakho.jpg?ex=697a7cab&is=69792b2b&hm=8f70ba2f3947151f7f8ec901b3661e5e7bbf1e417af8e105957892957f6c998d&" alt="مامۆستا وانە دەڵێت">
+                    <div class="media-info">
+                        <h3>پەیامی ئامادەیی پیشەیی سیڤەر بۆ یانەی زاخۆ ..</h3>
+                        <p>زاخۆ تەنها یانە نییە، هەست و شانازییە..
+ئامادەیی پیشەیی سیڤەر پیرۆزبایی لە هەموو دڵسۆزان و هاندەران گەلی کورد دەکات بۆ بەدەست هێنانی خەڵای باشترین هاندەر</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; text-align: center;">
+                <button class="btn btn-primary" id="uploadMediaBtn">
+                    <i class="fas fa-cloud-upload-alt"></i> بارکردنی وێنە یان ڤیدیۆی نوێ
+                </button>
+            </div>
+        </section>
+
+        <!-- بەشی کۆمێنت -->
+        <section id="comments" class="section">
+            <h2 class="section-title"><i class="fas fa-comments"></i> کۆمێنتەکان</h2>
+            <div class="comment-section">
+                <div class="comment-form">
+                    <h3 style="color: var(--secondary-color); margin-bottom: 15px;">کۆمێنتێک بنووسە</h3>
+                    <form id="commentForm">
+                        <textarea id="commentText" placeholder="کۆمێنتەکەت لێرە بنووسە..."></textarea>
+                        <button type="submit" class="btn btn-primary">ناردنی کۆمێنت</button>
+                    </form>
+                </div>
+                
+                <h3 style="color: var(--secondary-color); margin: 30px 0 20px;">کۆمێنتەکانی خەڵک</h3>
+                <div class="comments-list" id="commentsList">
+                    <!-- کۆمێنتەکان دێنە ئێرە -->
+                </div>
+            </div>
+        </section>
+
+        <!-- بەشی دەربارەی ئێمە -->
+        <section id="about" class="section">
+            <h2 class="section-title"><i class="fas fa-info-circle"></i> دەربارەی ئێمە</h2>
+            <div style="font-size: 18px; line-height: 1.8;">ئامادەی پیشەی سیڤەر لە یەکەم ساڵی خوێندنی ئاستێکی باشی پێشکەش کردووە</p>
+                
+                <p style="margin-top: 20px;">ئامادەی سیڤەر لە لایەن چەند پسپۆرێک دامەزراوە کەوا هەموو هەولیان ئەوەیە خزمەت بە قوتابیان بکەن وا دابین کردنی خوێندنێکی سەردەمیانە</p>
+                
+                <div style="background: linear-gradient(135deg, var(--light-color), #e9ecef); padding: 25px; border-radius: 10px; margin-top: 25px; border-right: 5px solid var(--accent-color);">
+                    <h3 style="color: var(--accent-color); margin-bottom: 15px;">ئامانجەکانی ئێمە</h3>
+                    <ul style="padding-right: 20px;">
+                        <li style="margin-bottom: 10px;">دابینکردنی سەرچاوەی باش بۆ خوێندکاران</li>
+                        <li style="margin-bottom: 10px;">دابینکردنی بابەتەکان بە شێوەیەکی سادە و ڕوون</li>
+                        <li style="margin-bottom: 10px;">ڕێگەدان بە خەڵک بۆ پەیوەندی کردن و کۆمێنت کردن</li>
+                        <li style="margin-bottom: 10px;">یارمەتیدانی خوێندکاران لە هەموو قوتابخانە و زانکۆکان</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+
+<!-- بەشی زانیاری -->
+<section id="info" class="section">
+    <h2 class="section-title"><i class="fas fa-book"></i> بەشەکانی ئامادەی سیڤەر</h2>
+    <div style="font-size: 18px; line-height: 1.8;">
+        <p>ئامادەی پیشەی سیڤەری نا حکومی پێک دێت لە چەند بەشێک.</p>
+        
+        <!-- پارەی سەرەوە بۆ جیاکردنەوەی بەشەکان -->
+        <div style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color), var(--accent-color)); height: 3px; width: 100%; margin: 30px 0; border-radius: 10px;"></div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; margin-top: 30px;">
+            <!-- بەشی پڕۆگرامسازی -->
+            <div style="background-color: var(--light-color); padding: 20px; border-radius: 10px; border-top: 5px solid var(--secondary-color); position: relative; overflow: hidden;">
+                <!-- پارەی جوانکاری -->
+                <div style="position: absolute; top: 0; right: 0; width: 100px; height: 100px; background: linear-gradient(135deg, rgba(var(--secondary-color-rgb), 0.1), transparent); border-radius: 0 10px 0 100px;"></div>
+                
+                <h3 style="color: var(--secondary-color); margin-bottom: 15px; position: relative; z-index: 1;">
+                    <i class="fas fa-code" style="margin-left: 10px;"></i>بەشی پڕۆگرامسازی
+                </h3>
+                <p style="position: relative; z-index: 1;">programing unit</p>
+                
+                <!-- پارەی خوارەوە بۆ جوانکاری -->
+                <div style="position: absolute; bottom: 0; left: 0; width: 100px; height: 100px; background: linear-gradient(315deg, rgba(var(--secondary-color-rgb), 0.05), transparent); border-radius: 100px 0 0 0;"></div>
+                
+                <!-- کونسۆڵی زانیاری زیاتر -->
+                <div id="more-info-programming" style="display: none; margin-top: 15px; padding: 15px; background: linear-gradient(to right, rgba(var(--secondary-color-rgb), 0.1), rgba(var(--secondary-color-rgb), 0.05)); border-radius: 8px; border-right: 3px solid var(--secondary-color); position: relative; z-index: 1;">
+                    <h4 style="color: var(--secondary-color); margin-bottom: 10px;">
+                        <i class="fas fa-info-circle"></i> زانیاری زیاتر:
+                    </h4>
+                    <ul style="margin: 0; padding-right: 20px;">
+                        <li>ماوەی خوێندن: ٣ ساڵ</li>
+                        <li >ژمارەی بابەتەکان: ١٣ بابەت</li>
+                        <li>ئاستی خوێندن: کادیری کارا </li>
+                        <li>شارەزایی: پڕۆگرامسازی و بنەمای IT</li>
+                    </ul>
+                    
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px; position: relative; z-index: 1;">
+                    <button onclick="toggleMoreInfo('programming')" style="padding: 10px 20px; background: linear-gradient(135deg, var(--secondary-color), #2980b9); color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(var(--secondary-color-rgb), 0.3); transition: all 0.3s ease; flex: 1;">
+                        <i id="button-icon-programming" class="fas fa-chevron-down" style="margin-left: 8px;"></i>
+                        <span id="button-text-programming">زانیاری</span>
+                    </button>
+                    
+                    <button onclick="openDepartmentPage('programming')" style="padding: 10px 20px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); transition: all 0.3s ease; flex: 1;">
+                        <i class="fas fa-external-link-alt" style="margin-left: 8px;"></i>
+                        <span>بینینی زیاتر</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- بەشی ڤێتەرنەری -->
+            <div style="background-color: var(--light-color); padding: 20px; border-radius: 10px; border-top: 5px solid var(--accent-color); position: relative; overflow: hidden;">
+                <!-- پارەی جوانکاری -->
+                <div style="position: absolute; top: 0; right: 0; width: 100px; height: 100px; background: linear-gradient(135deg, rgba(var(--accent-color-rgb), 0.1), transparent); border-radius: 0 10px 0 100px;"></div>
+                
+                <h3 style="color: var(--accent-color); margin-bottom: 15px; position: relative; z-index: 1;">
+                    <i class="fas fa-paw" style="margin-left: 10px;"></i>بەشی ڤێتەرنەری
+                </h3>
+                <p style="position: relative; z-index: 1;">Veterinary unit</p>
+                
+                <!-- پارەی خوارەوە بۆ جوانکاری -->
+                <div style="position: absolute; bottom: 0; left: 0; width: 100px; height: 100px; background: linear-gradient(315deg, rgba(var(--accent-color-rgb), 0.05), transparent); border-radius: 100px 0 0 0;"></div>
+                
+                <!-- کونسۆڵی زانیاری زیاتر -->
+                <div id="more-info-veterinary" style="display: none; margin-top: 15px; padding: 15px; background: linear-gradient(to right, rgba(var(--accent-color-rgb), 0.1), rgba(var(--accent-color-rgb), 0.05)); border-radius: 8px; border-right: 3px solid var(--accent-color); position: relative; z-index: 1;">
+                    <h4 style="color: var(--accent-color); margin-bottom: 10px;">
+                        <i class="fas fa-info-circle"></i> زانیاری زیاتر:
+                    </h4>
+                    <ul style="margin: 0; padding-right: 20px;">
+                        <li>ماوەی خوێندن: ٣ ساڵ</li>
+                        <li>ژمارەی بابەتەکان: ١٥ بابەت</li>
+                        <li>ئاستی خوێندن: کادیری کارا</li>
+                        <li>شارەزایی: چارەسەری ئاژەڵ و پزیشکی زیندەوەران</li>
+                    </ul>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px; position: relative; z-index: 1;">
+                    <button onclick="toggleMoreInfo('veterinary')" style="padding: 10px 20px; background: linear-gradient(135deg, var(--accent-color), #8e44ad); color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(var(--accent-color-rgb), 0.3); transition: all 0.3s ease; flex: 1;">
+                        <i id="button-icon-veterinary" class="fas fa-chevron-down" style="margin-left: 8px;"></i>
+                        <span id="button-text-veterinary">زانیاری</span>
+                    </button>
+                    
+                    <button onclick="openDepartmentPage('veterinary')" style="padding: 10px 20px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); transition: all 0.3s ease; flex: 1;">
+                        <i class="fas fa-external-link-alt" style="margin-left: 8px;"></i>
+                        <span>بینینی زیاتر</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- بەشی بیناسازی -->
+            <div style="background-color: var(--light-color); padding: 20px; border-radius: 10px; border-top: 5px solid var(--primary-color); position: relative; overflow: hidden;">
+                <!-- پارەی جوانکاری -->
+                <div style="position: absolute; top: 0; right: 0; width: 100px; height: 100px; background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.1), transparent); border-radius: 0 10px 0 100px;"></div>
+                
+                <h3 style="color: var(--primary-color); margin-bottom: 15px; position: relative; z-index: 1;">
+                    <i class="fas fa-building" style="margin-left: 10px;"></i>بەشی بیناسازی
+                </h3>
+                <p style="position: relative; z-index: 1;">architecture unit</p>
+                
+                <!-- پارەی خوارەوە بۆ جوانکاری -->
+                <div style="position: absolute; bottom: 0; left: 0; width: 100px; height: 100px; background: linear-gradient(315deg, rgba(var(--primary-color-rgb), 0.05), transparent); border-radius: 100px 0 0 0;"></div>
+                
+                <!-- کونسۆڵی زانیاری زیاتر -->
+                <div id="more-info-architecture" style="display: none; margin-top: 15px; padding: 15px; background: linear-gradient(to right, rgba(var(--primary-color-rgb), 0.1), rgba(var(--primary-color-rgb), 0.05)); border-radius: 8px; border-right: 3px solid var(--primary-color); position: relative; z-index: 1;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 10px;">
+                        <i class="fas fa-info-circle"></i> زانیاری زیاتر:
+                    </h4>
+                    <ul style="margin: 0; padding-right: 20px;">
+                        <li>ماوەی خوێندن:٣ ساڵ</li>
+                        <li>ژمارەی بابەتەکان: ١٠ بابەت</li>
+                        <li>ئاستی خوێندن: کادیری کارا</li>
+                        <li>شارەزایی: دیزاینی بینا و لکاندن</li>
+                    </ul>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px; position: relative; z-index: 1;">
+                    <button onclick="toggleMoreInfo('architecture')" style="padding: 10px 20px; background: linear-gradient(135deg, var(--primary-color), #2c3e50); color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(var(--primary-color-rgb), 0.3); transition: all 0.3s ease; flex: 1;">
+                        <i id="button-icon-architecture" class="fas fa-chevron-down" style="margin-left: 8px;"></i>
+                        <span id="button-text-architecture">زانیاری</span>
+                    </button>
+                    
+                    <button onclick="openDepartmentPage('architecture')" style="padding: 10px 20px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); transition: all 0.3s ease; flex: 1;">
+                        <i class="fas fa-external-link-alt" style="margin-left: 8px;"></i>
+                        <span>بینینی زیاتر</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        
+        
+        <!-- پارەی خوارەوە بۆ کۆتایی -->
+        <div style="background: linear-gradient(to left, var(--primary-color), var(--secondary-color), var(--accent-color)); height: 3px; width: 100%; margin: 40px 0 20px 0; border-radius: 10px;"></div>
+    </div>
+</section>
+
+<script>
+// زیادکردنی ڕەنگی RGB بۆ گۆڕینی ڕەنگ
+document.documentElement.style.setProperty('--primary-color-rgb', '44, 62, 80');
+document.documentElement.style.setProperty('--secondary-color-rgb', '52, 152, 219');
+document.documentElement.style.setProperty('--accent-color-rgb', '155, 89, 182');
+
+// ناوی پەڕەکان بۆ هەر بەشێک
+const departmentPages = {
+    'programming': 'programming.html',
+    'veterinary': 'veterinary.html',
+    'architecture': 'architecture.html',
+    'technical': 'technical.html',
+    'art': 'art.html',
+    'business': 'business.html'
+};
+
+// ناوی بەشەکان بە کوردی
+const departmentNames = {
+    'programming': 'پڕۆگرامسازی',
+    'veterinary': 'ڤێتەرنەری',
+    'architecture': 'بیناسازی',
+
+};
+
+// ئەم فەنکشنە پەڕەی نوێ دەکاتەوە
+function openDepartmentPage(department) {
+    const pageName = departmentPages[department];
+    const departmentName = departmentNames[department];
+    
+    // دروستکردنی پەڕەی ناوەڕاست بۆ نیشاندانی بار
+    showLoadingPage(departmentName);
+    
+    // دوای چەند چرکەیەک پەڕەکە دەکەینەوە
+    setTimeout(() => {
+        // لێرە پەڕەکە دەکەیتەوە بە ڕێگایەکی ڕاستەقینە
+        // بۆ نمونە:
+        // window.open(pageName, '_blank');
+        
+        // یان بۆ پەڕەی نموونەیی:
+        createSamplePage(department);
+    }, 1500);
+}
+
+// پەڕەی ناوەڕاست بۆ نیشاندانی بار
+function showLoadingPage(departmentName) {
+    const loadingPage = document.createElement('div');
+    loadingPage.id = 'loading-page';
+    loadingPage.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        color: white;
+        font-family: Arial, sans-serif;
+    `;
+    
+    loadingPage.innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+            <div style="width: 80px; height: 80px; border: 5px solid rgba(255,255,255,0.3); border-top: 5px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 30px;"></div>
+            <h2 style="margin-bottom: 20px; font-size: 28px;">بەشی ${departmentName}</h2>
+            <p style="font-size: 18px; margin-bottom: 30px;">پەڕەکە دانەخراوە...</p>
+            <div style="width: 300px; height: 10px; background: rgba(255,255,255,0.2); border-radius: 5px; overflow: hidden;">
+                <div id="progress-bar" style="width: 0%; height: 100%; background: white; transition: width 2s ease;"></div>
+            </div>
+            <p id="loading-text" style="margin-top: 20px; font-size: 14px; opacity: 0.8;">داگرتن...</p>
+        </div>
+        <style>
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
+    `;
+    
+    document.body.appendChild(loadingPage);
+    
+    // بەرەوپێشبردنی بار
+    const progressBar = document.getElementById('progress-bar');
+    const loadingText = document.getElementById('loading-text');
+    let progress = 0;
+    
+    const interval = setInterval(() => {
+        progress += 10;
+        progressBar.style.width = progress + '%';
+        
+        if (progress === 30) loadingText.textContent = 'داتاکان هەڵدەگیرێن...';
+        if (progress === 60) loadingText.textContent = 'پەڕە دروست دەکرێت...';
+        if (progress === 90) loadingText.textContent = 'کۆتایی هات...';
+        
+        if (progress >= 100) {
+            clearInterval(interval);
+        }
+    }, 200);
+}
+    
+    // دروستکردنی پەڕەی نموونەیی
+function createSamplePage(department) {
+    // لابردنی پەڕەی بار
+    const loadingPage = document.getElementById('loading-page');
+    if (loadingPage) loadingPage.remove();
+    
+    // دروستکردنی پەڕەی نوێ
+    const newPage = document.createElement('div');
+    newPage.id = 'department-page';
+    newPage.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        z-index: 10000;
+        overflow-y: auto;
+        animation: fadeIn 0.5s ease;
+    `;
+    
+    const departmentName = departmentNames[department];
+    const departmentColor = getDepartmentColor(department);
+    
+    newPage.innerHTML = `
+        <header style="background: linear-gradient(135deg, ${departmentColor}, ${darkenColor(departmentColor, 20)}); color: white; padding: 20px; position: sticky; top: 0; z-index: 100;">
+            <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
+                <button onclick="closeDepartmentPage()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-arrow-right"></i>
+                    گەڕانەوە
+                </button>
+                <h1 style="text-align: center; font-size: 28px; margin: 0;">
+                    <i class="${getDepartmentIcon(department)}" style="margin-left: 15px;"></i>
+                    بەشی ${departmentName}
+                </h1>
+                <div style="width: 100px;"></div>
+            </div>
+        </header>
+        
+        <main style="max-width: 1200px; margin: 0 auto; padding: 40px 20px;">
+            <section style="margin-bottom: 40px;">
+                <h2 style="color: ${departmentColor}; border-right: 5px solid ${departmentColor}; padding-right: 15px; margin-bottom: 20px;">
+                    <i class="fas fa-info-circle"></i> زانیاری گشتی
+                </h2>
+                <div style="background: linear-gradient(to right, rgba(${hexToRgb(departmentColor)}, 0.1), white); padding: 25px; border-radius: 15px; border-right: 3px solid ${departmentColor};">
+                    <p style="font-size: 18px; line-height: 1.8; margin-bottom: 20px;">
+                        ئەم بەشە تایبەتە بە خوێندنی ${departmentName} لە ئامادەییی پیشەیی سیڤەری نا حکومی. 
+                        خوێندکاران لەم بەشەدا شارەزایی پێویست بەدەست دەهێنن بۆ کاری پراکتیکی لە بواری ${departmentName}.
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 30px;">
+                        <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                            <h3 style="color: ${departmentColor}; margin-bottom: 10px;">
+                                <i class="fas fa-clock"></i> ماوەی خوێندن
+                            </h3>
+                            <p style="font-size: 24px; font-weight: bold; color: #333;">${getStudyDuration(department)} ساڵ</p>
+                        </div>
+                        <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                            <h3 style="color: ${departmentColor}; margin-bottom: 10px;">
+                                <i class="fas fa-book"></i> ژمارەی بابەتەکان
+                            </h3>
+                            <p style="font-size: 24px; font-weight: bold; color: #333;">${getSubjectCount(department)} بابەت</p>
+                        </div>
+                        <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                            <h3 style="color: ${departmentColor}; margin-bottom: 10px;">
+                                <i class="fas fa-graduation-cap"></i> ئاستی خوێندن
+                            </h3>
+                            <p style="font-size: 24px; font-weight: bold; color: #333;">کادیری کارا</p>
+                        </div>
+                    </div>
+                </div>
+                <section style="margin-bottom: 40px;">
+    <h2 style="color: ${departmentColor}; border-right: 5px solid ${departmentColor}; padding-right: 15px; margin-bottom: 20px;">
+        <i class="fas fa-camera"></i> وێنە و چالاکییەکان
+    </h2>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+        
+        ${[
+            {img:'https://cdn.discordapp.com/attachments/1421616214601629851/1466386424784879636/download-resizehood.com.png?ex=697c8e47&is=697b3cc7&hm=b5ecdac64abca7b92fca696c20425a30f8b95cd7e42c152b0ecde2c6439b3b63&', title:'م.خەندە سدیق', desc:'مامۆستای بەشی پڕۆگرامسازی لە ئامادەییی پیشەیی سیڤەر '},
+            {img:'', title:'وانەی تیۆری', desc:'وانەی تیۆری لە هۆڵی فێرکاری'},
+            {img:'', title:'کارگە', desc:'کارکردن لە کارگەی تایبەت'},
+            {img:'', title:'مامۆستا و خوێندکار', desc:'هاوبەشکاری مامۆستا لەگەڵ خوێندکار'},
+            {img:'images/photo5.jpg', title:'پڕۆژەی خوێندکاران', desc:'پیشاندانی پڕۆژەی فێرکاری'},
+            {img:'images/photo6.jpg', title:'چالاکی دەرەکی', desc:'چالاکی فێرکاری لە دەرەوەی قوتابخانە'},
+            {img:'images/photo7.jpg', title:'پیشەسازی', desc:'ئامادەکردنی خوێندکار بۆ بازاڕی کار'},
+            {img:'images/photo8.jpg', title:'تاقیکردنەوەی کۆتایی', desc:'تاقیکردنەوەی کۆتایی ساڵ'},
+            {img:'images/photo9.jpg', title:'هاوپۆل', desc:'کارکردنی گرووپی خوێندکاران'},
+            {img:'images/photo10.jpg', title:'سەرکەوتن', desc:'سەرکەوتنی خوێندکاران و بڕوانامە'}
+        ].map(photo => `
+            <div style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.15); transition: 0.3s;">
+                <img src="${photo.img}" alt="${photo.title}" style="width: 100%; height: 180px; object-fit: cover;">
+                <div style="padding: 15px;">
+                    <h3 style="color: ${departmentColor}; margin: 0 0 5px 0;">${photo.title}</h3>
+                    <p style="font-size: 14px; color: #666; line-height: 1.6;">${photo.desc}</p>
+                </div>
+            </div>
+        `).join('')}
+
+    </div>
+</section>
+            
+            <section style="margin-bottom: 40px;">
+                <h2 style="color: ${departmentColor}; border-right: 5px solid ${departmentColor}; padding-right: 15px; margin-bottom: 20px;">
+                    <i class="fas fa-list"></i> بابەتەکان
+                </h2>
+                <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.1);">
+                    <ul style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; list-style: none; padding: 0;">
+                        ${getSubjects(department).map(subject => `
+                            <li style="background: linear-gradient(to right, rgba(${hexToRgb(departmentColor)}, 0.1), rgba(${hexToRgb(departmentColor)}, 0.05)); padding: 15px; border-radius: 10px; border-right: 3px solid ${departmentColor}; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-check-circle" style="color: ${departmentColor};"></i>
+                                ${subject}
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            </section>
+            
+            <section style="margin-bottom: 40px;">
+                <h2 style="color: ${departmentColor}; border-right: 5px solid ${departmentColor}; padding-right: 15px; margin-bottom: 20px;">
+                    <i class="fas fa-briefcase"></i> دەرفەتەکانی کار
+                </h2>
+                <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.1);">
+                    <p style="font-size: 18px; line-height: 1.8; margin-bottom: 25px;">
+                        خوێندکارانی ئەم بەشە دەتوانن دوای تەواوکردنی خوێندنەکەیان لەم بوارانەدا کار بکەن:
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        ${getJobOpportunities(department).map(job => `
+                            <div style="background: linear-gradient(135deg, ${departmentColor}, ${darkenColor(departmentColor, 15)}); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                                <i class="fas fa-user-tie" style="font-size: 32px; margin-bottom: 15px;"></i>
+                                <h3 style="margin: 0; font-size: 18px;">${job}</h3>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer style="background: #f8f9fa; padding: 30px; text-align: center; border-top: 3px solid ${departmentColor};">
+            <p style="color: #666; margin-bottom: 10px;">© 2024 ئامادەییی پیشەیی سیڤەری نا حکومی</p>
+            <p style="color: #888; font-size: 14px;">بەشی ${departmentName}</p>
+        </footer>
+        
+        <style>
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+        </style>
+    `;
+    
+    document.body.appendChild(newPage);
+}
+
+// داخستنی پەڕەکە
+function closeDepartmentPage() {
+    const page = document.getElementById('department-page');
+    if (page) {
+        page.style.animation = 'fadeOut 0.5s ease';
+        setTimeout(() => {
+            page.remove();
+            // دروستکردنی کەیسێکی fadeOut
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeOut {
+                    from { opacity: 1; }
+                    to { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+            setTimeout(() => style.remove(), 500);
+        }, 500);
+    }
+}
+
+// فەنکشنە یاریدەدەرەکان
+function getDepartmentColor(department) {
+    const colors = {
+        'programming': 'var(--secondary-color)',
+        'veterinary': 'var(--accent-color)',
+        'architecture': 'var(--primary-color)',
+        'technical': '#4CAF50',
+        'art': '#9C27B0',
+        'business': '#FF9800'
+    };
+    return colors[department] || '#3498db';
+}
+
+function getDepartmentIcon(department) {
+    const icons = {
+        'programming': 'fas fa-code',
+        'veterinary': 'fas fa-paw',
+        'architecture': 'fas fa-building',
+        'technical': 'fas fa-cogs',
+        'art': 'fas fa-palette',
+        'business': 'fas fa-chart-line'
+    };
+    return icons[department] || 'fas fa-book';
+}
+
+function getStudyDuration(department) {
+    const durations = {
+        'programming': '٢',
+        'veterinary': '٣',
+        'architecture': '٢',
+        'technical': '٣',
+        'art': '٢',
+        'business': '٢'
+    };
+    return durations[department] || '٢';
+}
+
+function getSubjectCount(department) {
+    const counts = {
+        'programming': '١٣',
+        'veterinary': '١١',
+        'architecture': '١٣',
+    };
+    return counts[department] || '١٠';
+}
+
+function getSubjects(department) {
+    const subjects = {
+        'programming': ['C++ پڕۆگرامسازی', 'Database', 'Security', 'IT', 'MS Office'],
+        'veterinary': ['بەرێوەبردن', 'توێکاری', 'کارئەندامزانی', '', 'زیندەزانی', 'کیمیا'],
+        'architecture': ['dısıgn', 'drawing', 'weling', 'math', 'physic' , 'mechanic'],
+    
+    };
+    return subjects[department] || ['بابەتی گشتی'];
+}
+
+function getJobOpportunities(department) {
+    const jobs = {
+        'programming': ['پڕۆگرامساز', 'بەڕێوەبەری داتابەیس', 'تاقیکاری سەلامەتی'],
+        'veterinary': ['ڤێتەرنەر', 'شارەزا لە پزیشکی ئاژەڵ', 'بەڕێوەبەری پەرۆشگا'],
+        'architecture': ['بیناساز', 'دیزاینەری بینا', 'ئەندازیاری بیناسازی'],
+        'technical': ['میکانیکیار', 'کارەباکار', 'تەکنیکاری بیناسازی'],
+        'art': ['هونەرمەند', 'دیزاینەر', 'مۆسیقاژەن'],
+        'business': ['ژمێریار', 'بەڕێوەبەری بازرگانی', 'شیکەری ئابووری']
+    };
+    return jobs[department] || ['کارمەند'];
+}
+
+function hexToRgb(hex) {
+    hex = hex.replace('#', '');
+    if (hex.startsWith('var')) {
+        // بۆ ڕەنگی CSS variable
+        return '52, 152, 219'; // ڕەنگی بنەڕەت
+    }
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    return `${r}, ${g}, ${b}`;
+}
+
+function darkenColor(color, percent) {
+    // کورتکراوە بۆ نموونە
+    return color;
+}
+
+// فەنکشنی کرایەکی زانیاری (وەک پێشتر)
+function toggleMoreInfo(section) {
+    const moreInfoDiv = document.getElementById(`more-info-${section}`);
+    const buttonText = document.getElementById(`button-text-${section}`);
+    const buttonIcon = document.getElementById(`button-icon-${section}`);
+    
+    if (moreInfoDiv.style.display === 'none' || moreInfoDiv.style.display === '') {
+        moreInfoDiv.style.display = 'block';
+        buttonText.textContent = 'کەمتر بینین';
+        buttonIcon.className = 'fas fa-chevron-up';
+        moreInfoDiv.style.animation = 'fadeIn 0.5s ease';
+        moreInfoDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+        moreInfoDiv.style.display = 'none';
+        buttonText.textContent = 'زانیاری';
+        buttonIcon.className = 'fas fa-chevron-down';
+    }
+}
+
+// زیادکردنی کاریگەری hover بۆ دووگمەکان
+document.querySelectorAll('#info button').forEach(button => {
+    button.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-3px)';
+        this.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.25)';
+    });
+    
+    button.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
+    });
+});
+</script>
+
+
+       
+
+        <!-- ئامادەی پیشەی سیڤەری نا حکومی-->
+        <section id="mehad" class="section mehad-section">
+            <h2 class="section-title"><i class="fas fa-user-graduate"></i> ئامادەی پیشەی سیڤەری ناحکومی</h2>
+            <div class="mehad-content">
+                <div class="mehad-img">
+                    <img src="https://tse2.mm.bing.net/th/id/OIP.CNRufrub1TPOXqV5nZWivgHaHj?rs=1&pid=ImgDetMain&o=7&rm=3" alt="ئامادەی پیشەی سیڤەر  ">
+                </div>
+                <div class="mehad-text">
+                    <p>ئامادەی پیشەی سیڤەر قوتابخانەیەکی پیشەیییە کە تایبەتە بە فێربوونی هونەر و پیشەسازی.</p>
+                    
+                    <p>ئێمە ئامانجمان ئەوەیە کە خوێندکارانی ئامادە بکەین بۆ ئەوەی بتوانن کاری باش بکەن و لە کۆمەڵگادا کاریگەری باشیان هەبێت.</p>
+
+                    <p>بە بەکارهێنانی تەکنەلۆژیای نوێ و مێتۆدی فێربوونی سەردەمی، هەوڵدەدەین باشترین خزمەتگوزاری پێشکەش بە خوێندکاران بکەین.</p>
+
+                    <div style="background-color: rgba(255, 215, 0, 0.2); padding: 20px; border-radius: 10px; margin-top: 20px; border-right: 5px solid var(--primary-color);">
+                        <h3 style="color: var(--dark-color); margin-bottom: 10px;">تایبەتمەندیەکان</h3>
+                        <ul style="padding-right: 20px;">
+                            <li style="margin-bottom: 8px;">مامۆستایانی شارەزا و بەتوانا</li>
+                            <li style="margin-bottom: 8px;">ژووری تاقیگەی نوێ و ئامرازەکان</li>
+                            <li style="margin-bottom: 8px;">پەیوەندی بە بازاڕی کارەوە</li>
+                            <li style="margin-bottom: 8px;">بەرنامەی درێژخایەن بۆ گەشەکردنی شارەزایی</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- پەڕەوە -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>سیڤەر ئامادەی پیشەیی</h3>                   
+                    <p>ئێمە پەیمانگایەکین بۆ یارمەتیدانی خوێندکاران لە هەموو ئاستەکانی خوێندندا.</p>
+                    <p>هەموو بابەتەکان بە زمانی کوردی و بە شێوەیەکی سادە و ڕوون ڕێکخراون.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>پەیوەندی</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> هەولێر، هەرێمی کوردستان</p>
+                    <p><i class="fas fa-phone"></i> 07503292907-07509737773</p>
+                    <p><i class="fas fa-envelope"></i> info@savar.edu.krd</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>بەستەرە خێراکان</h3>
+                    <p><a href="#register" style="color: white; text-decoration: none;">تۆمارکردن</a></p>
+                    <p><a href="#teachers" style="color: white; text-decoration: none;">مامۆستایان</a></p>
+                    <p><a href="#about" style="color: white; text-decoration: none;">دەربارەی ئێمە</a></p>
+                    <p><a href="#info" style="color: white; text-decoration: none;">زانیاری</a></p>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>هەموو مافەکان پارێزراون © ٢٠٢٦ بۆ بەشی پڕۆگرامسازی.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Google Sign-In Configuration
+        function handleCredentialResponse(response) {
+            console.log("Encoded JWT ID token: " + response.credential);
+            
+            // Decode the JWT token to get user info
+            const responsePayload = decodeJwtResponse(response.credential);
+            
+            console.log("User info:", responsePayload);
+            
+            // Display user info
+            displayUserInfo(responsePayload);
+            
+            // Store user data in localStorage
+            localStorage.setItem('googleUser', JSON.stringify(responsePayload));
+            localStorage.setItem('googleToken', response.credential);
+        }
+
+        function decodeJwtResponse(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+
+            return JSON.parse(jsonPayload);
+        }
+
+        function displayUserInfo(user) {
+            const userInfoDiv = document.getElementById('userInfo');
+            const userName = document.getElementById('userName');
+            const userEmail = document.getElementById('userEmail');
+            const userImage = document.getElementById('userImage');
+            
+            userName.textContent = user.name;
+            userEmail.textContent = user.email;
+            userImage.src = user.picture;
+            
+            userInfoDiv.style.display = 'block';
+            
+            // Hide the Google sign-in button
+            document.querySelector('.g_id_signin').style.display = 'none';
+            
+            // Show welcome message
+            alert(`بەخێربێیت ${user.name}! چوونەژوورەوەت بە سەرکەوتوویی ئەنجامدرا.`);
+            
+            // Update register form with user data
+            document.getElementById('name').value = user.name;
+            document.getElementById('email').value = user.email;
+        }
+
+        function logout() {
+            // Clear stored data
+            localStorage.removeItem('googleUser');
+            localStorage.removeItem('googleToken');
+            
+            // Hide user info
+            document.getElementById('userInfo').style.display = 'none';
+            
+            // Show Google sign-in button
+            document.querySelector('.g_id_signin').style.display = 'block';
+            
+            // Clear form fields
+            document.getElementById('registerForm').reset();
+            
+            // Google Sign-Out
+            google.accounts.id.disableAutoSelect();
+            
+            alert('بە سەرکەوتوویی چووتەدەرەوە!');
+        }
+
+        // Check if user is already logged in
+        function checkLoginStatus() {
+            const savedUser = localStorage.getItem('googleUser');
+            if (savedUser) {
+                const user = JSON.parse(savedUser);
+                displayUserInfo(user);
+            }
+        }
+
+        // فۆرمی تۆمارکردن
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check login status on page load
+            checkLoginStatus();
+            
+            // فۆرمی تۆمارکردن
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const name = document.getElementById('name').value;
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    
+                    if (name && email && password) {
+                        alert(`سوپاس ${name}!\nئەکاونتەکەت بە سەرکەوتووی تۆمار کرا.\nئیمەیڵ: ${email}`);
+                        registerForm.reset();
+                    } else {
+                        alert('تکایە هەموو خانەکان پڕ بکەرەوە!');
+                    }
+                });
+            }
+            
+            // Logout button
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            
+            // فۆرمی کۆمێنت
+            const commentForm = document.getElementById('commentForm');
+            const commentsList = document.getElementById('commentsList');
+            
+            // کۆمێنتە سەرەتاییەکان
+            const initialComments = [
+                {name: "سارا عەلی", comment: "سەیتێکی زۆر باشە، زۆر سوپاس بۆ ئەم هەوڵە! بابەتەکان زۆر ڕوون و سادەن.", time: "٢ کاتژمێر لەمەوپێش"},
+                {name: "کەریم عەبدوڵڵا", comment: "من زۆر حەزم لە بەشی مەحەدە، وەک نمونەیەکە بۆ هەموو خوێندکاران.", time: "٥ کاتژمێر لەمەوپێش"},
+                {name: "نازنین ڕەحمان", comment: "مامۆستاکان زۆر باش وانە دەڵێن و بابەتەکان زۆر سادە ڕوون کراوەتەوە.", time: "١ ڕۆژ لەمەوپێش"}
+            ];
+            
+            // زیادکردنی کۆمێنتە سەرەتاییەکان
+            initialComments.forEach(comment => {
+                addCommentToDOM(comment.name, comment.comment, comment.time);
+            });
+            
+            if (commentForm) {
+                commentForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const commentText = document.getElementById('commentText').value;
+                    
+                    if (commentText.trim()) {
+                        const currentTime = new Date().toLocaleTimeString('ar-KW', {hour: '2-digit', minute: '2-digit'});
+                        addCommentToDOM("ئەکاونتێکی نوێ", commentText, `ئێستا (${currentTime})`);
+                        commentForm.reset();
+                    } else {
+                        alert('تکایە کۆمێنتێک بنووسە!');
+                    }
+                });
+            }
+            
+            // فەنکشن بۆ زیادکردنی کۆمێنت
+            function addCommentToDOM(name, comment, time) {
+                const commentDiv = document.createElement('div');
+                commentDiv.className = 'comment';
+                commentDiv.innerHTML = `
+                    <div class="comment-header">
+                        <span>${name}</span>
+                        <span>${time}</span>
+                    </div>
+                    <div class="comment-body">
+                        ${comment}
+                    </div>
+                `;
+                
+                if (commentsList) {
+                    commentsList.prepend(commentDiv);
+                }
+            }
+            
+            // دوگمەی بارکردنی میدیا
+            const uploadMediaBtn = document.getElementById('uploadMediaBtn');
+            if (uploadMediaBtn) {
+                uploadMediaBtn.addEventListener('click', function() {
+                    alert('بەشێک بۆ بارکردنی وێنە و ڤیدیۆ. لە وەشانەکانی داهاتوودا کاردەکات!');
+                });
+            }
+            
+            // ڕێکخستنی هێڵەکان بۆ ئاسانی گەڕان
+            document.querySelectorAll('nav a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (this.getAttribute('href').startsWith('#')) {
+                        e.preventDefault();
+                        
+                        // گۆڕینی ڕەنگی چالاک
+                        document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        const targetId = this.getAttribute('href');
+                        const targetElement = document.querySelector(targetId);
+                        
+                        if (targetElement) {
+                            window.scrollTo({
+                                top: targetElement.offsetTop - 80,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                });
+            });
+            
+            // پەیجی سکڕۆڵ - گۆڕینی چالاکی هێڵەکان
+            window.addEventListener('scroll', function() {
+                const sections = document.querySelectorAll('.section');
+                const navLinks = document.querySelectorAll('nav a');
+                
+                let current = '';
+                
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    
+                    if (scrollY >= (sectionTop - 100)) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${current}`) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+        
+</script>
+
+    </script>
+   
+</script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHdHnK0Lz8TITlrkWYgSdV8AmFZU3F7_0",
+    authDomain: "sivarvocationalhighschoo-513aa.firebaseapp.com",
+    projectId: "sivarvocationalhighschoo-513aa",
+    storageBucket: "sivarvocationalhighschoo-513aa.firebasestorage.app",
+    messagingSenderId: "498314470915",
+    appId: "1:498314470915:web:1d75488d20372f81e71036"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  addDoc(collection(db, "submissions"), {
+    status: "it works",
+    time: new Date().toISOString()
+  })
+  .then(() => console.log("✅ FIRESTORE CONNECTED"))
+  .catch(err => console.error("❌ FIRESTORE ERROR:", err));
+</script>
+
+</body>
+</html>
