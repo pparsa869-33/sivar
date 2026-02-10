@@ -137,42 +137,78 @@
   <!-- Header -->
   <header>
     <div class="container header-container">
-      <div class="logo">
-        <div class="logo-icon">
-          <i class="fas fa-graduation-cap"></i>
-        </div>
-        <div class="logo-text">
-          ئامادەی پیشەی سیڤەر
-          <span>پەروەردەی شارەزایانەی داهاتوو</span>
-        </div>
-      </div>
 
-      <nav>
-        <ul>
-          <li><a href="#home" class="active"><i class="fas fa-home"></i> سەرەتا</a></li>
-          <li><a href="#departments"><i class="fas fa-book"></i> بەشەکان</a></li>
-          <li><a href="#media"><i class="fas fa-photo-video"></i> میدیا</a></li>
-           <li><a href="#stats"><i class="fas fa-chart-line"></i> ئامارەکان</a></li>
-          <li><a href="#comments"><i class="fas fa-comments"></i> کۆمێنت</a></li>
-          <li><a href="#about"><i class="fas fa-info-circle"></i> دەربارە</a></li>
-        </ul>
-      </nav>
-
-      <div id="userProfile" class="user-profile" onclick="toggleUserMenu()">
-        <img src="" alt="User" class="user-avatar" id="userAvatar" />
-        <div class="user-info">
-          <div class="user-name" id="userDisplayName"></div>
-          <div class="user-role" id="userRole">خوێندکار</div>
-        </div>
-        <i class="fas fa-chevron-down"></i>
-      </div>
-
-      <button id="loginButton" class="login-btn" onclick="openAuthModal()">
-        <i class="fas fa-sign-in-alt"></i>
-        چوونەژورەوە
-      </button>
+  <div class="logo">
+    <div class="logo-icon">
+      <i class="fas fa-graduation-cap"></i>
     </div>
+    <div class="logo-text">
+      ئامادەی پیشەی سیڤەر
+      <span>پەروەردەی شارەزایانەی داهاتوو</span>
+    </div>
+  </div>
+
+  <!-- Mobile Menu Button (moved outside logo) -->
+  <button class="menu-toggle" onclick="toggleMenu()">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  
+   <nav class="main-nav" id="mainNav">
+  <ul class="nav-list">
+    <li><a href="#home" class="active"><i class="fas fa-home"></i> سەرەتا</a></li>
+
+    <!-- Departments (submenu) -->
+    <li class="has-submenu" id="departmentsItem">
+      <a href="#" class="dept-toggle" onclick="toggleDepartments(event)">
+        <i class="fas fa-book"></i> بەشەکان
+        <i class="fas fa-chevron-down caret"></i>
+      </a>
+
+      <ul class="submenu" id="departmentsMenu">
+        <li><a href="department-programming.html">پڕۆگرامسازی</a></li>
+        <li><a href="department-architecture.html">بیناسازی</a></li>
+        <li><a href="department-veterinary.html">ڤێتەرنەری</a></li>
+      </ul>
+    </li>
+
+    <li><a href="#media"><i class="fas fa-photo-video"></i> میدیا</a></li>
+    <li><a href="#stats"><i class="fas fa-chart-line"></i> ئامارەکان</a></li>
+    <li><a href="#comments"><i class="fas fa-comments"></i> کۆمێنت</a></li>
+    <li><a href="#about"><i class="fas fa-info-circle"></i> دەربارە</a></li>
+  </ul>
+
+  </nav>
+
+  <div id="userProfile" class="user-profile" onclick="toggleUserMenu()">
+    <img src="" alt="User" class="user-avatar" id="userAvatar" />
+    <div class="user-info">
+      <div class="user-name" id="userDisplayName"></div>
+      <div class="user-role" id="userRole">خوێندکار</div>
+    </div>
+    <i class="fas fa-chevron-down"></i>
+  </div>
+
+  <button id="loginButton" class="login-btn" onclick="openAuthModal()">
+    <i class="fas fa-sign-in-alt"></i>
+    چوونەژورەوە
+  </button>
+
+</div>
   </header>
+  <!-- Hero Section -->
+<section class="hero">
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <h1>ئامادەی پیشەی سیڤەر</h1>
+    <p>پەروەردەی شارەزایانەی داهاتوو لە بواری تەکنەلۆژیا و پیشەسازی</p>
+    <a href="#departments" class="hero-btn">
+      <i class="fas fa-book"></i>
+      بەشەکان ببینە
+    </a>
+  </div>
+</section>
 
   <!-- Main Content -->
   <main class="container">
