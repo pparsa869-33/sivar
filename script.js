@@ -26,23 +26,28 @@ const commentsList = document.getElementById("commentsList");
 function qs(sel) { return document.querySelector(sel); }
 function qsa(sel) { return document.querySelectorAll(sel); }
 
-// Notification
+// Notification (single + consistent)
 function showNotification(message, type = "success") {
   const existing = document.querySelector(".notification");
   if (existing) existing.remove();
 
   const notification = document.createElement("div");
   notification.className = `notification ${type}`;
+  notification.style.animation = "slideInRight 0.3s ease";
   notification.innerHTML = `
-    <i class="fas fa-${type === "success" ? "check-circle" : type === "error" ? "exclamation-circle" : "info-circle"}"></i>
+    <i class="fas fa-${
+      type === "success" ? "check-circle" :
+      type === "error" ? "exclamation-circle" : "info-circle"
+    }"></i>
     <span>${message}</span>
   `;
+
   document.body.appendChild(notification);
 
   setTimeout(() => {
     notification.style.animation = "slideInRight 0.3s ease reverse";
-    setTimeout(() => notification.remove(), 300);
-  }, 3000);
+    setTimeout(() => notification.remove(), 250);
+  }, 2400);
 }
 
 // Password toggle
@@ -63,11 +68,6 @@ function togglePassword(inputId) {
 function switchAuthTab(tab, el) {
   qsa(".auth-tab").forEach((t) => t.classList.remove("active"));
   if (el) el.classList.add("active");
-  else {
-    // fallback: activate by text
-    const target = Array.from(qsa(".auth-tab")).find((x) => x.textContent.includes(tab === "login" ? "چوونەژورەوە" : "تۆمار"));
-    if (target) target.classList.add("active");
-  }
 
   if (tab === "login") {
     loginForm.classList.add("active");
@@ -82,7 +82,6 @@ function switchAuthTab(tab, el) {
 function openAuthModal() {
   authModal.style.display = "flex";
   authModal.setAttribute("aria-hidden", "false");
-  // default to login tab
   const firstTab = qsa(".auth-tab")[0];
   switchAuthTab("login", firstTab);
 }
@@ -118,7 +117,6 @@ async function register(event) {
 
   try {
     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-
     await userCredential.user.updateProfile({ displayName: name });
 
     await db.collection("users").doc(userCredential.user.uid).set({
@@ -132,15 +130,12 @@ async function register(event) {
     closeAuthModal();
   } catch (error) {
     console.error("Registration error:", error);
-    let errorMessage = "هەڵەیەک ڕوویدا!";
 
-    if (error.code === "auth/email-already-in-use") {
-      errorMessage = "ئەم ئیمەیڵە پێشتر تۆمار کراوە!";
-    } else if (error.code === "auth/invalid-email") {
-      errorMessage = "ئیمەیڵەکە نادروستە!";
-    } else if (error.code === "auth/weak-password") {
-      errorMessage = "وشەی نهێنیەکە زۆر لاوازە!";
-    }
+    let errorMessage = "هەڵەیەک ڕوویدا!";
+    if (error.code === "auth/email-already-in-use") errorMessage = "ئەم ئیمەیڵە پێشتر تۆمار کراوە!";
+    else if (error.code === "auth/invalid-email") errorMessage = "ئیمەیڵەکە نادروستە!";
+    else if (error.code === "auth/weak-password") errorMessage = "وشەی نهێنیەکە زۆر لاوازە!";
+
     showNotification(errorMessage, "error");
   } finally {
     registerBtn.innerHTML = originalText;
@@ -164,15 +159,16 @@ async function login(event) {
     closeAuthModal();
   } catch (error) {
     console.error("Login error:", error);
-    let errorMessage = "هەڵەیەک ڕوویدا!";
 
-    if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password" || error.code === "auth/invalid-login-credentials") {
-      errorMessage = "ئیمەیڵ یان وشەی نهێنی هەڵەیە!";
-    } else if (error.code === "auth/invalid-email") {
-      errorMessage = "ئیمەیڵەکە نادروستە!";
-    } else if (error.code === "auth/user-disabled") {
-      errorMessage = "ئەکاونتەکەت داخراوە!";
-    }
+    let errorMessage = "هەڵەیەک ڕوویدا!";
+    if (
+      error.code === "auth/user-not-found" ||
+      error.code === "auth/wrong-password" ||
+      error.code === "auth/invalid-login-credentials"
+    ) errorMessage = "ئیمەیڵ یان وشەی نهێنی هەڵەیە!";
+    else if (error.code === "auth/invalid-email") errorMessage = "ئیمەیڵەکە نادروستە!";
+    else if (error.code === "auth/user-disabled") errorMessage = "ئەکاونتەکەت داخراوە!";
+
     showNotification(errorMessage, "error");
   } finally {
     loginBtn.innerHTML = originalText;
@@ -298,14 +294,8 @@ async function addComment(event) {
   }
 
   const commentText = document.getElementById("commentText").value.trim();
-  if (!commentText) {
-    showNotification("تکایە کۆمێنتێک بنووسە!", "error");
-    return;
-  }
-  if (commentText.length < 3) {
-    showNotification("کۆمێنتەکە دەبێت لانی کەم ٣ نووسە بێت!", "error");
-    return;
-  }
+  if (!commentText) return showNotification("تکایە کۆمێنتێک بنووسە!", "error");
+  if (commentText.length < 3) return showNotification("کۆمێنتەکە دەبێت لانی کەم ٣ نووسە بێت!", "error");
 
   const submitBtn = event.target.querySelector('button[type="submit"]');
   const originalText = submitBtn.innerHTML;
@@ -338,7 +328,6 @@ async function addComment(event) {
 async function loadComments() {
   try {
     const snapshot = await db.collection("comments").orderBy("timestamp", "desc").limit(20).get();
-
     commentsList.innerHTML = "";
 
     if (snapshot.empty) {
@@ -381,7 +370,6 @@ async function loadComments() {
           ${String(comment.text || "").replace(/\n/g, "<br>")}
         </div>
       `;
-
       commentsList.appendChild(commentDiv);
     });
   } catch (error) {
@@ -409,14 +397,20 @@ function formatTime(date) {
   return date.toLocaleDateString("ar-KW");
 }
 
-// Department placeholder
+// Departments -> real pages
 function openDepartmentPage(department) {
-  const departments = {
-    programming: "پڕۆگرامسازی",
-    veterinary: "ڤێتەرنەری",
-    architecture: "بیناسازی",
+  const map = {
+    programming: "department-programming.html",
+    veterinary: "department-veterinary.html",
+    architecture: "department-architecture.html",
   };
-  showNotification(`پەڕەی ${departments[department]} بەردەست نییە لە وەشانی ئەم وێبسایتە!`, "warning");
+
+  const target = map[department];
+  if (!target) {
+    showNotification("بەش نەدۆزرایەوە!", "error");
+    return;
+  }
+  window.location.href = target;
 }
 
 // Upload placeholder
@@ -430,32 +424,54 @@ function uploadMedia() {
   showNotification("بەشی بارکردنی میدیا لە وەشانی داھاتوودا بەردەست دەبێت!", "warning");
 }
 
-// Stats animation
-function initializeStats() {
+// Animated stats (only when stats section appears)
+function initializeStatsOnView() {
+  const statsSection = document.querySelector("#stats");
+  if (!statsSection) return;
+
   const stats = [
-    { id: "studentsCount", target: 1200, plus: true },
-    { id: "teachersCount", target: 80, plus: true },
-    { id: "graduatesCount", target: 5000, plus: true },
-    { id: "departmentsCount", target: 6, plus: false },
+    { id: "studentsCount", target: 140, plus: true },     // match your HTML
+    { id: "teachersCount", target: 13, plus: true },
+    { id: "departmentsCount", target: 3, plus: false },
   ];
 
-  stats.forEach((stat) => {
-    const el = document.getElementById(stat.id);
-    if (!el) return;
+  let started = false;
 
+  function animate(el, target, plus) {
     let current = 0;
-    const steps = 50;
-    const increment = stat.target / steps;
+    const steps = 60;
+    const inc = target / steps;
 
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= stat.target) {
-        current = stat.target;
-        clearInterval(timer);
-      }
-      el.textContent = Math.floor(current).toLocaleString("ar") + (stat.plus ? "+" : "");
-    }, 30);
-  });
+    const tick = () => {
+      current += inc;
+      if (current >= target) current = target;
+
+      // Kurdish/Arabic numerals
+      el.textContent = Math.floor(current).toLocaleString("ar") + (plus ? "+" : "");
+
+      if (current < target) requestAnimationFrame(tick);
+    };
+
+    tick();
+  }
+
+  const obs = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((en) => {
+        if (en.isIntersecting && !started) {
+          started = true;
+          stats.forEach((s) => {
+            const el = document.getElementById(s.id);
+            if (el) animate(el, s.target, s.plus);
+          });
+          obs.disconnect();
+        }
+      });
+    },
+    { threshold: 0.45 }
+  );
+
+  obs.observe(statsSection);
 }
 
 // Smooth scroll + active nav on scroll
@@ -468,13 +484,10 @@ function initializeSmoothScroll() {
       if (!href || !href.startsWith("#")) return;
 
       e.preventDefault();
-      links.forEach((x) => x.classList.remove("active"));
-      a.classList.add("active");
-
       const target = document.querySelector(href);
-      if (target) {
-        window.scrollTo({ top: target.offsetTop - 80, behavior: "smooth" });
-      }
+      if (!target) return;
+
+      window.scrollTo({ top: target.offsetTop - 80, behavior: "smooth" });
     });
   });
 
@@ -497,11 +510,35 @@ function initializeSmoothScroll() {
   sections.forEach((s) => obs.observe(s));
 }
 
+// Scroll reveal animations
+function initializeScrollReveal() {
+  const items = document.querySelectorAll(".section, .department-card, .stat-card, .media-item");
+
+  const obs = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((en) => {
+        if (en.isIntersecting) {
+          en.target.classList.add("active");
+        } else {
+          en.target.classList.remove("active");
+        }
+      });
+    },
+    { threshold: 0.15 }
+  );
+
+  items.forEach((el) => {
+    el.classList.add("reveal");
+    obs.observe(el);
+  });
+}
+
 // Boot
 document.addEventListener("DOMContentLoaded", function () {
   updateUI();
-  initializeStats();
+  initializeStatsOnView();
   initializeSmoothScroll();
+  initializeScrollReveal();
 
   // close modal when clicking outside
   authModal.addEventListener("click", function (e) {
@@ -530,38 +567,102 @@ document.addEventListener("DOMContentLoaded", function () {
       .catch(() => {});
   }, 1000);
 });
+// Header scroll effect
+const header = document.querySelector("header");
 
-function showNotification(message, type = 'success') {
-  const existing = document.querySelector('.notification');
-  if (existing) existing.remove();
+window.addEventListener("scroll", () => {
+  if (!header) return;
 
-  const notification = document.createElement('div');
-  notification.className = `notification ${type}`;
-  notification.style.animation = 'slideInRight 0.3s ease';
-  notification.innerHTML = `
-    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-    <span>${message}</span>
-  `;
-
-  document.body.appendChild(notification);
-
-  setTimeout(() => {
-    notification.remove();
-  }, 2400);
-}
-
-// Buttons now OPEN real pages (no warning anymore)
-function openDepartmentPage(department) {
-  const map = {
-    programming: 'department-programming.html',
-    veterinary: 'department-veterinary.html',
-    architecture: 'department-architecture.html',
-  };
-
-  const target = map[department];
-  if (!target) {
-    showNotification('بەش نەدۆزرایەوە!', 'error');
-    return;
+  if (window.scrollY > 40) {
+    header.classList.add("scrolled");
+  } else {
+    header.classList.remove("scrolled");
   }
-  window.location.href = target;
+});
+// Header scroll effect
+window.addEventListener("scroll", function () {
+  const header = document.querySelector("header");
+  if (window.scrollY > 60) {
+    header.classList.add("scrolled");
+  } else {
+    header.classList.remove("scrolled");
+  }
+});
+function toggleMenu() {
+  const nav = document.querySelector("nav");
+  nav.classList.toggle("active");
 }
+// ----- Mobile menu open/close -----
+function toggleMenu() {
+  document.body.classList.toggle("menu-open");
+}
+
+function closeMenu() {
+  document.body.classList.remove("menu-open");
+  closeDepartments();
+}
+
+// ----- Departments submenu -----
+function toggleDepartments(e) {
+  // Stop the page from jumping to top (because href="#")
+  if (e) e.preventDefault();
+
+  const item = document.getElementById("departmentsItem");
+  if (!item) return;
+
+  item.classList.toggle("submenu-open");
+}
+
+function closeDepartments() {
+  const item = document.getElementById("departmentsItem");
+  if (!item) return;
+  item.classList.remove("submenu-open");
+}
+
+// Close menu when clicking links (except the submenu toggle)
+document.addEventListener("click", (e) => {
+  const nav = document.getElementById("mainNav");
+  if (!nav) return;
+
+  const link = e.target.closest("a");
+  if (!link) return;
+
+  // If user clicked the departments toggle, don't close the menu
+  if (link.classList.contains("dept-toggle")) return;
+
+  // If user clicked inside the nav on a normal link => close menu
+  if (nav.contains(link)) {
+    closeMenu();
+  }
+});
+
+// If user taps outside nav while menu is open => close it
+document.addEventListener("click", (e) => {
+  if (!document.body.classList.contains("menu-open")) return;
+
+  const nav = document.getElementById("mainNav");
+  const toggleBtn = document.querySelector(".menu-toggle");
+  if (!nav) return;
+
+  const clickedInsideNav = nav.contains(e.target);
+  const clickedToggle = toggleBtn && toggleBtn.contains(e.target);
+
+  if (!clickedInsideNav && !clickedToggle) {
+    closeMenu();
+  }
+});
+
+// Safety: if screen goes back to desktop, reset mobile states
+window.addEventListener("resize", () => {
+  if (window.innerWidth > 768) {
+    closeMenu();
+  }
+});
+
+// Close menu when a link is clicked (mobile)
+document.querySelectorAll("nav a").forEach(link => {
+  link.addEventListener("click", () => {
+    const nav = document.querySelector("nav");
+    nav.classList.remove("active");
+  });
+});
