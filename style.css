@@ -6,22 +6,22 @@
 }
 
 :root{
-  --primary-color:#2c3e50;
-  --secondary-color:#3498db;
-  --accent-color:#9b59b6;
-  --dark-color:#2c003e;
-  --light-color:#f8f9fa;
-  --success-color:#27ae60;
-  --warning-color:#f39c12;
-  --danger-color:#e74c3c;
-  --text-color:#333;
-  --gray-color:#95a5a6;
-  --shadow:0 8px 30px rgba(0,0,0,.12);
-  --transition:all .3s cubic-bezier(.25,.46,.45,.94);
+  --primary-color:#0f172a;
+  --secondary-color:#3b82f6;
+  --accent-color:#8b5cf6;
+  --dark-color:#020617;
+  --light-color:#f8fafc;
+  --success-color:#22c55e;
+  --warning-color:#f59e0b;
+  --danger-color:#ef4444;
+  --text-color:#0f172a;
+  --gray-color:#64748b;
+  --shadow:0 10px 25px rgba(15,23,42,.08);
+  --transition:all .25s ease;
 }
 
 body{
-  background:linear-gradient(135deg,#f5f7fa 0%,#e4e8f0 100%);
+  background:#f1f5f9;
   color:var(--text-color);
   line-height:1.7;
   min-height:100vh;
@@ -35,16 +35,25 @@ body{
 }
 
 /* Header */
+/* Glass floating header */
 header{
-  background:linear-gradient(135deg,var(--primary-color),var(--dark-color));
-  color:#fff;
-  padding:20px 0;
-  box-shadow:var(--shadow);
-  position:sticky;
+  position:fixed;
   top:0;
+  left:0;
+  width:100%;
   z-index:1000;
-  backdrop-filter:blur(10px);
+  padding:18px 0;
+  background:transparent;
+  transition:all .35s ease;
 }
+
+/* Header when scrolled */
+header.scrolled{
+  background:rgba(2,6,23,0.85);
+  backdrop-filter:blur(12px);
+  box-shadow:0 8px 30px rgba(0,0,0,.15);
+}
+
 .header-container{
   display:flex;
   justify-content:space-between;
@@ -161,20 +170,24 @@ nav ul li a i{font-size:14px;}
 }
 
 /* Sections */
-main{padding:60px 0;}
+main{
+  padding:100px 0 60px;
+}
+
 .section{
-  background:#fff;
-  border-radius:25px;
+  background:#ffffff;
+  border-radius:18px;
   box-shadow:var(--shadow);
   padding:40px;
-  margin-bottom:40px;
-  border-right:8px solid var(--secondary-color);
+  margin-bottom:32px;
+  border:none;
   transition:var(--transition);
 }
 .section:hover{
-  transform:translateY(-5px);
-  box-shadow:0 15px 40px rgba(0,0,0,.15);
+  transform:translateY(-4px);
+  box-shadow:0 20px 45px rgba(15,23,42,.12);
 }
+
 .section-title{
   color:var(--primary-color);
   font-size:32px;
@@ -246,46 +259,49 @@ main{padding:60px 0;}
 }
 
 /* Departments */
-.departments-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(350px,1fr));
-  gap:30px;
-  margin-top:40px;
-}
 .department-card{
-  background:#fff;
-  border-radius:25px;
+  background:#ffffff;
+  border-radius:18px;
   overflow:hidden;
-  box-shadow:var(--shadow);
-  transition:var(--transition);
-  border-top:5px solid var(--secondary-color);
+  box-shadow:0 10px 25px rgba(15,23,42,.08);
+  transition:all .25s ease;
+  border:1px solid #e2e8f0;
+  position:relative;
 }
+
 .department-card:hover{
-  transform:translateY(-10px) scale(1.02);
-  box-shadow:0 20px 50px rgba(0,0,0,.2);
+  transform:translateY(-6px);
+  box-shadow:0 25px 60px rgba(15,23,42,.15);
 }
+
+/* Top icon area */
 .department-icon{
-  height:200px;
-  background:linear-gradient(135deg,var(--primary-color),var(--dark-color));
+  height:140px;
+  background:linear-gradient(135deg,#3b82f6,#8b5cf6);
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:70px;
+  font-size:55px;
   color:#fff;
 }
-.department-info{padding:30px;}
+
+.department-info{
+  padding:26px;
+}
+
 .department-info h3{
   color:var(--primary-color);
-  font-size:24px;
-  margin-bottom:15px;
+  font-size:22px;
+  margin-bottom:12px;
   display:flex;
   align-items:center;
   gap:10px;
 }
 .dept-meta{list-style:none;padding:0;margin:0 0 20px;}
 .dept-meta li{
-  margin-bottom:8px;
-  padding-right:22px;
+  margin-bottom:10px;
+  padding-right:24px;
+  font-size:15px;
   position:relative;
   color:var(--text-color);
 }
@@ -298,23 +314,24 @@ main{padding:60px 0;}
 }
 .department-btn{
   width:100%;
-  padding:15px;
-  background:linear-gradient(135deg,var(--secondary-color),var(--accent-color));
+  padding:14px;
+  background:var(--secondary-color);
   color:#fff;
   border:none;
-  border-radius:15px;
+  border-radius:12px;
   font-weight:600;
   cursor:pointer;
-  transition:var(--transition);
+  transition:all .25s ease;
   margin-top:20px;
   display:flex;
   align-items:center;
   justify-content:center;
   gap:10px;
 }
+
 .department-btn:hover{
+  background:#2563eb;
   transform:translateY(-2px);
-  box-shadow:0 10px 25px rgba(52,152,219,.4);
 }
 
 /* Stats */
@@ -770,42 +787,7 @@ footer{
   .notification{right:15px;left:15px;}
 }
 
-/*//////////////////////bashe jwankare
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Segoe UI','Tahoma','Geneva','Verdana','Arial',sans-serif;
-}
 
-:root{
-  --primary-color:#2c3e50;
-  --secondary-color:#3498db;
-  --accent-color:#9b59b6;
-  --dark-color:#2c003e;
-  --light-color:#f8f9fa;
-  --success-color:#27ae60;
-  --warning-color:#f39c12;
-  --danger-color:#e74c3c;
-  --text-color:#333;
-  --gray-color:#95a5a6;
-  --shadow:0 8px 30px rgba(0,0,0,.12);
-  --transition:all .3s cubic-bezier(.25,.46,.45,.94);
-}
-
-body{
-  background:linear-gradient(135deg,#f5f7fa 0%,#e4e8f0 100%);
-  color:var(--text-color);
-  line-height:1.7;
-  min-height:100vh;
-}
-
-.container{
-  width:90%;
-  max-width:1400px;
-  margin:0 auto;
-  padding:0 20px;
-}
 
 /* Header */
 header{
@@ -1596,4 +1578,342 @@ footer{
   font-weight: 700;
   font-size: 12px;
 }
+/* Scroll reveal */
+.reveal{
+  opacity:0;
+  transform:translateY(28px);
+  transition:opacity .6s ease, transform .6s ease;
+  will-change: opacity, transform;
+}
+.reveal.active{
+  opacity:1;
+  transform:translateY(0);
+}
+/* Hero Section */
+.hero{
+  position:relative;
+  height:85vh;
+  min-height:520px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  background:
+    url("https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=80")
+    center/cover no-repeat;
+  color:#fff;
+  overflow:hidden;
+}
 
+.hero-overlay{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(
+    135deg,
+    rgba(2,6,23,.85),
+    rgba(59,130,246,.55)
+  );
+}
+
+.hero-content{
+  position:relative;
+  z-index:2;
+  max-width:800px;
+  padding:20px;
+  animation:fadeUp 1s ease;
+}
+
+.hero-content h1{
+  font-size:48px;
+  font-weight:800;
+  margin-bottom:20px;
+}
+
+.hero-content p{
+  font-size:20px;
+  opacity:.9;
+  margin-bottom:30px;
+}
+
+.hero-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:14px 32px;
+  background:#3b82f6;
+  color:#fff;
+  border-radius:40px;
+  font-weight:600;
+  text-decoration:none;
+  transition:.3s;
+}
+
+.hero-btn:hover{
+  background:#2563eb;
+  transform:translateY(-3px);
+  box-shadow:0 15px 40px rgba(37,99,235,.4);
+}
+
+@keyframes fadeUp{
+  from{
+    opacity:0;
+    transform:translateY(40px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+/* =========================
+   TRANSPARENT HEADER (SAFE OVERRIDE)
+   Paste at the VERY BOTTOM of style.css
+   ========================= */
+
+/* Make the header itself transparent and floating */
+header{
+  background: transparent !important;
+  box-shadow: none !important;
+  border-bottom: none !important;
+  position: fixed !important;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+/* Keep header content aligned and not touching edges */
+header .header-container{
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+/* Give the NAV a glass “pill” background like your example */
+nav ul{
+  background: rgba(20,30,60,0.55) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 999px !important;
+  padding: 10px 18px !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+}
+
+/* Slightly tighter links inside the pill */
+nav ul li a{
+  padding: 10px 16px !important;
+  border-radius: 999px !important;
+}
+
+/* Make the logo text readable on the hero image */
+.logo-text span{
+  text-shadow: 0 2px 12px rgba(0,0,0,0.35);
+}
+
+/* Ensure hero isn't hidden behind the fixed header */
+.hero{
+  padding-top: 90px;
+}
+
+/* If you previously added main.container margin-top, neutralize it safely */
+main.container{
+  margin-top: 0 !important;
+}
+/* ===== REMOVE HEADER BLUR PANEL ===== */
+
+/* Remove any background from header container */
+header,
+header .header-container{
+  background: transparent !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Keep only the menu pill visible */
+.logo,
+.user-profile{
+  background: transparent !important;
+  box-shadow: none !important;
+}
+/* ===== HEADER SCROLL EFFECT ===== */
+
+header.scrolled{
+  background: rgba(20,30,60,0.9) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+/* Mobile Menu */
+@media (max-width: 768px) {
+  nav {
+    position: fixed;
+    top: 70px;
+    right: 0;
+    width: 80%;
+    height: calc(100vh - 70px);
+    background: #0a1a33;
+    transform: translateX(100%);
+    transition: 0.3s ease;
+    border-radius: 20px 0 0 20px;
+    padding: 30px 20px;
+  }
+
+  nav.active {
+    transform: translateX(0);
+  }
+  /* ===== NAV BASE ===== */
+.main-nav .nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Keep submenu hidden by default */
+.has-submenu .submenu {
+  display: none;
+}
+
+/* ===== DESKTOP (submenu as dropdown) ===== */
+@media (min-width: 769px) {
+  .main-nav .nav-list {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .has-submenu {
+    position: relative;
+  }
+
+  .has-submenu .submenu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 220px;
+    padding: 10px;
+    border-radius: 14px;
+    background: rgba(10, 20, 40, 0.92);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 18px 45px rgba(0,0,0,0.35);
+    display: none;
+    z-index: 9999;
+  }
+
+  /* show submenu on hover (desktop) */
+  .has-submenu:hover .submenu {
+    display: block;
+  }
+
+  .has-submenu .submenu a {
+    display: block;
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .has-submenu .submenu a:hover {
+    background: rgba(255,255,255,0.08);
+  }
+
+  .dept-toggle .caret {
+    margin-inline-start: 8px;
+    font-size: 12px;
+    opacity: 0.8;
+  }
+}
+
+/* ===== MOBILE (menu overlay + submenu expands inside) ===== */
+@media (max-width: 768px) {
+  /* your menu-open state controls visibility */
+  body.menu-open .main-nav {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* hide nav when closed */
+  .main-nav {
+    position: fixed;
+    top: 70px; /* adjust if your header height differs */
+    right: 12px;
+    left: 12px;
+    padding: 18px 14px;
+    border-radius: 22px;
+    background: rgba(10, 20, 40, 0.92);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 18px 45px rgba(0,0,0,0.35);
+    transform: translateY(-8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.25s ease;
+    z-index: 9999;
+  }
+
+  .main-nav .nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .main-nav a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+  
+
+  /* mobile submenu appears INSIDE list */
+  .has-submenu.submenu-open .submenu {
+    display: block;
+    margin-top: 8px;
+    padding: 8px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.06);
+  }
+
+  .has-submenu .submenu a {
+    padding: 10px 12px;
+  }
+
+  /* rotate caret when open */
+  .has-submenu.submenu-open .caret {
+    transform: rotate(180deg);
+    transition: 0.2s ease;
+  }
+}
+
+
+  nav ul {
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+/* ===== FIX: remove department circle on mobile ===== */
+@media (max-width: 768px) {
+  .submenu {
+    position: static;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    margin-top: 10px;
+  }
+
+  .submenu li a {
+    padding: 10px 0;
+    background: transparent;
+    border-radius: 0;
+  }
+}
+/* ===== Desktop header fix ===== */
+@media (min-width: 769px) {
+  .submenu {
+    display: none !important;
+  }
+
+  .has-submenu .caret {
+    display: none;
+  }
+
+  .nav-list {
+    align-items: center;
+  }
+}
