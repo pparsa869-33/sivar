@@ -1,22 +1,49 @@
-// Firebase Configuration
+// ===============================
+// FIREBASE CONFIGURATION
+// ===============================
 const firebaseConfig = {
   apiKey: "AIzaSyCHdHnK0Lz8TITlrkWYgSdV8AmFZU3F7_0",
   authDomain: "sivarvocationalhighschoo-513aa.firebaseapp.com",
   projectId: "sivarvocationalhighschoo-513aa",
   storageBucket: "sivarvocationalhighschoo-513aa.firebasestorage.app",
   messagingSenderId: "498314470915",
-  appId: "1:498314470915:web:1d75488d20372f81e71036",
+  appId: "1:498314470915:web:1d75488d20372f81e71036"
 };
 
-// Init Firebase (Compat)
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-const storage = firebase.storage();
+// ===============================
+// FIREBASE VARIABLES
+// ===============================
+let auth = null;
+let db = null;
+let storage = null;
+
+// ===============================
+// INIT FIREBASE
+// ===============================
+if (typeof firebase !== "undefined") {
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db = firebase.firestore();
+  storage = firebase.storage();
+  console.log("FIRESTORE CONNECTED");
+}
+
+
+// PROTECT ADMIN PAGE
+if (window.location.pathname.includes("admin.html")) {
+    const isLoggedIn = localStorage.getItem("isAdminLoggedIn");
+
+    if (isLoggedIn !== "true") {
+        window.location.href = "login.html";
+    }
+}
+
+
+
 
 // DOM Elements
 const authModal = document.getElementById("authModal");
-const loginForm = document.getElementById("loginForm");
+
 const registerForm = document.getElementById("registerForm");
 const userProfile = document.getElementById("userProfile");
 const loginButton = document.getElementById("loginButton");
@@ -492,9 +519,14 @@ function initializeSmoothScroll() {
   });
 
   // highlight current section while scrolling
-  const sections = links
-    .map((a) => document.querySelector(a.getAttribute("href")))
+const sections = links
+    .map(a => {
+        const href = a.getAttribute("href");
+        if (!href || href === "#" || !href.startsWith("#")) return null;
+        return document.querySelector(href);
+    })
     .filter(Boolean);
+
 
   const obs = new IntersectionObserver(
     (entries) => {
@@ -666,3 +698,259 @@ document.querySelectorAll("nav a").forEach(link => {
     nav.classList.remove("active");
   });
 });
+// Header scroll effect
+window.addEventListener("scroll", function () {
+  const header = document.querySelector("header");
+  if (window.scrollY > 50) {
+    header.classList.add("scrolled");
+  } else {
+    header.classList.remove("scrolled");
+  }
+});
+// Load announcements on public site
+function loadPublicAnnouncements() {
+  const container = document.getElementById("announcementPublicList");
+  if (!container) return;
+
+  db.collection("announcements")
+    .orderBy("createdAt", "desc")
+    .onSnapshot((snapshot) => {
+      container.innerHTML = "";
+
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+
+        const item = document.createElement("div");
+        item.className = "announcement-item";
+        item.textContent = data.text;
+
+        container.appendChild(item);
+      });
+    });
+}
+
+// Start loading on page load
+loadPublicAnnouncements();
+// Load announcements on public site
+function loadPublicAnnouncements() {
+  const container = document.getElementById("announcementPublicList");
+  if (!container) return;
+
+  db.collection("announcements")
+    .orderBy("createdAt", "desc")
+    .onSnapshot((snapshot) => {
+      container.innerHTML = "";
+
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+
+        const item = document.createElement("div");
+        item.className = "announcement-item";
+
+        item.innerHTML = `
+          <p>${data.text || ""}</p>
+          ${
+            data.imageUrl
+              ? `<img src="${data.imageUrl}" class="announcement-img" />`
+              : ""
+          }
+        `;
+
+        container.appendChild(item);
+      });
+    });
+}
+
+// start loading announcements
+loadPublicAnnouncements();
+// Get stored announcements or empty array
+let announcements = JSON.parse(localStorage.getItem("announcements")) || [];
+
+// ADMIN: Add announcement
+const form = document.getElementById("announcementForm");
+
+if (form) {
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const title = document.getElementById("title").value;
+        const message = document.getElementById("message").value;
+        const image = document.getElementById("image").value;
+
+        const newAnnouncement = {
+            title,
+            message,
+            image,
+            date: new Date().toLocaleDateString()
+        };
+
+        announcements.unshift(newAnnouncement);
+
+        localStorage.setItem("announcements", JSON.stringify(announcements));
+
+        alert("Announcement posted!");
+        form.reset();
+    });
+}
+
+// HOMEPAGE: Display announcements
+const list = document.getElementById("announcementList");
+
+if (list) {
+    announcements.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "announcement-card";
+
+        card.innerHTML = `
+            ${item.image ? `<img src="${item.image}" alt="Announcement Image">` : ""}
+            <h3>${item.title}</h3>
+            <p>${item.message}</p>
+            <span class="date">${item.date}</span>
+        `;
+
+        list.appendChild(card);
+    });
+}
+// LOGIN LOGIC
+const loginForm = document.getElementById("loginForm");
+
+if (loginForm) {
+    loginForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const password = document.getElementById("password").value;
+        const correctPassword = "Parsa2006"; // change this later
+
+        if (password === correctPassword) {
+            localStorage.setItem("isAdminLoggedIn", "true");
+            window.location.href = "admin.html";
+        } else {
+            document.getElementById("error").textContent = "Wrong password";
+        }
+    });
+}
+function logout() {
+    localStorage.removeItem("isAdminLoggedIn");
+    window.location.href = "login.html";
+}
+// Logout button
+const logoutBtn = document.getElementById("logoutAdmin");
+
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", function () {
+        localStorage.removeItem("isAdminLoggedIn");
+        window.location.href = "login.html";
+    });
+}
+// ===============================
+// POST ANNOUNCEMENT (ADMIN)
+// ===============================
+const postBtn = document.getElementById("postAnnouncement");
+
+if (postBtn && typeof db !== "undefined") {
+    postBtn.addEventListener("click", async () => {
+        const text = document.getElementById("announcementText").value;
+
+        if (!text) {
+            alert("Write something first.");
+            return;
+        }
+
+        try {
+            await db.collection("announcements").add({
+                text: text,
+                date: new Date()
+            });
+
+            alert("Announcement posted!");
+            document.getElementById("announcementText").value = "";
+        } catch (err) {
+            console.error(err);
+            alert("Error posting announcement.");
+        }
+    });
+}
+// ===============================
+// LOAD ANNOUNCEMENTS (HOMEPAGE)
+// ===============================
+const announcementList = document.getElementById("announcementList");
+
+if (announcementList && db) {
+    db.collection("announcements")
+        .orderBy("date", "desc")
+        .onSnapshot(snapshot => {
+            announcementList.innerHTML = "";
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+
+                const card = document.createElement("div");
+                card.className = "announcement-card";
+
+                // If we're on admin page, show delete button
+                const isAdminPage = window.location.pathname.includes("admin.html");
+
+                card.innerHTML = `
+                    <p>${data.text}</p>
+                    ${isAdminPage ? `<button class="delete-btn" data-id="${doc.id}">Delete</button>` : ""}
+                `;
+
+                announcementList.appendChild(card);
+            });
+
+            // Attach delete events
+            const deleteButtons = document.querySelectorAll(".delete-btn");
+
+            deleteButtons.forEach(btn => {
+                btn.addEventListener("click", async () => {
+                    const id = btn.getAttribute("data-id");
+
+                    if (confirm("Delete this announcement?")) {
+                        await db.collection("announcements").doc(id).delete();
+                    }
+                });
+            });
+        });
+}
+// Scroll animations
+function initScrollAnimations() {
+    const elements = document.querySelectorAll(".fade-in");
+
+    function showOnScroll() {
+        const triggerBottom = window.innerHeight * 0.85;
+
+        elements.forEach(el => {
+            const top = el.getBoundingClientRect().top;
+
+            if (top < triggerBottom) {
+                el.classList.add("visible");
+            }
+        });
+    }
+
+    window.addEventListener("scroll", showOnScroll);
+    showOnScroll();
+}
+
+initScrollAnimations();
+function toggleMenu() {
+  const nav = document.getElementById("mainNav");
+  nav.classList.toggle("active");
+}
+// Reveal animation on scroll
+const sections = document.querySelectorAll('.section');
+
+const revealOnScroll = () => {
+  const trigger = window.innerHeight * 0.85;
+
+  sections.forEach(section => {
+    const top = section.getBoundingClientRect().top;
+    if (top < trigger) {
+      section.classList.add('show');
+    }
+  });
+};
+
+window.addEventListener('scroll', revealOnScroll);
+window.addEventListener('load', revealOnScroll);
+
