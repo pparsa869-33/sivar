@@ -139,14 +139,13 @@
     <div class="container header-container">
 
   <div class="logo">
-    <div class="logo-icon">
-      <i class="fas fa-graduation-cap"></i>
-    </div>
-    <div class="logo-text">
-      ئامادەی پیشەی سیڤەر
-      <span>پەروەردەی شارەزایانەی داهاتوو</span>
-    </div>
+  <img src="logo.png" class="logo-img" alt="School Logo">
+  <div class="logo-text">
+    ئامادەی پیشەی سیڤەر
+    <span>پەروەردەی شارەزایانەی داهاتوو</span>
   </div>
+</div>
+
 
   <!-- Mobile Menu Button (moved outside logo) -->
   <button class="menu-toggle" onclick="toggleMenu()">
@@ -209,9 +208,48 @@
     </a>
   </div>
 </section>
+<section class="principal-section">
+  <div class="container principal-wrap">
 
+    <div class="principal-image">
+  <img src="assets/images/Staff/principal.png" alt="بەڕێوەبەر" class="principal-img">
+    </div>
+
+    <div class="principal-content">
+      <h2 class="section-title">
+        <i class="fas fa-user-tie"></i>
+        پەیامی بەڕێوەبەر
+      </h2>
+
+      <p>
+        بەخێرهاتن بۆ ئامادەی پیشەی سیڤەر. ئامانجی ئێمە تەنها فێربوونی زانیاری نییە،
+        بەڵکو دروستکردنی کادیرێکی توانا و سەربەخۆیە کە بتوانێت لە بازاڕی کاردا
+        بە شێوەیەکی کاریگەر بەشداری بکات.
+      </p>
+
+      <p>
+        هەوڵ دەدەین ژینگەیەکی ئەکادیمی سەردەمی و پڕ لە پەرەپێدان بۆ خوێندکاران
+        دابین بکەین، بۆ ئەوەی داهاتوویەکی سەقامگیر بۆ خۆیان دروست بکەن.
+      </p>
+
+      <div class="principal-name">
+        — بەڕێوەبەری گشتی
+      </div>
+    </div>
+
+  </div>
+</section>
   <!-- Main Content -->
   <main class="container">
+    <section id="announcements" class="section">
+  <h2 class="section-title">
+    <i class="fas fa-bullhorn"></i>
+    ڕاگەیاندن
+  </h2>
+
+  <div id="announcementPublicList"></div>
+</section>
+
     <!-- Welcome Section -->
     <section id="home" class="section">
       <h2 class="section-title">
@@ -308,7 +346,90 @@
         </div>
       </div>
     </section>
+    <section id="news" class="section">
+  <h2 class="section-title">
+    <i class="fas fa-newspaper"></i>
+    دواهەمین هەواڵ و چالاکییەکان
+  </h2>
 
+  <div class="news-grid">
+
+    <div class="news-card">
+      <img src="https://images.unsplash.com/photo-1523580494863-6f3031224c94" alt="News">
+      <div class="news-content">
+        <div class="news-date">١٠ی ئەیلوول ٢٠٢٦</div>
+        <h3>چالاکییەکی تایبەت بۆ خوێندکاران</h3>
+        <p>چالاکییەکی نوێ لە پەیمانگا بە مەبەستی پەرەپێدانی توانا پیشەییەکان.</p>
+        <a href="#" class="news-btn">زیاتر بخوێنەوە</a>
+      </div>
+    </div>
+
+    <div class="news-card">
+      <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7" alt="News">
+      <div class="news-content">
+        <div class="news-date">٥ی ئەیلوول ٢٠٢٦</div>
+        <h3>ڕاهێنان لەگەڵ کۆمپانیایەکی تەکنەلۆژیا</h3>
+        <p>خوێندکارانمان بەشداری ڕاهێنانێکی تایبەتیان کرد بۆ ئامادەبوون بۆ بازاڕی کار.</p>
+        <a href="#" class="news-btn">زیاتر بخوێنەوە</a>
+      </div>
+    </div>
+
+    <div class="news-card">
+      <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644" alt="News">
+      <div class="news-content">
+        <div class="news-date">١ی ئەیلوول ٢٠٢٦</div>
+        <h3>دەستپێکردنی ساڵی خوێندن</h3>
+        <p>بە خۆشحاڵی ساڵی خوێندنی نوێمان دەست پێ کرد بە ئامادەبوونی خوێندکاران.</p>
+        <a href="#" class="news-btn">زیاتر بخوێنەوە</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+<section class="admissions-section">
+  <div class="container admissions-wrap">
+
+    <div class="admissions-content">
+      <h2 class="section-title">
+        <i class="fas fa-user-graduate"></i>
+        وەرگرتنی خوێندکاران
+      </h2>
+
+      <p>
+        ئەگەر دەتەوێت ببیتە بەشێک لە ئامادەی پیشەی سیڤەر،
+        ئێستا کاتی ئەوەیە داواکاری بنێریت و داهاتووی خۆت دەست پێ بکەیت.
+      </p>
+
+      <ul class="admission-points">
+        <li>✔️ پێویستی بە بڕوانامەی پێشوو</li>
+        <li>✔️ تاقیکردنەوەی وەرگرتن</li>
+        <li>✔️ گفتوگۆی تایبەت</li>
+      </ul>
+
+      <a href="admissions.html" class="admission-btn">
+        داواکاری ئێستا بکە
+      </a>
+    </div>
+
+    <div class="admissions-box">
+      <div class="admission-highlight">
+        <h3>دەستپێکردن:</h3>
+        <p>١ی تشرینی دووەم ٢٠٢٦</p>
+      </div>
+
+      <div class="admission-highlight">
+        <h3>کۆتایی:</h3>
+        <p>٣٠ی تشرینی دووەم ٢٠٢٦</p>
+      </div>
+
+      <div class="admission-highlight">
+        <h3>ژمارەی قبوڵکراوان:</h3>
+        <p>١٢٠ خوێندکار</p>
+      </div>
+    </div>
+
+  </div>
+</section>
     <!-- Stats Section -->
     <section id="stats" class="section">
       <h2 class="section-title">
@@ -431,14 +552,21 @@
 
       <div class="about-text">
         <p>
-          <strong>ئامادەی پیشەی سیڤەر</strong> لە ساڵی ٢٠١٠ دامەزراوە و لەو کاتەوە بووەتە یەکێک لە پێشەنگەکانی پەروەردەی
-          پیشەیی لە هەرێمی کوردستان.
-        </p>
+      ئامادەیی پیشەیی سیڤەر : لە ساڵی 2025 دامەزراوە، وەک دامەزراوەیەکی ئەکادیمی
+      کە ئامانجمان پەرەپێدانی قوتابیانە، بە بنەمای زانستی و پێویستییە ڕاستەقینەکانی
+      بازاڕی کار. پڕۆگرامەکانمان لەسەر تێکەڵکردنی زانیاری ئەکادیمی،
+      توانا پیشەیی، بۆ دروستکردنی کەسایەتییەکی پیشەیی سەقامگیر و توانا‌دار.
+    </p>
 
-        <p>
-          ئێمە باوەڕمان وایە کە پەروەردەی کوالیتی باش مەرجی سەرەکییە بۆ دروستکردنی کۆمەڵگایەکی پێشکەوتوو. بۆیە هەموو
-          هەوڵێک دەدەین بۆ دابینکردنی باشترین مامۆستایان و سەرچاوەکان بۆ خوێندکارانمان.
-        </p>
+    <p>
+      لە ئامادەیی پیشەیی سیڤەر تەنها فێربوونی زانیاری نییە، بەڵکو پڕۆسەیەکی
+      بەردەوامە کە گەشەپێدانی بیرکردنەوەی ستراتیژی، ئەخلاقی کار و توانای
+      گونجاندن لەگەڵ گۆڕانکارییەکانی ژینگەی کار لەخۆ دەگرێت. بۆیە هەوڵ دەدەین
+      تاکەکان ئامادە بکەین بۆ ئەوەی بتوانن بە شێوەیەکی کارامە و بەرپرسیارانە
+      بچنە ناو جیهانی کار و بەشداری کاریگەری لە پەرەپێدانی دامەزراوەکان و
+      کۆمەڵگادا بکەن.
+    </p>
+
 
         <div class="about-highlights">
           <h3><i class="fas fa-star"></i> پێشکەوتنەکانی ئێمە</h3>
@@ -463,6 +591,55 @@
       </div>
     </section>
   </main>
+  <!-- Goals Section -->
+<section class="goals">
+  <div class="container">
+
+    <h2>ئامانجی ئامادەیی پیشەیی سیڤەر</h2>
+
+    <div class="goals-grid">
+
+      <div class="goal-card">
+        <i class="fas fa-bullseye"></i>
+        <span>هاندان بۆ دیاریکردنی ئامانجی پیشەیی</span>
+      </div>
+
+      <div class="goal-card">
+        <i class="fas fa-map"></i>
+        <span>ڕێنمایی لە پلاندانان و هەنگاوەکان</span>
+      </div>
+
+      <div class="goal-card">
+        <i class="fas fa-briefcase"></i>
+        <span>ئامادەبوون بۆ گونجاندن لەگەڵ بازاڕی کار</span>
+      </div>
+
+      <div class="goal-card">
+        <i class="fas fa-smile"></i>
+        <span>دروستکردنی هەڵوێستی پۆزەتیڤ</span>
+      </div>
+
+      <div class="goal-card">
+        <i class="fas fa-users"></i>
+        <span>بەشداری کارا لە تیم و کۆمەڵگا</span>
+      </div>
+
+      <div class="goal-card">
+        <i class="fas fa-shield-alt"></i>
+        <span>فێربوونی بەرپرسیارێتی</span>
+      </div>
+
+      <div class="goal-card">
+        <i class="fas fa-rocket"></i>
+        <span>داهاتوویەکی سەقامگیر و توانا‌دار</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+
 
   <!-- Footer -->
   <footer>
