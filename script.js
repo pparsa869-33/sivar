@@ -1,6 +1,3 @@
-// ===============================
-// FIREBASE CONFIGURATION
-// ===============================
 const firebaseConfig = {
   apiKey: "AIzaSyCHdHnK0Lz8TITlrkWYgSdV8AmFZU3F7_0",
   authDomain: "sivarvocationalhighschoo-513aa.firebaseapp.com",
@@ -10,947 +7,3084 @@ const firebaseConfig = {
   appId: "1:498314470915:web:1d75488d20372f81e71036"
 };
 
-// ===============================
-// FIREBASE VARIABLES
-// ===============================
 let auth = null;
 let db = null;
 let storage = null;
+let currentDashboardRole = null;
+let departmentLessonsUnsubscribe = null;
+let publicAnnouncementsUnsubscribe = null;
+let publicCommentsUnsubscribe = null;
+let adminLessonsUnsubscribe = null;
+let adminAnnouncementsUnsubscribe = null;
+let adminCommentsUnsubscribe = null;
 
-// ===============================
-// INIT FIREBASE
-// ===============================
 if (typeof firebase !== "undefined") {
-  firebase.initializeApp(firebaseConfig);
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
   auth = firebase.auth();
   db = firebase.firestore();
-  storage = firebase.storage();
-  console.log("FIRESTORE CONNECTED");
+  storage = typeof firebase.storage === "function" ? firebase.storage() : null;
 }
 
-
-// PROTECT ADMIN PAGE
-if (window.location.pathname.includes("admin.html")) {
-    const isLoggedIn = localStorage.getItem("isAdminLoggedIn");
-
-    if (isLoggedIn !== "true") {
-        window.location.href = "login.html";
-    }
+function qs(selector, scope = document) {
+  return scope.querySelector(selector);
 }
 
+function qsa(selector, scope = document) {
+  return Array.from(scope.querySelectorAll(selector));
+}
 
+function escapeHtml(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
+function safeText(value) {
+  return String(value == null ? "" : value).replace(/[<>]/g, "");
+}
 
-// DOM Elements
-const authModal = document.getElementById("authModal");
+function sanitizeFilename(name) {
+  return String(name || "file")
+    .toLowerCase()
+    .replace(/[^a-z0-9.\-_]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
 
-const registerForm = document.getElementById("registerForm");
-const userProfile = document.getElementById("userProfile");
-const loginButton = document.getElementById("loginButton");
-const commentsList = document.getElementById("commentsList");
-
-// Helpers
-function qs(sel) { return document.querySelector(sel); }
-function qsa(sel) { return document.querySelectorAll(sel); }
-
-// Notification (single + consistent)
 function showNotification(message, type = "success") {
-  const existing = document.querySelector(".notification");
+  const existing = qs(".notification");
   if (existing) existing.remove();
 
-  const notification = document.createElement("div");
-  notification.className = `notification ${type}`;
-  notification.style.animation = "slideInRight 0.3s ease";
-  notification.innerHTML = `
-    <i class="fas fa-${
-      type === "success" ? "check-circle" :
-      type === "error" ? "exclamation-circle" : "info-circle"
+  const box = document.createElement("div");
+  box.className = `notification ${type}`;
+  box.innerHTML = `
+    <i class="fas ${
+      type === "error"
+        ? "fa-circle-exclamation"
+        : type === "warning"
+        ? "fa-triangle-exclamation"
+        : "fa-circle-check"
     }"></i>
-    <span>${message}</span>
+    <span>${escapeHtml(message)}</span>
   `;
 
-  document.body.appendChild(notification);
+  document.body.appendChild(box);
 
   setTimeout(() => {
-    notification.style.animation = "slideInRight 0.3s ease reverse";
-    setTimeout(() => notification.remove(), 250);
-  }, 2400);
+    box.style.opacity = "0";
+    box.style.transform = "translateX(16px)";
+    setTimeout(() => box.remove(), 220);
+  }, 2600);
 }
 
-// Password toggle
-function togglePassword(inputId) {
-  const input = document.getElementById(inputId);
-  const icon = input.parentElement.querySelector(".password-toggle i");
+function formatRelativeTime(date) {
+  if (!date) return "";
 
-  if (input.type === "password") {
-    input.type = "text";
-    icon.className = "fas fa-eye-slash";
-  } else {
-    input.type = "password";
-    icon.className = "fas fa-eye";
-  }
-}
-
-// Tabs
-function switchAuthTab(tab, el) {
-  qsa(".auth-tab").forEach((t) => t.classList.remove("active"));
-  if (el) el.classList.add("active");
-
-  if (tab === "login") {
-    loginForm.classList.add("active");
-    registerForm.classList.remove("active");
-  } else {
-    loginForm.classList.remove("active");
-    registerForm.classList.add("active");
-  }
-}
-
-// Modal
-function openAuthModal() {
-  authModal.style.display = "flex";
-  authModal.setAttribute("aria-hidden", "false");
-  const firstTab = qsa(".auth-tab")[0];
-  switchAuthTab("login", firstTab);
-}
-
-function closeAuthModal() {
-  authModal.style.display = "none";
-  authModal.setAttribute("aria-hidden", "true");
-  document.getElementById("loginFormElement")?.reset();
-  document.getElementById("registerFormElement")?.reset();
-}
-
-// Register
-async function register(event) {
-  event.preventDefault();
-
-  const name = document.getElementById("registerName").value.trim();
-  const email = document.getElementById("registerEmail").value.trim();
-  const password = document.getElementById("registerPassword").value;
-  const confirmPassword = document.getElementById("registerConfirmPassword").value;
-
-  if (password !== confirmPassword) {
-    showNotification("وشەی نهێنیەکان جیاوازن!", "error");
-    return;
-  }
-  if (password.length < 6) {
-    showNotification("وشەی نهێنی دەبێت لانی کەم ٦ نووسە بێت!", "error");
-    return;
-  }
-
-  const registerBtn = document.getElementById("registerBtn");
-  const originalText = registerBtn.innerHTML;
-  registerBtn.innerHTML = '<div class="loading"></div>';
-
-  try {
-    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-    await userCredential.user.updateProfile({ displayName: name });
-
-    await db.collection("users").doc(userCredential.user.uid).set({
-      name,
-      email,
-      role: "student",
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
-
-    showNotification("بە سەرکەوتوویی تۆمارت کرد!", "success");
-    closeAuthModal();
-  } catch (error) {
-    console.error("Registration error:", error);
-
-    let errorMessage = "هەڵەیەک ڕوویدا!";
-    if (error.code === "auth/email-already-in-use") errorMessage = "ئەم ئیمەیڵە پێشتر تۆمار کراوە!";
-    else if (error.code === "auth/invalid-email") errorMessage = "ئیمەیڵەکە نادروستە!";
-    else if (error.code === "auth/weak-password") errorMessage = "وشەی نهێنیەکە زۆر لاوازە!";
-
-    showNotification(errorMessage, "error");
-  } finally {
-    registerBtn.innerHTML = originalText;
-  }
-}
-
-// Login
-async function login(event) {
-  event.preventDefault();
-
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value;
-
-  const loginBtn = document.getElementById("loginBtn");
-  const originalText = loginBtn.innerHTML;
-  loginBtn.innerHTML = '<div class="loading"></div>';
-
-  try {
-    await auth.signInWithEmailAndPassword(email, password);
-    showNotification("بە سەرکەوتوویی چوویتە ژوورەوە!", "success");
-    closeAuthModal();
-  } catch (error) {
-    console.error("Login error:", error);
-
-    let errorMessage = "هەڵەیەک ڕوویدا!";
-    if (
-      error.code === "auth/user-not-found" ||
-      error.code === "auth/wrong-password" ||
-      error.code === "auth/invalid-login-credentials"
-    ) errorMessage = "ئیمەیڵ یان وشەی نهێنی هەڵەیە!";
-    else if (error.code === "auth/invalid-email") errorMessage = "ئیمەیڵەکە نادروستە!";
-    else if (error.code === "auth/user-disabled") errorMessage = "ئەکاونتەکەت داخراوە!";
-
-    showNotification(errorMessage, "error");
-  } finally {
-    loginBtn.innerHTML = originalText;
-  }
-}
-
-// Google login
-async function loginWithGoogle() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  try {
-    await auth.signInWithPopup(provider);
-    showNotification("بە سەرکەوتوویی چوویتە ژوورەوە!", "success");
-    closeAuthModal();
-  } catch (error) {
-    console.error("Google login error:", error);
-    showNotification("هەڵە لە چوونەژورەوە بە گووگڵ!", "error");
-  }
-}
-
-// Facebook login (placeholder)
-function loginWithFacebook() {
-  showNotification("لە وەشانی داھاتوودا بەردەست دەبێت!", "warning");
-}
-
-// Logout
-async function logout() {
-  try {
-    await auth.signOut();
-    showNotification("بە سەرکەوتوویی چووتە دەرەوە!", "success");
-    const userMenu = document.querySelector(".user-menu");
-    if (userMenu) userMenu.remove();
-  } catch (error) {
-    console.error("Logout error:", error);
-    showNotification("هەڵە لە چوونەدەرەوە!", "error");
-  }
-}
-
-// User menu
-function toggleUserMenu() {
-  const existingMenu = document.querySelector(".user-menu");
-  if (existingMenu) {
-    existingMenu.remove();
-    return;
-  }
-
-  const menu = document.createElement("div");
-  menu.className = "user-menu";
-  menu.innerHTML = `
-    <div style="padding: 20px; border-bottom: 1px solid #f0f0f0;">
-      <div style="font-weight: 600; color: var(--primary-color);">ئەکاونت</div>
-    </div>
-    <div style="padding: 0;">
-      <div class="user-menu-item" onclick="window.location.href='#profile'">
-        <i class="fas fa-user"></i>
-        <span>پڕۆفایل</span>
-      </div>
-      <div class="user-menu-item" onclick="window.location.href='#settings'">
-        <i class="fas fa-cog"></i>
-        <span>ڕێکخستنەکان</span>
-      </div>
-      <div class="user-menu-item" onclick="logout()" style="color: var(--danger-color);">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>چوونە دەرەوە</span>
-      </div>
-    </div>
-  `;
-
-  userProfile.appendChild(menu);
-
-  setTimeout(() => {
-    document.addEventListener("click", function closeMenu(e) {
-      if (!userProfile.contains(e.target)) {
-        menu.remove();
-        document.removeEventListener("click", closeMenu);
-      }
-    });
-  }, 10);
-}
-
-// Auth UI
-function updateUI() {
-  auth.onAuthStateChanged(async (user) => {
-    if (user) {
-      loginButton.style.display = "none";
-      userProfile.style.display = "flex";
-
-      try {
-        const userDoc = await db.collection("users").doc(user.uid).get();
-        const userData = userDoc.data();
-
-        document.getElementById("userDisplayName").textContent =
-          user.displayName || userData?.name || "بەکارهێنەر";
-        document.getElementById("userRole").textContent = userData?.role || "خوێندکار";
-
-        const userAvatar = document.getElementById("userAvatar");
-        if (user.photoURL) {
-          userAvatar.src = user.photoURL;
-        } else {
-          const displayName = user.displayName || userData?.name || "User";
-          userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=3498db&color=fff&size=150`;
-        }
-      } catch (error) {
-        console.error("Error loading user data:", error);
-      }
-    } else {
-      loginButton.style.display = "flex";
-      userProfile.style.display = "none";
-    }
-
-    loadComments();
-  });
-}
-
-// Comments
-async function addComment(event) {
-  event.preventDefault();
-
-  const user = auth.currentUser;
-  if (!user) {
-    showNotification("تکایە یەکەم چوونەژورەوە بکە!", "error");
-    openAuthModal();
-    return;
-  }
-
-  const commentText = document.getElementById("commentText").value.trim();
-  if (!commentText) return showNotification("تکایە کۆمێنتێک بنووسە!", "error");
-  if (commentText.length < 3) return showNotification("کۆمێنتەکە دەبێت لانی کەم ٣ نووسە بێت!", "error");
-
-  const submitBtn = event.target.querySelector('button[type="submit"]');
-  const originalText = submitBtn.innerHTML;
-  submitBtn.innerHTML = '<div class="loading"></div>';
-
-  try {
-    const userDoc = await db.collection("users").doc(user.uid).get();
-    const userData = userDoc.data();
-
-    await db.collection("comments").add({
-      userId: user.uid,
-      userName: user.displayName || userData?.name || "بەکارهێنەرێکی نەناسراو",
-      userRole: userData?.role || "خوێندکار",
-      text: commentText,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      likes: 0,
-    });
-
-    document.getElementById("commentText").value = "";
-    showNotification("کۆمێنتەکەت بە سەرکەوتوویی نێردرا!", "success");
-    loadComments();
-  } catch (error) {
-    console.error("Error adding comment:", error);
-    showNotification("هەڵەیەک ڕوویدا لە ناردنی کۆمێنتەکە!", "error");
-  } finally {
-    submitBtn.innerHTML = originalText;
-  }
-}
-
-async function loadComments() {
-  try {
-    const snapshot = await db.collection("comments").orderBy("timestamp", "desc").limit(20).get();
-    commentsList.innerHTML = "";
-
-    if (snapshot.empty) {
-      commentsList.innerHTML = `
-        <div style="text-align: center; padding: 40px; color: var(--gray-color);">
-          <i class="fas fa-comment-slash" style="font-size: 48px; margin-bottom: 20px;"></i>
-          <p>هێشتا کۆمێنتێک نەنێردراوە!</p>
-          <p style="font-size: 14px; margin-top: 10px;">یەکەم کەس بە کۆمێنتەکەت!</p>
-        </div>
-      `;
-      return;
-    }
-
-    snapshot.forEach((doc) => {
-      const comment = doc.data();
-      const time = comment.timestamp?.toDate?.() || new Date();
-
-      const commentDiv = document.createElement("div");
-      commentDiv.className = "comment";
-      commentDiv.innerHTML = `
-        <div class="comment-header">
-          <div class="comment-user">
-            <img
-              src="https://ui-avatars.com/api/?name=${encodeURIComponent(comment.userName)}&background=3498db&color=fff&size=150"
-              alt="${comment.userName}"
-              class="comment-avatar"
-            />
-            <div class="comment-user-info">
-              <h4>${comment.userName}</h4>
-              <div style="display:flex; gap:10px; align-items:center;">
-                <span style="background:${comment.userRole === "teacher" ? "var(--secondary-color)" : "var(--gray-color)"}; color:#fff; padding:2px 8px; border-radius:10px; font-size:12px;">
-                  ${comment.userRole === "teacher" ? "مامۆستا" : "خوێندکار"}
-                </span>
-                <span class="comment-time">${formatTime(time)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="comment-body" style="font-size: 16px; line-height: 1.6; color: var(--text-color);">
-          ${String(comment.text || "").replace(/\n/g, "<br>")}
-        </div>
-      `;
-      commentsList.appendChild(commentDiv);
-    });
-  } catch (error) {
-    console.error("Error loading comments:", error);
-    commentsList.innerHTML = `
-      <div style="text-align: center; padding: 40px; color: var(--danger-color);">
-        <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 20px;"></i>
-        <p>هەڵە لە بارکردنی کۆمێنتەکان!</p>
-        <p style="font-size: 14px; margin-top: 10px;">تکایە دووبارە هەوڵ بدەرەوە</p>
-      </div>
-    `;
-  }
-}
-
-// Time format
-function formatTime(date) {
   const now = new Date();
-  const diff = now - date;
+  const diff = now.getTime() - date.getTime();
 
   if (diff < 60000) return "ئێستا";
   if (diff < 3600000) return `${Math.floor(diff / 60000)} خولەک لەمەوپێش`;
   if (diff < 86400000) return `${Math.floor(diff / 3600000)} کاتژمێر لەمەوپێش`;
   if (diff < 604800000) return `${Math.floor(diff / 86400000)} ڕۆژ لەمەوپێش`;
 
-  return date.toLocaleDateString("ar-KW");
+  return date.toLocaleDateString("ar-IQ");
 }
 
-// Departments -> real pages
+function renderEmptyState(message) {
+  return `
+    <div class="empty-state">
+      <i class="fas fa-inbox" style="font-size:34px; margin-bottom:12px; color:#2f7cf6;"></i>
+      <p>${escapeHtml(message)}</p>
+    </div>
+  `;
+}
+
+function openAuthModal() {
+  const modal = qs("#authModal");
+  if (!modal) return;
+  modal.style.display = "flex";
+  modal.setAttribute("aria-hidden", "false");
+  switchAuthTab("login");
+}
+
+function closeAuthModal() {
+  const modal = qs("#authModal");
+  if (!modal) return;
+  modal.style.display = "none";
+  modal.setAttribute("aria-hidden", "true");
+  qs("#loginFormElement")?.reset();
+  qs("#registerFormElement")?.reset();
+}
+
+function switchAuthTab(tabName) {
+  qsa(".auth-tab").forEach((tab) => {
+    const target = tab.getAttribute("data-tab");
+    tab.classList.toggle("active", target === tabName);
+  });
+
+  const loginPanel = qs("#loginForm");
+  const registerPanel = qs("#registerForm");
+
+  if (loginPanel) loginPanel.classList.toggle("active", tabName === "login");
+  if (registerPanel) registerPanel.classList.toggle("active", tabName === "register");
+}
+
+function togglePassword(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+
+  const toggle = input.parentElement?.querySelector(".password-toggle i");
+  const isHidden = input.type === "password";
+  input.type = isHidden ? "text" : "password";
+
+  if (toggle) {
+    toggle.className = isHidden ? "fas fa-eye-slash" : "fas fa-eye";
+  }
+}
+
+async function ensureUserProfile(user) {
+  if (!user || !db) return null;
+
+  const userRef = db.collection("users").doc(user.uid);
+  const snap = await userRef.get();
+
+  if (!snap.exists) {
+    const payload = {
+      name: user.displayName || user.email?.split("@")[0] || "بەکارهێنەر",
+      email: user.email || "",
+      role: "student",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    await userRef.set(payload, { merge: true });
+    return payload;
+  }
+
+  const data = snap.data() || {};
+
+  await userRef.set(
+    {
+      name: data.name || user.displayName || user.email?.split("@")[0] || "بەکارهێنەر",
+      email: data.email || user.email || ""
+    },
+    { merge: true }
+  );
+
+  return { ...data, email: data.email || user.email || "" };
+}
+
+async function register(event) {
+  event?.preventDefault();
+
+  if (!auth || !db) {
+    showNotification("Firebase ئامادە نییە.", "error");
+    return;
+  }
+
+  const name = qs("#registerName")?.value.trim();
+  const email = qs("#registerEmail")?.value.trim();
+  const password = qs("#registerPassword")?.value || "";
+  const confirm = qs("#registerConfirmPassword")?.value || "";
+
+  if (!name || !email || !password || !confirm) {
+    showNotification("تکایە هەموو خانەکان پڕ بکەوە.", "error");
+    return;
+  }
+
+  if (password !== confirm) {
+    showNotification("وشەی نهێنیەکان یەکسان نین.", "error");
+    return;
+  }
+
+  if (password.length < 6) {
+    showNotification("وشەی نهێنی دەبێت لانی کەم ٦ نووسە بێت.", "error");
+    return;
+  }
+
+  const btn = qs("#registerBtn");
+  const old = btn?.innerHTML;
+  if (btn) btn.innerHTML = '<span class="loading"></span>';
+
+  try {
+    const result = await auth.createUserWithEmailAndPassword(email, password);
+    await result.user.updateProfile({ displayName: name });
+
+    await db.collection("users").doc(result.user.uid).set({
+      name,
+      email,
+      role: "student",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    showNotification("تۆمارکردن بە سەرکەوتوویی ئەنجامدرا.");
+    closeAuthModal();
+  } catch (error) {
+    let message = "هەڵەیەک ڕوویدا.";
+
+    if (error.code === "auth/email-already-in-use") message = "ئەم ئیمەیڵە پێشتر تۆمار کراوە.";
+    if (error.code === "auth/invalid-email") message = "ئیمەیڵەکە دروست نییە.";
+    if (error.code === "auth/weak-password") message = "وشەی نهێنی زۆر لاوازە.";
+
+    showNotification(message, "error");
+  } finally {
+    if (btn && old) btn.innerHTML = old;
+  }
+}
+
+async function login(event) {
+  event?.preventDefault();
+
+  if (!auth) {
+    showNotification("Firebase ئامادە نییە.", "error");
+    return;
+  }
+
+  const email = qs("#loginEmail")?.value.trim();
+  const password = qs("#loginPassword")?.value || "";
+
+  if (!email || !password) {
+    showNotification("ئیمەیڵ و وشەی نهێنی پێویستن.", "error");
+    return;
+  }
+
+  const btn = qs("#loginBtn");
+  const old = btn?.innerHTML;
+  if (btn) btn.innerHTML = '<span class="loading"></span>';
+
+  try {
+    const result = await auth.signInWithEmailAndPassword(email, password);
+    await ensureUserProfile(result.user);
+    showNotification("بە سەرکەوتوویی چوویتە ژوورەوە.");
+    closeAuthModal();
+  } catch (error) {
+    let message = "ئیمەیڵ یان وشەی نهێنی هەڵەیە.";
+
+    if (error.code === "auth/invalid-email") message = "ئیمەیڵەکە دروست نییە.";
+    if (error.code === "auth/user-disabled") message = "ئەم ئەکاونتە داخراوە.";
+
+    showNotification(message, "error");
+  } finally {
+    if (btn && old) btn.innerHTML = old;
+  }
+}
+
+async function loginWithGoogle() {
+  if (!auth) {
+    showNotification("Firebase ئامادە نییە.", "error");
+    return;
+  }
+
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const result = await auth.signInWithPopup(provider);
+    await ensureUserProfile(result.user);
+    showNotification("بە سەرکەوتوویی چوویتە ژوورەوە.");
+    closeAuthModal();
+  } catch (error) {
+    showNotification("هەڵە لە چوونەژورەوە بە گووگڵ.", "error");
+  }
+}
+
+function loginWithFacebook() {
+  showNotification("ئەم بەشە دواتر زیاد دەکرێت.", "warning");
+}
+
+async function logout() {
+  if (!auth) return;
+
+  try {
+    await auth.signOut();
+    showNotification("بە سەرکەوتوویی چوویتە دەرەوە.");
+    const menu = qs(".user-menu");
+    if (menu) menu.remove();
+  } catch (error) {
+    showNotification("هەڵە لە چوونەدەرەوە.", "error");
+  }
+}
+
+async function getUserRole(uid) {
+  if (!uid || !db) return null;
+  const doc = await db.collection("users").doc(uid).get();
+  if (!doc.exists) return null;
+  return doc.data()?.role || null;
+}
+
+function getVisibleUserProfile() {
+  const candidates = [qs("#userProfile"), qs("#userProfileMobile")].filter(Boolean);
+  return candidates.find((el) => window.getComputedStyle(el).display !== "none") || candidates[0] || null;
+}
+
+function buildUserMenu() {
+  return `
+    <div class="user-menu-item" data-action="profile"><i class="fas fa-user"></i><span>پڕۆفایل</span></div>
+    <div class="user-menu-item" data-action="dashboard"><i class="fas fa-chalkboard-user"></i><span>داشبۆرد</span></div>
+    <div class="user-menu-item" data-action="logout" style="color:#c53a3a;"><i class="fas fa-right-from-bracket"></i><span>چوونە دەرەوە</span></div>
+  `;
+}
+
+function toggleUserMenu(targetElement = null) {
+  const host = targetElement || getVisibleUserProfile();
+  if (!host) return;
+
+  const existing = qs(".user-menu", host);
+  if (existing) {
+    existing.remove();
+    return;
+  }
+
+  qsa(".user-menu").forEach((menu) => menu.remove());
+
+  const menu = document.createElement("div");
+  menu.className = "user-menu";
+  menu.innerHTML = buildUserMenu();
+  host.appendChild(menu);
+
+  menu.addEventListener("click", async (event) => {
+    const item = event.target.closest("[data-action]");
+    if (!item) return;
+
+    const action = item.getAttribute("data-action");
+
+    if (action === "logout") {
+      await logout();
+      return;
+    }
+
+    if (action === "dashboard") {
+      window.location.href = "login.html";
+      return;
+    }
+
+    if (action === "profile") {
+      showNotification("پڕۆفایل دواتر زیاد دەکرێت.", "warning");
+    }
+  });
+
+  setTimeout(() => {
+    const handleOutside = (event) => {
+      if (!host.contains(event.target)) {
+        menu.remove();
+        document.removeEventListener("click", handleOutside);
+      }
+    };
+
+    document.addEventListener("click", handleOutside);
+  }, 0);
+}
+
+function applyUserDataToUI(user, userData) {
+  const desktopProfile = qs("#userProfile");
+  const mobileProfile = qs("#userProfileMobile");
+  const loginButton = qs("#loginButton");
+  const roleText = userData?.role === "admin" ? "ئەدمین" : userData?.role === "teacher" ? "مامۆستا" : "خوێندکار";
+  const nameText = user.displayName || userData?.name || "بەکارهێنەر";
+  const avatarUrl = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(nameText)}&background=1e4ea8&color=fff&size=160`;
+
+  if (desktopProfile) desktopProfile.style.display = user ? "flex" : "none";
+  if (mobileProfile) mobileProfile.style.display = user ? "flex" : "none";
+  if (loginButton) loginButton.style.display = user ? "none" : "inline-flex";
+
+  const desktopName = qs("#userDisplayName");
+  const desktopRole = qs("#userRole");
+  const desktopAvatar = qs("#userAvatar");
+  const mobileName = qs("#userDisplayNameMobile");
+  const mobileRole = qs("#userRoleMobile");
+  const mobileAvatar = qs("#userAvatarMobile");
+
+  if (desktopName) desktopName.textContent = nameText;
+  if (desktopRole) desktopRole.textContent = roleText;
+  if (desktopAvatar) desktopAvatar.src = avatarUrl;
+  if (mobileName) mobileName.textContent = nameText;
+  if (mobileRole) mobileRole.textContent = roleText;
+  if (mobileAvatar) mobileAvatar.src = avatarUrl;
+}
+
+function updateUI() {
+  if (!auth) return;
+
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      applyUserDataToUI(null, null);
+      if (isDashboardPage()) {
+        window.location.replace("login.html");
+      }
+      return;
+    }
+
+    try {
+      const userData = await ensureUserProfile(user);
+      applyUserDataToUI(user, userData);
+    } catch (error) {
+      applyUserDataToUI(user, null);
+    }
+  });
+}
+
+function isDashboardPage() {
+  return window.location.pathname.toLowerCase().endsWith("admin.html");
+}
+
+function isAccessLoginPage() {
+  return window.location.pathname.toLowerCase().endsWith("login.html");
+}
+
+function setDashboardRoleState(role) {
+  currentDashboardRole = role;
+  const roleBox = qs("#dashboardRoleBadge");
+  if (roleBox) {
+    roleBox.textContent = role === "admin" ? "ئەدمین" : role === "teacher" ? "مامۆستا" : "نەناسراو";
+  }
+
+  const adminOnlyBlocks = qsa("[data-admin-only]");
+  adminOnlyBlocks.forEach((block) => {
+    block.classList.toggle("hidden", role !== "admin");
+  });
+}
+
+function protectDashboardPage() {
+  if (!auth || !db || !isDashboardPage()) return;
+
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      window.location.replace("login.html");
+      return;
+    }
+
+    try {
+      const role = await getUserRole(user.uid);
+
+      if (role !== "admin" && role !== "teacher") {
+        showNotification("تەنها ئەدمین یان مامۆستا دەتوانێت بچێتە ناو داشبۆرد.", "error");
+        await auth.signOut();
+        window.location.replace("login.html");
+        return;
+      }
+
+      setDashboardRoleState(role);
+      initDashboard();
+    } catch (error) {
+      window.location.replace("login.html");
+    }
+  });
+}
+
+function initAccessLoginPage() {
+  if (!auth || !db || !isAccessLoginPage()) return;
+
+  const form = qs("#adminLoginForm");
+  const errorEl = qs("#error");
+  if (!form) return;
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (errorEl) errorEl.textContent = "";
+
+    const email = qs("#adminEmail")?.value.trim();
+    const password = qs("#adminPassword")?.value || "";
+    const submitBtn = qs("#accessLoginBtn");
+    const old = submitBtn?.innerHTML;
+    if (submitBtn) submitBtn.innerHTML = '<span class="loading"></span>';
+
+    try {
+      const cred = await auth.signInWithEmailAndPassword(email, password);
+      await ensureUserProfile(cred.user);
+      const role = await getUserRole(cred.user.uid);
+
+      if (role !== "admin" && role !== "teacher") {
+        await auth.signOut();
+        if (errorEl) errorEl.textContent = "تەنها ئەدمین یان مامۆستا دەتوانێت بچێتە ژوورەوە.";
+        return;
+      }
+
+      window.location.href = "admin.html";
+    } catch (error) {
+      if (errorEl) errorEl.textContent = "چوونەژورەوە سەرکەوتوو نەبوو.";
+    } finally {
+      if (submitBtn && old) submitBtn.innerHTML = old;
+    }
+  });
+}
+
+async function uploadToImgBB(file) {
+  const apiKey = "a60d17c9e2a12b41ef35cd6ef4f10115";
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await response.json();
+  return data?.data?.url || "";
+}
+
+async function postAnnouncement(event) {
+  event?.preventDefault();
+
+  if (!db) return;
+
+  const text = qs("#announcementText")?.value.trim() || "";
+  const imageFile = qs("#announcementImage")?.files?.[0] || null;
+
+  if (!text && !imageFile) {
+    showNotification("دەق یان وێنە زیاد بکە.", "error");
+    return;
+  }
+
+  const btn = qs("#postAnnouncementBtn");
+  const old = btn?.innerHTML;
+  if (btn) btn.innerHTML = '<span class="loading"></span>';
+
+  try {
+    let imageUrl = "";
+    if (imageFile) {
+      imageUrl = await uploadToImgBB(imageFile);
+    }
+
+    await db.collection("announcements").add({
+      text,
+      imageUrl,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    qs("#announcementText").value = "";
+    if (qs("#announcementImage")) qs("#announcementImage").value = "";
+    showNotification("ڕاگەیاندن زیادکرا.");
+  } catch (error) {
+    showNotification("هەڵە لە ناردنی ڕاگەیاندن.", "error");
+  } finally {
+    if (btn && old) btn.innerHTML = old;
+  }
+}
+
+function loadPublicAnnouncements() {
+  if (!db) return;
+  const container = qs("#announcementPublicList");
+  if (!container) return;
+
+  if (publicAnnouncementsUnsubscribe) publicAnnouncementsUnsubscribe();
+
+  publicAnnouncementsUnsubscribe = db
+    .collection("announcements")
+    .orderBy("createdAt", "desc")
+    .limit(12)
+    .onSnapshot(
+      (snapshot) => {
+        if (snapshot.empty) {
+          container.innerHTML = renderEmptyState("هێشتا هیچ ڕاگەیاندنێک زیاد نەکراوە.");
+          return;
+        }
+
+        container.innerHTML = snapshot.docs
+          .map((doc) => {
+            const data = doc.data() || {};
+            const createdAt = data.createdAt?.toDate?.();
+            return `
+              <article class="announcement-card">
+                <h3><i class="fas fa-bullhorn"></i> ڕاگەیاندن</h3>
+                <p>${escapeHtml(data.text || "")}</p>
+                ${data.imageUrl ? `<img class="announcement-image" src="${data.imageUrl}" alt="ڕاگەیاندن">` : ""}
+                <div class="lesson-date">${createdAt ? formatRelativeTime(createdAt) : ""}</div>
+              </article>
+            `;
+          })
+          .join("");
+      },
+      () => {
+        container.innerHTML = renderEmptyState("نەتوانرا ڕاگەیاندنەکان باربکرێن.");
+      }
+    );
+}
+
+function loadAdminAnnouncements() {
+  if (!db) return;
+  const list = qs("#announcementList");
+  if (!list) return;
+
+  db.collection("announcements")
+    .orderBy("createdAt", "desc")
+    .limit(50)
+    .onSnapshot((snapshot) => {
+      if (snapshot.empty) {
+        list.innerHTML = renderEmptyState("هێشتا ڕاگەیاندن نییە.");
+        return;
+      }
+
+      list.innerHTML = snapshot.docs
+        .map((doc) => {
+          const data = doc.data() || {};
+          return `
+            <article class="announcement-card">
+              <h3>ڕاگەیاندنی نوێ</h3>
+              <p>${escapeHtml(data.text || "")}</p>
+              ${data.imageUrl ? `<img class="announcement-image" src="${data.imageUrl}" alt="Announcement">` : ""}
+              <div class="dashboard-item-actions">
+                <button class="danger-btn" data-delete-announcement="${doc.id}"><i class="fas fa-trash"></i> سڕینەوە</button>
+              </div>
+            </article>
+          `;
+        })
+        .join("");
+
+      qsa("[data-delete-announcement]", list).forEach((button) => {
+        button.addEventListener("click", async () => {
+          const id = button.getAttribute("data-delete-announcement");
+          if (!confirm("دڵنیای لە سڕینەوەی ئەم ڕاگەیاندنە؟")) return;
+          await db.collection("announcements").doc(id).delete();
+        });
+      });
+    });
+}
+
+async function addComment(event) {
+  event?.preventDefault();
+
+  if (!auth || !db) {
+    showNotification("Firebase ئامادە نییە.", "error");
+    return;
+  }
+
+  const user = auth.currentUser;
+  if (!user) {
+    showNotification("تکایە یەکەم چوونەژورەوە بکە.", "error");
+    openAuthModal();
+    return;
+  }
+
+  const textarea = qs("#commentText");
+  const text = textarea?.value.trim() || "";
+
+  if (text.length < 3) {
+    showNotification("کۆمێنتەکە دەبێت لانی کەم ٣ نووسە بێت.", "error");
+    return;
+  }
+
+  const formBtn = qs("#commentForm button[type='submit']");
+  const old = formBtn?.innerHTML;
+  if (formBtn) formBtn.innerHTML = '<span class="loading"></span>';
+
+  try {
+    const userData = await ensureUserProfile(user);
+
+    await db.collection("comments").add({
+      userId: user.uid,
+      userName: user.displayName || userData?.name || "بەکارهێنەر",
+      userRole: userData?.role || "student",
+      text,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    textarea.value = "";
+    showNotification("کۆمێنتەکەت نێردرا.");
+  } catch (error) {
+    showNotification("هەڵە لە ناردنی کۆمێنت.", "error");
+  } finally {
+    if (formBtn && old) formBtn.innerHTML = old;
+  }
+}
+
+function renderCommentHtml(data) {
+  const createdAt = data.timestamp?.toDate?.();
+  const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.userName || "User")}&background=1e4ea8&color=fff&size=160`;
+  const roleLabel = data.userRole === "teacher" ? "مامۆستا" : data.userRole === "admin" ? "ئەدمین" : "خوێندکار";
+
+  return `
+    <article class="comment">
+      <div class="comment-header">
+        <div class="comment-user">
+          <img class="comment-avatar" src="${avatar}" alt="${escapeHtml(data.userName || "User")}">
+          <div class="comment-user-info">
+            <h4>${escapeHtml(data.userName || "بەکارهێنەر")}</h4>
+            <div class="teacher-meta">
+              <span class="teacher-badge">${roleLabel}</span>
+              <span class="comment-time">${createdAt ? formatRelativeTime(createdAt) : ""}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="comment-body">${escapeHtml(data.text || "").replace(/\n/g, "<br>")}</div>
+    </article>
+  `;
+}
+
+function loadComments() {
+  if (!db) return;
+  const list = qs("#commentsList");
+  if (!list) return;
+  if (publicCommentsUnsubscribe) publicCommentsUnsubscribe();
+
+  publicCommentsUnsubscribe = db
+    .collection("comments")
+    .orderBy("timestamp", "desc")
+    .limit(20)
+    .onSnapshot(
+      (snapshot) => {
+        if (snapshot.empty) {
+          list.innerHTML = renderEmptyState("هێشتا هیچ کۆمێنتێک نییە.");
+          return;
+        }
+
+        list.innerHTML = snapshot.docs.map((doc) => renderCommentHtml(doc.data() || {})).join("");
+      },
+      () => {
+        list.innerHTML = renderEmptyState("نەتوانرا کۆمێنتەکان باربکرێن.");
+      }
+    );
+}
+
+function loadAdminComments() {
+  if (!db) return;
+  const container = qs("#adminCommentsList");
+  if (!container) return;
+
+  db.collection("comments")
+    .orderBy("timestamp", "desc")
+    .limit(50)
+    .onSnapshot((snapshot) => {
+      if (snapshot.empty) {
+        container.innerHTML = renderEmptyState("هێشتا هیچ کۆمێنتێک نییە.");
+        return;
+      }
+
+      container.innerHTML = snapshot.docs
+        .map((doc) => {
+          const data = doc.data() || {};
+          return `
+            <article class="comment">
+              ${renderCommentBody(data)}
+              <div class="dashboard-item-actions">
+                <button class="danger-btn" data-delete-comment="${doc.id}"><i class="fas fa-trash"></i> سڕینەوە</button>
+              </div>
+            </article>
+          `;
+        })
+        .join("");
+
+      qsa("[data-delete-comment]", container).forEach((button) => {
+        button.addEventListener("click", async () => {
+          const id = button.getAttribute("data-delete-comment");
+          if (!confirm("سڕینەوەی ئەم کۆمێنتە؟")) return;
+          await db.collection("comments").doc(id).delete();
+        });
+      });
+    });
+}
+
+async function uploadLessonVideo(file, department) {
+  if (!storage) {
+    throw new Error("Storage not ready");
+  }
+
+  const safeName = sanitizeFilename(file.name || "lesson-video.mp4");
+  const path = `lessons/${department}/${Date.now()}-${safeName}`;
+  const ref = storage.ref(path);
+  const snapshot = await ref.put(file, { contentType: file.type || "video/mp4" });
+  const url = await snapshot.ref.getDownloadURL();
+  return { url, path };
+}
+
+async function postLesson(event) {
+  event?.preventDefault();
+
+  if (!db || !auth) return;
+
+  const user = auth.currentUser;
+  if (!user) {
+    showNotification("تکایە یەکەم چوونەژورەوە بکە.", "error");
+    return;
+  }
+
+  const department = qs("#lessonDepartment")?.value || "";
+  const title = qs("#lessonTitle")?.value.trim() || "";
+  const teacher = qs("#lessonTeacher")?.value.trim() || user.displayName || "";
+  const subject = qs("#lessonSubject")?.value.trim() || "";
+  const description = qs("#lessonDescription")?.value.trim() || "";
+  const videoFile = qs("#lessonVideo")?.files?.[0] || null;
+
+  if (!department || !title || !teacher || !subject || !videoFile) {
+    showNotification("تکایە خانە سەرەکییەکان و ڤیدیۆکە پڕ بکەوە.", "error");
+    return;
+  }
+
+  const btn = qs("#postLessonBtn");
+  const old = btn?.innerHTML;
+  if (btn) btn.innerHTML = '<span class="loading"></span>';
+
+  try {
+    const { url, path } = await uploadLessonVideo(videoFile, department);
+
+    await db.collection("lessons").add({
+      department,
+      title,
+      teacher,
+      subject,
+      description,
+      videoUrl: url,
+      storagePath: path,
+      uploadedBy: user.uid,
+      uploadedByName: user.displayName || teacher,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    qs("#lessonForm")?.reset();
+    showNotification("وانەکە بە سەرکەوتوویی زیادکرا.");
+  } catch (error) {
+    showNotification("هەڵە لە بارکردنی وانەکە.", "error");
+  } finally {
+    if (btn && old) btn.innerHTML = old;
+  }
+}
+
+function mapDepartmentName(value) {
+  if (value === "programming") return "پڕۆگرامسازی";
+  if (value === "architecture") return "بیناسازی";
+  if (value === "veterinary") return "ڤێتێرنەری";
+  return value;
+}
+
+function renderLessonCard(data, options = {}) {
+  const createdAt = data.createdAt?.toDate?.();
+  const showDelete = options.showDelete === true;
+  const lessonId = options.lessonId || "";
+
+  return `
+    <article class="lesson-card">
+      <video controls preload="metadata">
+        <source src="${data.videoUrl}" type="video/mp4">
+        <source src="${data.videoUrl}" type="video/webm">
+        وێبگەڕەکەت پشتیوانی ڤیدیۆ ناکات.
+      </video>
+      <div>
+        <h3>${escapeHtml(data.title || "وانە")}</h3>
+        <div class="lesson-meta">
+          <span class="lesson-badge"><i class="fas fa-book"></i>${escapeHtml(data.subject || "بابەت")}</span>
+          <span class="lesson-badge"><i class="fas fa-user"></i>${escapeHtml(data.teacher || "مامۆستا")}</span>
+          <span class="lesson-badge"><i class="fas fa-building"></i>${escapeHtml(mapDepartmentName(data.department || ""))}</span>
+        </div>
+      </div>
+      <p>${escapeHtml(data.description || "")}</p>
+      <div class="lesson-date">${createdAt ? formatRelativeTime(createdAt) : ""}</div>
+      ${showDelete ? `<div class="dashboard-item-actions"><button class="danger-btn" data-delete-lesson="${lessonId}"><i class="fas fa-trash"></i> سڕینەوە</button></div>` : ""}
+    </article>
+  `;
+}
+
+function loadDepartmentLessons() {
+  if (!db) return;
+  const container = qs("#departmentLessonsList");
+  if (!container) return;
+
+  const department = container.getAttribute("data-department") || document.body.getAttribute("data-department") || "";
+  if (!department) return;
+
+  if (departmentLessonsUnsubscribe) departmentLessonsUnsubscribe();
+
+  departmentLessonsUnsubscribe = db
+    .collection("lessons")
+    .orderBy("createdAt", "desc")
+    .limit(80)
+    .onSnapshot(
+      (snapshot) => {
+        const lessons = snapshot.docs
+          .map((doc) => ({ id: doc.id, ...(doc.data() || {}) }))
+          .filter((item) => item.department === department);
+
+        if (!lessons.length) {
+          container.innerHTML = renderEmptyState("هێشتا هیچ وانەیەک بۆ ئەم بەشە زیاد نەکراوە.");
+          return;
+        }
+
+        container.innerHTML = lessons.map((lesson) => renderLessonCard(lesson)).join("");
+      },
+      () => {
+        container.innerHTML = renderEmptyState("نەتوانرا وانەکان باربکرێن.");
+      }
+    );
+}
+
+function loadAdminLessons() {
+  if (!db) return;
+  const container = qs("#lessonAdminList");
+  if (!container) return;
+
+  db.collection("lessons")
+    .orderBy("createdAt", "desc")
+    .limit(100)
+    .onSnapshot((snapshot) => {
+      if (snapshot.empty) {
+        container.innerHTML = renderEmptyState("هێشتا هیچ وانەیەک زیاد نەکراوە.");
+        return;
+      }
+
+      container.innerHTML = snapshot.docs
+        .map((doc) => renderLessonCard(doc.data() || {}, { showDelete: true, lessonId: doc.id }))
+        .join("");
+
+      qsa("[data-delete-lesson]", container).forEach((button) => {
+        button.addEventListener("click", async () => {
+          const lessonId = button.getAttribute("data-delete-lesson");
+          if (!confirm("دڵنیای لە سڕینەوەی ئەم وانەیە؟")) return;
+
+          try {
+            const lessonRef = db.collection("lessons").doc(lessonId);
+            const snap = await lessonRef.get();
+            const data = snap.data() || {};
+
+            if (data.storagePath && storage) {
+              try {
+                await storage.ref(data.storagePath).delete();
+              } catch (error) {
+                // ignore missing storage file
+              }
+            }
+
+            await lessonRef.delete();
+            showNotification("وانەکە سڕایەوە.");
+          } catch (error) {
+            showNotification("هەڵە لە سڕینەوەی وانەکە.", "error");
+          }
+        });
+      });
+    });
+}
+
+async function updateUserRole(event) {
+  event?.preventDefault();
+
+  if (!db || currentDashboardRole !== "admin") return;
+
+  const email = qs("#roleEmail")?.value.trim().toLowerCase() || "";
+  const role = qs("#roleSelect")?.value || "student";
+
+  if (!email) {
+    showNotification("ئیمەیڵی بەکارهێنەر بنووسە.", "error");
+    return;
+  }
+
+  const btn = qs("#roleUpdateBtn");
+  const old = btn?.innerHTML;
+  if (btn) btn.innerHTML = '<span class="loading"></span>';
+
+  try {
+    const result = await db.collection("users").where("email", "==", email).limit(1).get();
+
+    if (result.empty) {
+      showNotification("هیچ بەکارهێنەرێک بەو ئیمەیڵە نەدۆزرایەوە.", "error");
+      return;
+    }
+
+    const doc = result.docs[0];
+    await doc.ref.set({ role }, { merge: true });
+    qs("#roleForm")?.reset();
+    showNotification("ڕۆڵی بەکارهێنەر نوێکرایەوە.");
+  } catch (error) {
+    showNotification("هەڵە لە گۆڕینی ڕۆڵ.", "error");
+  } finally {
+    if (btn && old) btn.innerHTML = old;
+  }
+}
+
+function initDashboard() {
+  const dashboard = qs("#dashboardReady");
+  if (!dashboard || dashboard.getAttribute("data-ready") === "true") return;
+  dashboard.setAttribute("data-ready", "true");
+
+  qs("#announcementForm")?.addEventListener("submit", postAnnouncement);
+  qs("#lessonForm")?.addEventListener("submit", postLesson);
+  qs("#roleForm")?.addEventListener("submit", updateUserRole);
+  qs("#logoutAdmin")?.addEventListener("click", async () => {
+    await logout();
+    window.location.replace("index.html");
+  });
+
+  qs("#lessonVideo")?.addEventListener("change", (event) => {
+    const file = event.target?.files?.[0];
+    if (!file) {
+      setLessonUploadStatus(t("lesson_url_mode"), "info");
+      return;
+    }
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+    setLessonUploadStatus(`${file.name} • ${sizeMb} MB`, "info");
+  });
+
+  qs("#lessonVideoUrl")?.addEventListener("input", (event) => {
+    const value = event.target?.value?.trim() || "";
+    if (!value) return;
+    setLessonUploadStatus(t("lesson_url_mode"), "info");
+  });
+
+  loadAdminAnnouncements();
+  loadAdminLessons();
+  loadAdminComments();
+}
+
 function openDepartmentPage(department) {
   const map = {
     programming: "department-programming.html",
-    veterinary: "department-veterinary.html",
     architecture: "department-architecture.html",
+    veterinary: "department-veterinary.html"
   };
 
   const target = map[department];
   if (!target) {
-    showNotification("بەش نەدۆزرایەوە!", "error");
+    showNotification("بەش نەدۆزرایەوە.", "error");
     return;
   }
+
   window.location.href = target;
 }
 
-// Upload placeholder
 function uploadMedia() {
-  const user = auth.currentUser;
-  if (!user) {
-    showNotification("تکایە یەکەم چوونەژورەوە بکە بۆ بارکردنی میدیا!", "error");
-    openAuthModal();
-    return;
-  }
-  showNotification("بەشی بارکردنی میدیا لە وەشانی داھاتوودا بەردەست دەبێت!", "warning");
+  showNotification("بارکردنی میدیا هێشتا کراوە بە بەشێکی جیاواز. بۆ وانەکان، داشبۆرد بەکاربهێنە.", "warning");
 }
 
-// Animated stats (only when stats section appears)
 function initializeStatsOnView() {
-  const statsSection = document.querySelector("#stats");
+  const statsSection = qs("#stats");
   if (!statsSection) return;
 
-  const stats = [
-    { id: "studentsCount", target: 140, plus: true },     // match your HTML
-    { id: "teachersCount", target: 13, plus: true },
-    { id: "departmentsCount", target: 3, plus: false },
+  const targets = [
+    { id: "studentsCount", value: 140, suffix: "+" },
+    { id: "teachersCount", value: 13, suffix: "+" },
+    { id: "departmentsCount", value: 3, suffix: "" }
   ];
 
   let started = false;
 
-  function animate(el, target, plus) {
+  const animate = (element, target, suffix) => {
     let current = 0;
-    const steps = 60;
-    const inc = target / steps;
+    const duration = 1200;
+    const start = performance.now();
 
-    const tick = () => {
-      current += inc;
-      if (current >= target) current = target;
-
-      // Kurdish/Arabic numerals
-      el.textContent = Math.floor(current).toLocaleString("ar") + (plus ? "+" : "");
-
-      if (current < target) requestAnimationFrame(tick);
+    const frame = (time) => {
+      const progress = Math.min((time - start) / duration, 1);
+      current = Math.floor(progress * target);
+      element.textContent = `${current.toLocaleString("ar-IQ")}${suffix}`;
+      if (progress < 1) requestAnimationFrame(frame);
     };
 
-    tick();
-  }
+    requestAnimationFrame(frame);
+  };
 
-  const obs = new IntersectionObserver(
+  const observer = new IntersectionObserver(
     (entries) => {
-      entries.forEach((en) => {
-        if (en.isIntersecting && !started) {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && !started) {
           started = true;
-          stats.forEach((s) => {
-            const el = document.getElementById(s.id);
-            if (el) animate(el, s.target, s.plus);
+          targets.forEach((item) => {
+            const el = document.getElementById(item.id);
+            if (el) animate(el, item.value, item.suffix);
           });
-          obs.disconnect();
+          observer.disconnect();
         }
       });
     },
-    { threshold: 0.45 }
+    { threshold: 0.35 }
   );
 
-  obs.observe(statsSection);
+  observer.observe(statsSection);
 }
 
-// Smooth scroll + active nav on scroll
 function initializeSmoothScroll() {
-  const links = Array.from(document.querySelectorAll("nav a"));
-
-  links.forEach((a) => {
-    a.addEventListener("click", (e) => {
-      const href = a.getAttribute("href");
-      if (!href || !href.startsWith("#")) return;
-
-      e.preventDefault();
-      const target = document.querySelector(href);
+  qsa("a[href^='#']").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      const href = link.getAttribute("href");
+      if (!href || href === "#") return;
+      const target = qs(href);
       if (!target) return;
 
-      window.scrollTo({ top: target.offsetTop - 80, behavior: "smooth" });
+      event.preventDefault();
+      const offset = target.getBoundingClientRect().top + window.scrollY - 88;
+      window.scrollTo({ top: offset, behavior: "smooth" });
+      closeMenu();
     });
   });
-
-  // highlight current section while scrolling
-const sections = links
-    .map(a => {
-        const href = a.getAttribute("href");
-        if (!href || href === "#" || !href.startsWith("#")) return null;
-        return document.querySelector(href);
-    })
-    .filter(Boolean);
-
-
-  const obs = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((en) => {
-        if (!en.isIntersecting) return;
-        const id = "#" + en.target.id;
-        links.forEach((x) => x.classList.toggle("active", x.getAttribute("href") === id));
-      });
-    },
-    { rootMargin: "-40% 0px -55% 0px", threshold: 0.01 }
-  );
-
-  sections.forEach((s) => obs.observe(s));
 }
 
-// Scroll reveal animations
 function initializeScrollReveal() {
-  const items = document.querySelectorAll(".section, .department-card, .stat-card, .media-item");
+  const items = qsa(".section, .department-card, .stat-card, .media-item, .teacher-card, .video-card, .news-card, .goal-card, .quick-card, .map-card");
+  if (!items.length) return;
 
-  const obs = new IntersectionObserver(
+  const observer = new IntersectionObserver(
     (entries) => {
-      entries.forEach((en) => {
-        if (en.isIntersecting) {
-          en.target.classList.add("active");
-        } else {
-          en.target.classList.remove("active");
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target);
         }
       });
     },
-    { threshold: 0.15 }
+    { threshold: 0.12 }
   );
 
-  items.forEach((el) => {
-    el.classList.add("reveal");
-    obs.observe(el);
+  items.forEach((item) => {
+    item.classList.add("reveal");
+    observer.observe(item);
   });
 }
 
-// Boot
-document.addEventListener("DOMContentLoaded", function () {
-  updateUI();
-  initializeStatsOnView();
-  initializeSmoothScroll();
-  initializeScrollReveal();
-
-  // close modal when clicking outside
-  authModal.addEventListener("click", function (e) {
-    if (e.target === authModal) closeAuthModal();
-  });
-
-  // close modal via ESC
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && authModal.style.display === "flex") closeAuthModal();
-  });
-
-  // go to hash if exists
-  if (window.location.hash) {
-    const target = document.querySelector(window.location.hash);
-    if (target) {
-      setTimeout(() => {
-        window.scrollTo({ top: target.offsetTop - 80, behavior: "smooth" });
-      }, 300);
-    }
-  }
-
-  // Firestore connection test (silent)
-  setTimeout(() => {
-    db.collection("test")
-      .add({ test: "connection", timestamp: firebase.firestore.FieldValue.serverTimestamp() })
-      .catch(() => {});
-  }, 1000);
-});
-// Header scroll effect
-const header = document.querySelector("header");
-
-window.addEventListener("scroll", () => {
+function initHeaderScrollEffect() {
+  const header = qs("header");
   if (!header) return;
 
-  if (window.scrollY > 40) {
-    header.classList.add("scrolled");
-  } else {
-    header.classList.remove("scrolled");
-  }
-});
-// Header scroll effect
-window.addEventListener("scroll", function () {
-  const header = document.querySelector("header");
-  if (window.scrollY > 60) {
-    header.classList.add("scrolled");
-  } else {
-    header.classList.remove("scrolled");
-  }
-});
-function toggleMenu() {
-  const nav = document.querySelector("nav");
-  nav.classList.toggle("active");
+  const update = () => {
+    header.classList.toggle("scrolled", window.scrollY > 60);
+  };
+
+  update();
+  window.addEventListener("scroll", update, { passive: true });
 }
-// ----- Mobile menu open/close -----
+
 function toggleMenu() {
-  document.body.classList.toggle("menu-open");
+  const nav = qs("#mainNav");
+  if (!nav) return;
+  nav.classList.toggle("active");
+  document.body.classList.toggle("menu-open", nav.classList.contains("active"));
 }
 
 function closeMenu() {
+  const nav = qs("#mainNav");
+  if (!nav) return;
+  nav.classList.remove("active");
   document.body.classList.remove("menu-open");
-  closeDepartments();
 }
 
-// ----- Departments submenu -----
-function toggleDepartments(e) {
-  // Stop the page from jumping to top (because href="#")
-  if (e) e.preventDefault();
-
-  const item = document.getElementById("departmentsItem");
+function toggleDepartments(forceState = null) {
+  const item = qs("#departmentsItem");
   if (!item) return;
+  if (forceState == null) item.classList.toggle("submenu-open");
+  else item.classList.toggle("submenu-open", Boolean(forceState));
 
-  item.classList.toggle("submenu-open");
-}
-
-function closeDepartments() {
-  const item = document.getElementById("departmentsItem");
-  if (!item) return;
-  item.classList.remove("submenu-open");
-}
-
-// Close menu when clicking links (except the submenu toggle)
-document.addEventListener("click", (e) => {
-  const nav = document.getElementById("mainNav");
-  if (!nav) return;
-
-  const link = e.target.closest("a");
-  if (!link) return;
-
-  // If user clicked the departments toggle, don't close the menu
-  if (link.classList.contains("dept-toggle")) return;
-
-  // If user clicked inside the nav on a normal link => close menu
-  if (nav.contains(link)) {
-    closeMenu();
+  const toggle = qs(".dept-toggle", item);
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", item.classList.contains("submenu-open") ? "true" : "false");
   }
-});
+}
 
-// If user taps outside nav while menu is open => close it
-document.addEventListener("click", (e) => {
-  if (!document.body.classList.contains("menu-open")) return;
+function initMenuAndSubmenu() {
+  const toggle = qs(".menu-toggle");
+  const deptToggle = qs(".dept-toggle");
+  const nav = qs("#mainNav");
 
-  const nav = document.getElementById("mainNav");
-  const toggleBtn = document.querySelector(".menu-toggle");
-  if (!nav) return;
-
-  const clickedInsideNav = nav.contains(e.target);
-  const clickedToggle = toggleBtn && toggleBtn.contains(e.target);
-
-  if (!clickedInsideNav && !clickedToggle) {
-    closeMenu();
+  if (toggle) {
+    toggle.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleMenu();
+    });
   }
-});
 
-// Safety: if screen goes back to desktop, reset mobile states
-window.addEventListener("resize", () => {
-  if (window.innerWidth > 768) {
-    closeMenu();
+  if (deptToggle) {
+    deptToggle.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleDepartments();
+    });
   }
-});
 
-// Close menu when a link is clicked (mobile)
-document.querySelectorAll("nav a").forEach(link => {
-  link.addEventListener("click", () => {
-    const nav = document.querySelector("nav");
-    nav.classList.remove("active");
-  });
-});
-// Header scroll effect
-window.addEventListener("scroll", function () {
-  const header = document.querySelector("header");
-  if (window.scrollY > 50) {
-    header.classList.add("scrolled");
-  } else {
-    header.classList.remove("scrolled");
-  }
-});
-// Load announcements on public site
-function loadPublicAnnouncements() {
-  const container = document.getElementById("announcementPublicList");
-  if (!container) return;
-
-  db.collection("announcements")
-    .orderBy("createdAt", "desc")
-    .onSnapshot((snapshot) => {
-      container.innerHTML = "";
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-
-        const item = document.createElement("div");
-        item.className = "announcement-item";
-        item.textContent = data.text;
-
-        container.appendChild(item);
-      });
-    });
-}
-
-// Start loading on page load
-loadPublicAnnouncements();
-// Load announcements on public site
-function loadPublicAnnouncements() {
-  const container = document.getElementById("announcementPublicList");
-  if (!container) return;
-
-  db.collection("announcements")
-    .orderBy("createdAt", "desc")
-    .onSnapshot((snapshot) => {
-      container.innerHTML = "";
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-
-        const item = document.createElement("div");
-        item.className = "announcement-item";
-
-        item.innerHTML = `
-          <p>${data.text || ""}</p>
-          ${
-            data.imageUrl
-              ? `<img src="${data.imageUrl}" class="announcement-img" />`
-              : ""
-          }
-        `;
-
-        container.appendChild(item);
-      });
-    });
-}
-
-// start loading announcements
-loadPublicAnnouncements();
-// Get stored announcements or empty array
-let announcements = JSON.parse(localStorage.getItem("announcements")) || [];
-
-// ADMIN: Add announcement
-const form = document.getElementById("announcementForm");
-
-if (form) {
-    form.addEventListener("submit", function (e) {
-        e.preventDefault();
-
-        const title = document.getElementById("title").value;
-        const message = document.getElementById("message").value;
-        const image = document.getElementById("image").value;
-
-        const newAnnouncement = {
-            title,
-            message,
-            image,
-            date: new Date().toLocaleDateString()
-        };
-
-        announcements.unshift(newAnnouncement);
-
-        localStorage.setItem("announcements", JSON.stringify(announcements));
-
-        alert("Announcement posted!");
-        form.reset();
-    });
-}
-
-// HOMEPAGE: Display announcements
-const list = document.getElementById("announcementList");
-
-if (list) {
-    announcements.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "announcement-card";
-
-        card.innerHTML = `
-            ${item.image ? `<img src="${item.image}" alt="Announcement Image">` : ""}
-            <h3>${item.title}</h3>
-            <p>${item.message}</p>
-            <span class="date">${item.date}</span>
-        `;
-
-        list.appendChild(card);
-    });
-}
-// LOGIN LOGIC
-const loginForm = document.getElementById("loginForm");
-
-if (loginForm) {
-    loginForm.addEventListener("submit", function (e) {
-        e.preventDefault();
-
-        const password = document.getElementById("password").value;
-        const correctPassword = "Parsa2006"; // change this later
-
-        if (password === correctPassword) {
-            localStorage.setItem("isAdminLoggedIn", "true");
-            window.location.href = "admin.html";
-        } else {
-            document.getElementById("error").textContent = "Wrong password";
-        }
-    });
-}
-function logout() {
-    localStorage.removeItem("isAdminLoggedIn");
-    window.location.href = "login.html";
-}
-// Logout button
-const logoutBtn = document.getElementById("logoutAdmin");
-
-if (logoutBtn) {
-    logoutBtn.addEventListener("click", function () {
-        localStorage.removeItem("isAdminLoggedIn");
-        window.location.href = "login.html";
-    });
-}
-// ===============================
-// POST ANNOUNCEMENT (ADMIN)
-// ===============================
-const postBtn = document.getElementById("postAnnouncement");
-
-if (postBtn && typeof db !== "undefined") {
-    postBtn.addEventListener("click", async () => {
-        const text = document.getElementById("announcementText").value;
-
-        if (!text) {
-            alert("Write something first.");
-            return;
-        }
-
-        try {
-            await db.collection("announcements").add({
-                text: text,
-                date: new Date()
-            });
-
-            alert("Announcement posted!");
-            document.getElementById("announcementText").value = "";
-        } catch (err) {
-            console.error(err);
-            alert("Error posting announcement.");
-        }
-    });
-}
-// ===============================
-// LOAD ANNOUNCEMENTS (HOMEPAGE)
-// ===============================
-const announcementList = document.getElementById("announcementList");
-
-if (announcementList && db) {
-    db.collection("announcements")
-        .orderBy("date", "desc")
-        .onSnapshot(snapshot => {
-            announcementList.innerHTML = "";
-
-            snapshot.forEach(doc => {
-                const data = doc.data();
-
-                const card = document.createElement("div");
-                card.className = "announcement-card";
-
-                // If we're on admin page, show delete button
-                const isAdminPage = window.location.pathname.includes("admin.html");
-
-                card.innerHTML = `
-                    <p>${data.text}</p>
-                    ${isAdminPage ? `<button class="delete-btn" data-id="${doc.id}">Delete</button>` : ""}
-                `;
-
-                announcementList.appendChild(card);
-            });
-
-            // Attach delete events
-            const deleteButtons = document.querySelectorAll(".delete-btn");
-
-            deleteButtons.forEach(btn => {
-                btn.addEventListener("click", async () => {
-                    const id = btn.getAttribute("data-id");
-
-                    if (confirm("Delete this announcement?")) {
-                        await db.collection("announcements").doc(id).delete();
-                    }
-                });
-            });
-        });
-}
-// Scroll animations
-function initScrollAnimations() {
-    const elements = document.querySelectorAll(".fade-in");
-
-    function showOnScroll() {
-        const triggerBottom = window.innerHeight * 0.85;
-
-        elements.forEach(el => {
-            const top = el.getBoundingClientRect().top;
-
-            if (top < triggerBottom) {
-                el.classList.add("visible");
-            }
-        });
+  document.addEventListener("click", (event) => {
+    if (nav && nav.classList.contains("active") && !nav.contains(event.target) && !toggle?.contains(event.target)) {
+      closeMenu();
     }
 
-    window.addEventListener("scroll", showOnScroll);
-    showOnScroll();
-}
-
-initScrollAnimations();
-function toggleMenu() {
-  const nav = document.getElementById("mainNav");
-  nav.classList.toggle("active");
-}
-// Reveal animation on scroll
-const sections = document.querySelectorAll('.section');
-
-const revealOnScroll = () => {
-  const trigger = window.innerHeight * 0.85;
-
-  sections.forEach(section => {
-    const top = section.getBoundingClientRect().top;
-    if (top < trigger) {
-      section.classList.add('show');
+    const item = qs("#departmentsItem");
+    if (item && item.classList.contains("submenu-open") && !item.contains(event.target)) {
+      toggleDepartments(false);
     }
   });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 992) closeMenu();
+  });
+}
+
+function initScrollProgressBar() {
+  const bar = qs("#scrollProgress");
+  if (!bar) return;
+
+  const update = () => {
+    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const progress = height > 0 ? (scrollTop / height) * 100 : 0;
+    bar.style.width = `${progress}%`;
+  };
+
+  update();
+  window.addEventListener("scroll", update, { passive: true });
+}
+
+function initScrollTopButton() {
+  const button = qs("#scrollTopBtn");
+  if (!button) return;
+
+  const update = () => {
+    button.classList.toggle("show", window.scrollY > 420);
+  };
+
+  button.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  update();
+  window.addEventListener("scroll", update, { passive: true });
+}
+
+function initHeroTyping() {
+  const title = qs("#heroTitle");
+  if (!title) return;
+
+  const text = title.getAttribute("data-text") || "ئامادەی پیشەی سیڤەر";
+  let index = 0;
+  title.textContent = "";
+
+  const type = () => {
+    if (index < text.length) {
+      title.textContent += text.charAt(index);
+      index += 1;
+      setTimeout(type, 75);
+    }
+  };
+
+  type();
+}
+
+function initLoader() {
+  const loader = qs("#loader");
+  if (!loader) return;
+
+  window.addEventListener("load", () => {
+    loader.style.opacity = "0";
+    setTimeout(() => {
+      loader.style.display = "none";
+    }, 280);
+  });
+}
+
+function initPrincipalLightbox() {
+  const image = qs(".principal-img");
+  const lightbox = qs("#principalLightbox");
+  const lightboxImage = qs("#principalLightboxImage");
+  const closeBtn = qs("#closePrincipalLightbox");
+
+  if (!image || !lightbox || !lightboxImage) return;
+
+  const open = () => {
+    lightboxImage.src = image.getAttribute("src") || "";
+    lightboxImage.alt = image.getAttribute("alt") || "Principal";
+    lightbox.classList.add("active");
+    document.body.style.overflow = "hidden";
+  };
+
+  const close = () => {
+    lightbox.classList.remove("active");
+    document.body.style.overflow = "";
+  };
+
+  image.addEventListener("click", open);
+  closeBtn?.addEventListener("click", close);
+  lightbox.addEventListener("click", (event) => {
+    if (event.target === lightbox) close();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && lightbox.classList.contains("active")) {
+      close();
+    }
+  });
+}
+
+function initAuthModalEvents() {
+  const modal = qs("#authModal");
+  if (!modal) return;
+
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) closeAuthModal();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      if (modal.style.display === "flex") closeAuthModal();
+    }
+  });
+
+  qsa(".auth-tab").forEach((tab) => {
+    tab.addEventListener("click", () => switchAuthTab(tab.getAttribute("data-tab")));
+  });
+
+  qsa(".password-toggle").forEach((toggle) => {
+    toggle.addEventListener("click", () => togglePassword(toggle.getAttribute("data-target")));
+  });
+
+  qs("#loginFormElement")?.addEventListener("submit", login);
+  qs("#registerFormElement")?.addEventListener("submit", register);
+}
+
+function initUserProfileButtons() {
+  const desktop = qs("#userProfile");
+  const mobile = qs("#userProfileMobile");
+
+  desktop?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleUserMenu(desktop);
+  });
+
+  mobile?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleUserMenu(mobile);
+  });
+}
+
+function initQuickActions() {
+  qsa("[data-open-auth]").forEach((button) => {
+    button.addEventListener("click", openAuthModal);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initLoader();
+  initAuthModalEvents();
+  initUserProfileButtons();
+  initQuickActions();
+  updateUI();
+  protectDashboardPage();
+  initAccessLoginPage();
+  initializeStatsOnView();
+  initializeSmoothScroll();
+  initializeScrollReveal();
+  initHeaderScrollEffect();
+  initMenuAndSubmenu();
+  initScrollProgressBar();
+  initScrollTopButton();
+  initHeroTyping();
+  initPrincipalLightbox();
+  loadPublicAnnouncements();
+  loadComments();
+  loadDepartmentLessons();
+});
+
+window.openAuthModal = openAuthModal;
+window.closeAuthModal = closeAuthModal;
+window.switchAuthTab = switchAuthTab;
+window.togglePassword = togglePassword;
+window.login = login;
+window.register = register;
+window.loginWithGoogle = loginWithGoogle;
+window.loginWithFacebook = loginWithFacebook;
+window.logout = logout;
+window.toggleUserMenu = toggleUserMenu;
+window.toggleMenu = toggleMenu;
+window.toggleDepartments = toggleDepartments;
+window.openDepartmentPage = openDepartmentPage;
+window.addComment = addComment;
+window.uploadMedia = uploadMedia;
+
+/* =====================================================
+   2026-03-30 upgrades: language, mobile UX, upload fixes
+   ===================================================== */
+let currentLang = localStorage.getItem("sivar_lang") === "en" ? "en" : "ku";
+
+const runtimeText = {
+  badge_subject: { ku: "بابەت", en: "Subject" },
+  badge_teacher: { ku: "مامۆستا", en: "Teacher" },
+  badge_department: { ku: "بەش", en: "Department" },
+  badge_announcement: { ku: "ڕاگەیاندن", en: "Announcement" },
+  empty_announcements: { ku: "هێشتا هیچ ڕاگەیاندنێک زیاد نەکراوە.", en: "No announcements have been posted yet." },
+  empty_comments: { ku: "هێشتا هیچ کۆمێنتێک نییە.", en: "No comments yet." },
+  empty_lessons: { ku: "هێشتا هیچ وانەیەک بۆ ئەم بەشە زیاد نەکراوە.", en: "No lessons have been added for this department yet." },
+  empty_admin_lessons: { ku: "هێشتا هیچ وانەیەک بار نەکراوە.", en: "No lesson videos have been uploaded yet." },
+  empty_admin_announcements: { ku: "هێشتا ڕاگەیاندن نییە.", en: "No announcements yet." },
+  empty_admin_comments: { ku: "هێشتا هیچ کۆمێنتێک نییە.", en: "No comments yet." },
+  role_admin: { ku: "ئەدمین", en: "Admin" },
+  role_teacher: { ku: "مامۆستا", en: "Teacher" },
+  role_student: { ku: "خوێندکار", en: "Student" },
+  not_ready: { ku: "Firebase ئامادە نییە.", en: "Firebase is not ready." },
+  need_login: { ku: "تکایە یەکەم چوونەژورەوە بکە.", en: "Please log in first." },
+  lesson_missing: { ku: "تکایە بەش، ناونیشان، بابەت و ڤیدیۆ یان بەستەر پڕ بکەوە.", en: "Please fill in the department, title, subject, and add a video file or link." },
+  lesson_posted: { ku: "وانەکە بە سەرکەوتوویی زیادکرا.", en: "The lesson was uploaded successfully." },
+  lesson_deleted: { ku: "وانەکە سڕایەوە.", en: "The lesson was deleted." },
+  lesson_uploading: { ku: "بارکردنی ڤیدیۆ دەست پێکرد...", en: "Uploading the video..." },
+  lesson_processing: { ku: "بارکردن تەواو بوو، زانیاریەکان تۆمار دەکرێن...", en: "Upload completed. Saving lesson details..." },
+  lesson_upload_progress: { ku: "بارکردن", en: "Upload" },
+  lesson_upload_done: { ku: "بارکردن تەواو بوو.", en: "Upload finished." },
+  lesson_url_mode: { ku: "وانەکە بە بەستەری ڤیدیۆ زیاد دەکرێت.", en: "The lesson will be added using the video link." },
+  invalid_video_link: { ku: "بەستەری ڤیدیۆ دروست نییە.", en: "The video link is not valid." },
+  lesson_delete_confirm: { ku: "دڵنیای لە سڕینەوەی ئەم وانەیە؟", en: "Are you sure you want to delete this lesson?" },
+  announcement_delete_confirm: { ku: "دڵنیای لە سڕینەوەی ئەم ڕاگەیاندنە؟", en: "Are you sure you want to delete this announcement?" },
+  comment_delete_confirm: { ku: "سڕینەوەی ئەم کۆمێنتە؟", en: "Delete this comment?" },
+  announcement_missing: { ku: "دەق یان وێنە زیاد بکە.", en: "Please add announcement text or an image." },
+  announcement_added: { ku: "ڕاگەیاندن زیادکرا.", en: "The announcement was posted." },
+  announcement_error: { ku: "هەڵە لە ناردنی ڕاگەیاندن.", en: "There was a problem posting the announcement." },
+  comment_posted: { ku: "کۆمێنتەکەت نێردرا.", en: "Your comment was sent." },
+  comment_min: { ku: "کۆمێنتەکە دەبێت لانی کەم ٣ نووسە بێت.", en: "A comment must be at least 3 characters long." },
+  login_success: { ku: "بە سەرکەوتوویی چوویتە ژوورەوە.", en: "You are now signed in." },
+  login_fail: { ku: "ئیمەیڵ یان وشەی نهێنی هەڵەیە.", en: "Incorrect email or password." },
+  register_success: { ku: "تۆمارکردن بە سەرکەوتوویی ئەنجامدرا.", en: "Registration completed successfully." },
+  saved: { ku: "تۆمارکرا.", en: "Saved." },
+  upload_media_info: { ku: "بارکردنی میدیا هێشتا کراوە بە بەشێکی جیاواز. بۆ وانەکان، داشبۆرد بەکاربهێنە.", en: "Media upload is handled separately for now. Please use the dashboard for lessons." },
+  profile_soon: { ku: "پڕۆفایل دواتر زیاد دەکرێت.", en: "Profile will be added later." },
+  dashboard_login_only: { ku: "تەنها ئەدمین یان مامۆستا دەتوانێت بچێتە ناو داشبۆرد.", en: "Only admins or teachers can access the dashboard." },
+  delete_text: { ku: "سڕینەوە", en: "Delete" },
+  dashboard_text: { ku: "داشبۆرد", en: "Dashboard" },
+  profile_text: { ku: "پڕۆفایل", en: "Profile" },
+  logout_text: { ku: "چوونە دەرەوە", en: "Logout" },
+  now: { ku: "ئێستا", en: "now" },
+  mins_ago: { ku: "خولەک لەمەوپێش", en: "min ago" },
+  hours_ago: { ku: "کاتژمێر لەمەوپێش", en: "hours ago" },
+  days_ago: { ku: "ڕۆژ لەمەوپێش", en: "days ago" },
+  open_map: { ku: "کردنەوەی نەخشە", en: "Open map" },
+  upload_lesson_btn: { ku: "بارکردنی وانە", en: "Upload lesson" }
 };
 
-window.addEventListener('scroll', revealOnScroll);
-window.addEventListener('load', revealOnScroll);
+function t(key, fallback = "") {
+  const bucket = runtimeText[key];
+  if (!bucket) return fallback || key;
+  return bucket[currentLang] || bucket.ku || fallback || key;
+}
 
+function updateLangButtonsUI() {
+  qsa(".lang-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.getAttribute("data-lang") === currentLang);
+  });
+}
+
+function applyRule(rule) {
+  qsa(rule.selector).forEach((el) => {
+    const value = rule[currentLang] ?? rule.ku ?? "";
+    if (rule.attr) el.setAttribute(rule.attr, value);
+    else if (rule.html) el.innerHTML = value;
+    else el.textContent = value;
+  });
+}
+
+const pageTranslations = {
+  common: [
+    { selector: "title", ku: document.title, en: document.title },
+    { selector: ".logo-text", html: true, ku: "ئامادەی پیشەی سیڤەر<span>پەروەردەی شارەزایانەی داهاتوو</span>", en: "Sivar Vocational HS<span>Smart education for the future</span>" },
+    { selector: ".lang-switch", attr: "aria-label", ku: "گۆڕینی زمان", en: "Change language" }
+  ],
+  index: [
+    { selector: "title", ku: "ئامادەی پیشەی سیڤەر", en: "Sivar Vocational High School" },
+    { selector: "#authTitle", ku: "بەخێربێیت", en: "Welcome" },
+    { selector: ".auth-header p", ku: "تکایە چوونەژورەوە بکە یان تۆمار ببە", en: "Please sign in or create an account." },
+    { selector: ".auth-tab[data-tab='login']", ku: "چوونەژورەوە", en: "Login" },
+    { selector: ".auth-tab[data-tab='register']", ku: "تۆمارکردن", en: "Register" },
+    { selector: "label[for='loginEmail']", html: true, ku: "<i class='fas fa-envelope'></i> ئیمەیڵ", en: "<i class='fas fa-envelope'></i> Email" },
+    { selector: "label[for='loginPassword']", html: true, ku: "<i class='fas fa-lock'></i> وشەی نهێنی", en: "<i class='fas fa-lock'></i> Password" },
+    { selector: "#loginEmail", attr: "placeholder", ku: "example@gmail.com", en: "example@gmail.com" },
+    { selector: "#loginPassword", attr: "placeholder", ku: "وشەی نهێنی", en: "Password" },
+    { selector: "#loginBtn span", ku: "چوونەژورەوە", en: "Login" },
+    { selector: ".social-login p", ku: "یان چوونەژورەوە بە", en: "Or sign in with" },
+    { selector: ".social-buttons button:nth-child(1)", html: true, ku: "<i class='fab fa-google'></i> گووگڵ", en: "<i class='fab fa-google'></i> Google" },
+    { selector: ".social-buttons button:nth-child(2)", html: true, ku: "<i class='fab fa-facebook-f'></i> فەیسبووک", en: "<i class='fab fa-facebook-f'></i> Facebook" },
+    { selector: "label[for='registerName']", html: true, ku: "<i class='fas fa-user'></i> ناوی تەواو", en: "<i class='fas fa-user'></i> Full name" },
+    { selector: "label[for='registerEmail']", html: true, ku: "<i class='fas fa-envelope'></i> ئیمەیڵ", en: "<i class='fas fa-envelope'></i> Email" },
+    { selector: "label[for='registerPassword']", html: true, ku: "<i class='fas fa-lock'></i> وشەی نهێنی", en: "<i class='fas fa-lock'></i> Password" },
+    { selector: "label[for='registerConfirmPassword']", html: true, ku: "<i class='fas fa-lock'></i> دووبارەکردنەوەی وشەی نهێنی", en: "<i class='fas fa-lock'></i> Confirm password" },
+    { selector: "#registerName", attr: "placeholder", ku: "ناوی تەواو", en: "Full name" },
+    { selector: "#registerEmail", attr: "placeholder", ku: "example@gmail.com", en: "example@gmail.com" },
+    { selector: "#registerPassword", attr: "placeholder", ku: "وشەی نهێنی (لانی کەم ٦ نووسە)", en: "Password (at least 6 characters)" },
+    { selector: "#registerConfirmPassword", attr: "placeholder", ku: "دووبارەکردنەوەی وشەی نهێنی", en: "Confirm password" },
+    { selector: "#registerBtn span", ku: "تۆمارکردن", en: "Register" },
+    { selector: ".nav-list a[href='#home']", html: true, ku: "<i class='fas fa-house'></i> سەرەتا", en: "<i class='fas fa-house'></i> Home" },
+    { selector: ".dept-toggle span", html: true, ku: "<i class='fas fa-book'></i> بەشەکان", en: "<i class='fas fa-book'></i> Departments" },
+    { selector: "#departmentsSubmenu a[href='department-programming.html']", ku: "پڕۆگرامسازی", en: "Programming" },
+    { selector: "#departmentsSubmenu a[href='department-architecture.html']", ku: "بیناسازی", en: "Architecture" },
+    { selector: "#departmentsSubmenu a[href='department-veterinary.html']", ku: "ڤێتێرنەری", en: "Veterinary" },
+    { selector: ".nav-list a[href='#online-lessons']", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-video'></i> Online lessons" },
+    { selector: ".nav-list a[href='#announcements']", html: true, ku: "<i class='fas fa-bullhorn'></i> ڕاگەیاندن", en: "<i class='fas fa-bullhorn'></i> Announcements" },
+    { selector: ".nav-list a[href='#comments']", html: true, ku: "<i class='fas fa-comments'></i> کۆمێنت", en: "<i class='fas fa-comments'></i> Comments" },
+    { selector: ".nav-list a[href='#about']", html: true, ku: "<i class='fas fa-circle-info'></i> دەربارە", en: "<i class='fas fa-circle-info'></i> About" },
+    { selector: "#loginButton", html: true, ku: "<i class='fas fa-right-to-bracket'></i> چوونەژورەوە", en: "<i class='fas fa-right-to-bracket'></i> Login" },
+    { selector: ".hero-content p", ku: "پەروەردەی شارەزایانەی داهاتوو لە بواری تەکنەلۆژیا، پیشەسازی و فێربوونی کارا", en: "Smart future-ready education in technology, vocational skills, and practical learning." },
+    { selector: ".hero-actions .hero-btn", html: true, ku: "<i class='fas fa-book-open'></i> بەشەکان ببینە", en: "<i class='fas fa-book-open'></i> Explore departments" },
+    { selector: ".hero-actions .secondary-btn", html: true, ku: "<i class='fas fa-circle-play'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-circle-play'></i> Online lessons" },
+    { selector: ".principal-content .section-title", html: true, ku: "<i class='fas fa-user-tie'></i> پەیامی بەڕێوەبەر", en: "<i class='fas fa-user-tie'></i> Principal's message" },
+    { selector: ".principal-content p:nth-of-type(1)", ku: "بەخێرهاتن بۆ ئامادەی پیشەی سیڤەر. ئامانجی ئێمە تەنها فێربوونی زانیاری نییە، بەڵکو دروستکردنی کادیرێکی توانا و سەربەخۆیە کە بتوانێت لە بازاڕی کاردا بە شێوەیەکی کاریگەر بەشداری بکات.", en: "Welcome to Sivar Vocational High School. Our goal is not only to teach knowledge, but also to build confident and capable graduates who can contribute effectively in the job market." },
+    { selector: ".principal-content p:nth-of-type(2)", ku: "هەوڵ دەدەین ژینگەیەکی ئەکادیمی سەردەمی و پڕ لە پەرەپێدان بۆ خوێندکاران دابین بکەین، بۆ ئەوەی داهاتوویەکی سەقامگیر بۆ خۆیان دروست بکەن.", en: "We strive to provide a modern academic environment full of growth, so our students can build a strong and stable future for themselves." },
+    { selector: ".principal-name", ku: "— بەڕێوەبەری گشتی، شێروان جەبار حاجی", en: "— General Principal, Sherwan Jabar Haji" },
+    { selector: "#announcements .section-title", html: true, ku: "<i class='fas fa-bullhorn'></i> ڕاگەیاندنەکان", en: "<i class='fas fa-bullhorn'></i> Announcements" },
+    { selector: "#announcements .outline-btn", html: true, ku: "<i class='fas fa-chalkboard-user'></i> چوونە ناو داشبۆرد", en: "<i class='fas fa-chalkboard-user'></i> Open dashboard" },
+    { selector: "#announcements .section-subtitle", ku: "ڕاگەیاندنەکان و هەواڵی نوێ لێرە بە شێوەی ئۆتۆماتیکی نیشان دەدرێن.", en: "New announcements and updates will appear here automatically." },
+    { selector: "main .section:nth-of-type(2) .section-title", html: true, ku: "<i class='fas fa-graduation-cap'></i> بەخێربێیت بۆ ئامادەی پیشەی سیڤەر", en: "<i class='fas fa-graduation-cap'></i> Welcome to Sivar Vocational High School" },
+    { selector: ".welcome-quote", html: true, ku: "<i class='fas fa-quote-right'></i> ئامانجەکەت لە ئامادەی پیشەی سیڤەر بەدی بهێنە <i class='fas fa-quote-left'></i>", en: "<i class='fas fa-quote-right'></i> Reach your goals at Sivar Vocational High School <i class='fas fa-quote-left'></i>" },
+    { selector: ".welcome-goals h3", html: true, ku: "<i class='fas fa-bullseye'></i> ئامانجەکانی ئێمە", en: "<i class='fas fa-bullseye'></i> Our goals" },
+    { selector: ".welcome-goals li:nth-child(1)", html: true, ku: "<i class='fas fa-check-circle'></i> پەروەردەی کادیرێکی کاریگەر لە بواری تەکنەلۆژیای زانیاری", en: "<i class='fas fa-check-circle'></i> Train capable graduates in information technology" },
+    { selector: ".welcome-goals li:nth-child(2)", html: true, ku: "<i class='fas fa-check-circle'></i> دابینکردنی سەرچاوەی نوێ بۆ خوێندکاران", en: "<i class='fas fa-check-circle'></i> Provide modern learning resources for students" },
+    { selector: ".welcome-goals li:nth-child(3)", html: true, ku: "<i class='fas fa-check-circle'></i> پەیوەندی بە بازاڕی کارەوە لە ڕێگەی پراکتیک", en: "<i class='fas fa-check-circle'></i> Connect learning with the job market through practice" },
+    { selector: ".welcome-goals li:nth-child(4)", html: true, ku: "<i class='fas fa-check-circle'></i> دابینکردنی ژینگەیەکی سەردەمی بۆ خوێندن", en: "<i class='fas fa-check-circle'></i> Create a modern and supportive learning environment" },
+    { selector: "#departments .section-title", html: true, ku: "<i class='fas fa-book'></i> بەشەکانی ئامادەی سیڤەر", en: "<i class='fas fa-book'></i> School departments" },
+    { selector: "#departments .department-card:nth-child(1) h3", html: true, ku: "<i class='fas fa-code'></i> پڕۆگرامسازی", en: "<i class='fas fa-code'></i> Programming" },
+    { selector: "#departments .department-card:nth-child(1) .muted", ku: "بەشی پڕۆگرامسازی پێک دێت لە خوێندنی پڕۆگرامسازی، داتابەیس، سیکیوریتی، و IT.", en: "The programming department focuses on software development, databases, security, and IT." },
+    { selector: "#departments .department-card:nth-child(1) .dept-meta li:nth-child(1)", html: true, ku: "<i class='fas fa-check'></i> ماوەی خوێندن: ٣ ساڵ", en: "<i class='fas fa-check'></i> Study duration: 3 years" },
+    { selector: "#departments .department-card:nth-child(1) .dept-meta li:nth-child(2)", html: true, ku: "<i class='fas fa-check'></i> بابەتەکان: ١٣ بابەت", en: "<i class='fas fa-check'></i> Subjects: 13" },
+    { selector: "#departments .department-card:nth-child(1) .dept-meta li:nth-child(3)", html: true, ku: "<i class='fas fa-check'></i> ئاست: کادیری کارا", en: "<i class='fas fa-check'></i> Outcome: job-ready graduate" },
+    { selector: "#departments .department-card:nth-child(2) h3", html: true, ku: "<i class='fas fa-paw'></i> ڤێتێرنەری", en: "<i class='fas fa-paw'></i> Veterinary" },
+    { selector: "#departments .department-card:nth-child(2) .muted", ku: "بەشی ڤێتێرنەری پێک دێت لە توێکاری، نەخۆشییەکان، و پزیشکی ئاژەڵ.", en: "The veterinary department covers animal health, diseases, and practical veterinary care." },
+    { selector: "#departments .department-card:nth-child(2) .dept-meta li:nth-child(1)", html: true, ku: "<i class='fas fa-check'></i> ماوەی خوێندن: ٣ ساڵ", en: "<i class='fas fa-check'></i> Study duration: 3 years" },
+    { selector: "#departments .department-card:nth-child(2) .dept-meta li:nth-child(2)", html: true, ku: "<i class='fas fa-check'></i> بابەتەکان: ١٥ بابەت", en: "<i class='fas fa-check'></i> Subjects: 15" },
+    { selector: "#departments .department-card:nth-child(2) .dept-meta li:nth-child(3)", html: true, ku: "<i class='fas fa-check'></i> ئاست: کادیری کارا", en: "<i class='fas fa-check'></i> Outcome: job-ready graduate" },
+    { selector: "#departments .department-card:nth-child(3) h3", html: true, ku: "<i class='fas fa-building'></i> بیناسازی", en: "<i class='fas fa-building'></i> Architecture" },
+    { selector: "#departments .department-card:nth-child(3) .muted", ku: "بەشی بیناسازی پێک دێت لە وێنە ئەندازەیی، لکاندن، و دیزاینی بینا.", en: "The architecture department focuses on drafting, planning, and building design." },
+    { selector: "#departments .department-card:nth-child(3) .dept-meta li:nth-child(1)", html: true, ku: "<i class='fas fa-check'></i> ماوەی خوێندن: ٣ ساڵ", en: "<i class='fas fa-check'></i> Study duration: 3 years" },
+    { selector: "#departments .department-card:nth-child(3) .dept-meta li:nth-child(2)", html: true, ku: "<i class='fas fa-check'></i> بابەتەکان: ١٠ بابەت", en: "<i class='fas fa-check'></i> Subjects: 10" },
+    { selector: "#departments .department-card:nth-child(3) .dept-meta li:nth-child(3)", html: true, ku: "<i class='fas fa-check'></i> ئاست: کادیری کارا", en: "<i class='fas fa-check'></i> Outcome: job-ready graduate" },
+    { selector: "#departments .department-btn span", ku: "زیاتر بزانە", en: "Learn more" },
+    { selector: "#online-lessons .section-title", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-video'></i> Online lessons" },
+    { selector: "#online-lessons .section-subtitle", ku: "ڤیدیۆی وانەکان لێرە بە شێوەی ئۆتۆماتیکی نیشان دەدرێن. مامۆستاکان دەتوانن لە داشبۆرددا وانەکان بەپێی بەش زیاد بکەن.", en: "Lesson videos appear here automatically. Teachers can add lessons from the dashboard by department." },
+    { selector: "#media .section-title", html: true, ku: "<i class='fas fa-photo-video'></i> وێنە و ڤیدیۆ", en: "<i class='fas fa-photo-video'></i> Photos and videos" },
+    { selector: "#media .section-subtitle", ku: "ئێرە دەتوانیت نموونەی میدیای قوتابخانە ببینیت. بۆ وانەکان، بەشی وانە ئۆنلاینەکان بەکاربهێنە.", en: "Here you can view sample school media. For class videos, please use the online lessons section." },
+    { selector: "#media .media-item:nth-child(1) h3", ku: "خوێندن لە ئامادەیەکەمان", en: "Learning at our school" },
+    { selector: "#media .media-item:nth-child(1) p", ku: "خوێندکاران لە قوتابخانە لە کاتی وانەدا", en: "Students during an in-person lesson" },
+    { selector: "#media .media-item:nth-child(2) h3", ku: "خوێندکاران وانە دەگرنەوە", en: "Students reviewing a lesson" },
+    { selector: "#media .media-item:nth-child(2) p", ku: "خوێندکاران لە کاتی وانەگرتنەوەدا", en: "Students revising together" },
+    { selector: "#media .media-item:nth-child(3) h3", ku: "مامۆستا وانە دەڵێت", en: "Teacher delivering a lesson" },
+    { selector: "#media .media-item:nth-child(3) p", ku: "مامۆستایان لە کاتی وانەوتندا", en: "Teachers during classroom instruction" },
+    { selector: "#media .auth-btn", html: true, ku: "<i class='fas fa-cloud-arrow-up'></i> بارکردنی میدیا", en: "<i class='fas fa-cloud-arrow-up'></i> Upload media" },
+    { selector: "#comments .section-title", html: true, ku: "<i class='fas fa-comments'></i> کۆمێنتەکان", en: "<i class='fas fa-comments'></i> Comments" },
+    { selector: ".comment-form h3", ku: "کۆمێنتێک بنووسە", en: "Write a comment" },
+    { selector: "#commentText", attr: "placeholder", ku: "کۆمێنتەکەت لێرە بنووسە...", en: "Write your comment here..." },
+    { selector: "#commentForm .auth-btn span", ku: "ناردنی کۆمێنت", en: "Send comment" },
+    { selector: ".comments-title", ku: "کۆمێنتەکانی خەڵک", en: "Community comments" },
+    { selector: "#about .section-title", html: true, ku: "<i class='fas fa-info-circle'></i> دەربارەی ئێمە", en: "<i class='fas fa-info-circle'></i> About us" },
+    { selector: ".about-text > p:nth-of-type(1)", ku: "ئامادەیی پیشەیی سیڤەر لە ساڵی 2025 دامەزراوە، وەک دامەزراوەیەکی ئەکادیمی کە ئامانجمان پەرەپێدانی قوتابیانە، بە بنەمای زانستی و پێویستییە ڕاستەقینەکانی بازاڕی کار.", en: "Sivar Vocational High School was established in 2025 as an academic institution focused on student development through real-world, market-relevant education." },
+    { selector: ".about-text > p:nth-of-type(2)", ku: "لە ئامادەیی پیشەیی سیڤەر تەنها فێربوونی زانیاری نییە، بەڵکو پڕۆسەیەکی بەردەوامە کە گەشەپێدانی بیرکردنەوەی ستراتیژی، ئەخلاقی کار و توانای گونجاندن لەگەڵ گۆڕانکارییەکانی ژینگەی کار لەخۆ دەگرێت.", en: "At Sivar, education is not only about knowledge. It is an ongoing process that develops strategic thinking, work ethics, and the ability to adapt to a changing professional environment." },
+    { selector: ".about-highlights h3", html: true, ku: "<i class='fas fa-star'></i> پێشکەوتنەکانی ئێمە", en: "<i class='fas fa-star'></i> Our highlights" },
+    { selector: ".highlight-card:nth-child(1) h4", html: true, ku: "<i class='fas fa-award'></i> خەڵاتەکان", en: "<i class='fas fa-award'></i> Awards" },
+    { selector: ".highlight-card:nth-child(1) p", ku: "خەڵاتی باشترین پەیمانگای پێشەنگی لە هەرێمی کوردستان", en: "Recognized among the leading vocational schools in the Kurdistan Region" },
+    { selector: ".highlight-card:nth-child(2) h4", html: true, ku: "<i class='fas fa-handshake'></i> هاوپەیمانییەکان", en: "<i class='fas fa-handshake'></i> Partnerships" },
+    { selector: ".highlight-card:nth-child(2) p", ku: "هاوپەیمانی لەگەڵ ٢٠+ کۆمپانیای تەکنەلۆژیا", en: "Partnerships with 20+ technology companies" },
+    { selector: ".highlight-card:nth-child(3) h4", html: true, ku: "<i class='fas fa-briefcase'></i> ڕێژەی کار", en: "<i class='fas fa-briefcase'></i> Employment rate" },
+    { selector: ".highlight-card:nth-child(3) p", ku: "٨٥٪ی خوێندکاران دوای تەواوکردن کار دەکەنەوە", en: "85% of students move into work after graduation" },
+    { selector: ".map-grid .section-title", html: true, ku: "<i class='fas fa-map-location-dot'></i> شوێنی قوتابخانە", en: "<i class='fas fa-map-location-dot'></i> School location" },
+    { selector: "main .section:nth-last-of-type(1) .section-subtitle", ku: "نەخشەکە پێش پایی ویب‌سایت زیادکراوە بۆ ئەوەی شوێنی قوتابخانە بە ئاشکرا نیشان بدرێت.", en: "The map is placed near the bottom of the website so visitors can find the school easily." },
+    { selector: ".map-info-row:nth-child(1) strong", ku: "ناونیشان", en: "Address" },
+    { selector: ".map-info-row:nth-child(1) p", ku: "ئامادەی پیشەی سیڤەر - هەولێر، هەرێمی کوردستان", en: "Sivar Vocational High School - Erbil, Kurdistan Region" },
+    { selector: ".map-info-row:nth-child(2) strong", ku: "پەیوەندی", en: "Phone" },
+    { selector: ".map-info-row:nth-child(3) strong", ku: "ئیمەیڵ", en: "Email" },
+    { selector: ".map-details .primary-btn", html: true, ku: "<i class='fas fa-diamond-turn-right'></i> کردنەوەی نەخشە", en: "<i class='fas fa-diamond-turn-right'></i> Open map" },
+    { selector: ".goals .section-title", html: true, ku: "<i class='fas fa-bullseye'></i> ئامانجەکانی ئامادەیی پیشەیی سیڤەر", en: "<i class='fas fa-bullseye'></i> Goals of Sivar Vocational High School" },
+    { selector: ".goal-card:nth-child(1) span", ku: "هاندان بۆ دیاریکردنی ئامانجی پیشەیی", en: "Help students define their vocational goals" },
+    { selector: ".goal-card:nth-child(2) span", ku: "ڕێنمایی لە پلاندانان و هەنگاوەکان", en: "Guide planning and next steps" },
+    { selector: ".goal-card:nth-child(3) span", ku: "ئامادەبوون بۆ گونجاندن لەگەڵ بازاڕی کار", en: "Prepare students for the job market" },
+    { selector: ".goal-card:nth-child(4) span", ku: "دروستکردنی هەڵوێستی پۆزەتیڤ", en: "Build a positive mindset" },
+    { selector: ".goal-card:nth-child(5) span", ku: "بەشداری کارا لە تیم و کۆمەڵگا", en: "Encourage teamwork and community participation" },
+    { selector: ".goal-card:nth-child(6) span", ku: "فێربوونی بەرپرسیارێتی", en: "Teach responsibility" },
+    { selector: ".goal-card:nth-child(7) span", ku: "داهاتوویەکی سەقامگیر و توانا‌دار", en: "Build a strong and stable future" },
+    { selector: "footer .footer-section:nth-child(1) h3", html: true, ku: "<i class='fas fa-graduation-cap'></i> سیڤەر ئامادەی پیشەیی", en: "<i class='fas fa-graduation-cap'></i> Sivar Vocational High School" },
+    { selector: "footer .footer-section:nth-child(1) p:nth-of-type(1)", ku: "لە سەرکەوتنەکانت مەترسە، تۆ لە ئامادەی سیڤەری.", en: "Shape your success at Sivar Vocational High School." },
+    { selector: "footer .footer-section:nth-child(1) p:nth-of-type(2)", ku: "هەموو بابەتەکان بە زمانی کوردی و بە شێوەیەکی سادە و ڕوون ڕێکخراون.", en: "All school content is organized clearly and accessibly for students and families." },
+    { selector: "footer .footer-section:nth-child(2) h3", html: true, ku: "<i class='fas fa-address-book'></i> پەیوەندی", en: "<i class='fas fa-address-book'></i> Contact" },
+    { selector: "footer .footer-section:nth-child(3) h3", html: true, ku: "<i class='fas fa-link'></i> بەستەرە خێراکان", en: "<i class='fas fa-link'></i> Quick links" },
+    { selector: "footer .footer-section:nth-child(3) a[href='#home']", html: true, ku: "<i class='fas fa-house'></i> سەرەتا", en: "<i class='fas fa-house'></i> Home" },
+    { selector: "footer .footer-section:nth-child(3) a[href='#departments']", html: true, ku: "<i class='fas fa-book'></i> بەشەکان", en: "<i class='fas fa-book'></i> Departments" },
+    { selector: "footer .footer-section:nth-child(3) a[href='#online-lessons']", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-video'></i> Online lessons" },
+    { selector: "footer .footer-section:nth-child(3) a[href='#comments']", html: true, ku: "<i class='fas fa-comments'></i> کۆمێنت", en: "<i class='fas fa-comments'></i> Comments" },
+    { selector: "footer .footer-section:nth-child(3) a[href='#about']", html: true, ku: "<i class='fas fa-circle-info'></i> دەربارە", en: "<i class='fas fa-circle-info'></i> About" },
+    { selector: ".copyright p:nth-child(1)", ku: "© ٢٠٢٦ هەموو مافەکان پارێزراون بۆ ئامادەی پیشەی سیڤەر.", en: "© 2026 All rights reserved by Sivar Vocational High School." },
+    { selector: ".copyright p:nth-child(2)", ku: "هەرێمی کوردستان - هەولێر", en: "Erbil - Kurdistan Region" }
+  ],
+  activities: [
+    { selector: "title", ku: "وانە و چالاکییەکان - ئامادەی پیشەی سیڤەر", en: "Lessons and Activities - Sivar Vocational High School" },
+    { selector: ".nav-list a[href='index.html']", html: true, ku: "<i class='fas fa-house'></i> سەرەکی", en: "<i class='fas fa-house'></i> Home" },
+    { selector: ".nav-list a[href='activity-programming.html']", html: true, ku: "<i class='fas fa-code'></i> پڕۆگرامسازی", en: "<i class='fas fa-code'></i> Programming" },
+    { selector: ".nav-list a[href='activity-architecture.html']", html: true, ku: "<i class='fas fa-building'></i> بیناسازی", en: "<i class='fas fa-building'></i> Architecture" },
+    { selector: ".nav-list a[href='activity-veterinary.html']", html: true, ku: "<i class='fas fa-paw'></i> ڤێتێرنەری", en: "<i class='fas fa-paw'></i> Veterinary" },
+    { selector: ".hero-content h1", ku: "وانە و چالاکییەکان", en: "Lessons and activities" },
+    { selector: ".hero-content p", ku: "هەموو بەشەکان لە یەک شوێندا بۆ گەیشتن بە وانە و ڤیدیۆکان", en: "All departments in one place for easy access to lessons and videos." },
+    { selector: ".section-title", html: true, ku: "<i class='fas fa-clapperboard'></i> بەشەکان هەڵبژێرە", en: "<i class='fas fa-clapperboard'></i> Choose a department" },
+    { selector: ".quick-card:nth-child(1) h3", html: true, ku: "<i class='fas fa-code'></i> پڕۆگرامسازی", en: "<i class='fas fa-code'></i> Programming" },
+    { selector: ".quick-card:nth-child(1) p", ku: "وانە و ڤیدیۆکانی پڕۆگرامسازی.", en: "Programming lessons and videos." },
+    { selector: ".quick-card:nth-child(2) h3", html: true, ku: "<i class='fas fa-building'></i> بیناسازی", en: "<i class='fas fa-building'></i> Architecture" },
+    { selector: ".quick-card:nth-child(2) p", ku: "وانە و ڤیدیۆکانی بیناسازی.", en: "Architecture lessons and videos." },
+    { selector: ".quick-card:nth-child(3) h3", html: true, ku: "<i class='fas fa-paw'></i> ڤێتێرنەری", en: "<i class='fas fa-paw'></i> Veterinary" },
+    { selector: ".quick-card:nth-child(3) p", ku: "وانە و ڤیدیۆکانی ڤێتێرنەری.", en: "Veterinary lessons and videos." }
+  ],
+  admissions: [
+    { selector: "title", ku: "وەرگرتن و تۆمارکردن - ئامادەی پیشەی سیڤەر", en: "Admissions and Registration - Sivar Vocational High School" },
+    { selector: ".nav-list a[href='index.html']", html: true, ku: "<i class='fas fa-house'></i> سەرەکی", en: "<i class='fas fa-house'></i> Home" },
+    { selector: ".nav-list a[href='#requirements']", html: true, ku: "<i class='fas fa-file-lines'></i> مەرجەکان", en: "<i class='fas fa-file-lines'></i> Requirements" },
+    { selector: ".nav-list a[href='#documents']", html: true, ku: "<i class='fas fa-folder-open'></i> بەڵگەنامەکان", en: "<i class='fas fa-folder-open'></i> Documents" },
+    { selector: ".nav-list a[href='#steps']", html: true, ku: "<i class='fas fa-list-ol'></i> هەنگاوەکان", en: "<i class='fas fa-list-ol'></i> Steps" },
+    { selector: ".header-actions .login-btn", html: true, ku: "<i class='fas fa-arrow-right'></i> گەڕانەوە", en: "<i class='fas fa-arrow-right'></i> Back" },
+    { selector: ".hero-content h1", ku: "وەرگرتن و تۆمارکردن", en: "Admissions and registration" },
+    { selector: ".hero-content p", ku: "زانیاری دەربارەی مەرجەکان و چۆنیەتی تۆمارکردن بۆ بەشەکانی قوتابخانە", en: "Information about the requirements and registration process for the school departments." },
+    { selector: "#requirements .section-title", html: true, ku: "<i class='fas fa-file-lines'></i> مەرجەکانی وەرگرتن", en: "<i class='fas fa-file-lines'></i> Admission requirements" },
+    { selector: "#requirements .info-card:nth-child(1) h3", ku: "بڕوانامەی پێشووتر", en: "Previous certificate" },
+    { selector: "#requirements .info-card:nth-child(1) p", ku: "پێویستە خوێندکار بڕوانامەی قۆناغی پێشووتر هەبێت.", en: "Students must have the required certificate from the previous stage." },
+    { selector: "#requirements .info-card:nth-child(2) h3", ku: "نمرەی وەرگرتن", en: "Admission score" },
+    { selector: "#requirements .info-card:nth-child(2) p", ku: "پێویستە نمرەی گونجاو بەپێی بەشەکە بێت.", en: "Students should meet the required score for their chosen department." },
+    { selector: "#requirements .info-card:nth-child(3) h3", ku: "ناسنامە", en: "Identification" },
+    { selector: "#requirements .info-card:nth-child(3) p", ku: "وێنەی ناسنامە و بەڵگەنامەی کەسی پێویستە.", en: "A copy of an ID card and personal documents is required." },
+    { selector: "#documents .section-title", html: true, ku: "<i class='fas fa-folder-open'></i> بەڵگەنامە پێویستەکان", en: "<i class='fas fa-folder-open'></i> Required documents" },
+    { selector: "#documents li:nth-child(1)", html: true, ku: "<i class='fas fa-check'></i> وێنەی 4x3", en: "<i class='fas fa-check'></i> 4x3 photo" },
+    { selector: "#documents li:nth-child(2)", html: true, ku: "<i class='fas fa-check'></i> بڕوانامەی پێشووتر", en: "<i class='fas fa-check'></i> Previous certificate" },
+    { selector: "#documents li:nth-child(3)", html: true, ku: "<i class='fas fa-check'></i> ناسنامە", en: "<i class='fas fa-check'></i> ID card" },
+    { selector: "#documents li:nth-child(4)", html: true, ku: "<i class='fas fa-check'></i> فۆرمی تۆمارکردن", en: "<i class='fas fa-check'></i> Registration form" },
+    { selector: "#steps .section-title", html: true, ku: "<i class='fas fa-list-ol'></i> چۆنیەتی تۆمارکردن", en: "<i class='fas fa-list-ol'></i> How to register" },
+    { selector: "#steps .step-card:nth-child(1) p", ku: "پڕکردنەوەی فۆرمی ئۆنلاین", en: "Fill out the online form" },
+    { selector: "#steps .step-card:nth-child(2) p", ku: "ناردنی بەڵگەنامەکان", en: "Submit the required documents" },
+    { selector: "#steps .step-card:nth-child(3) p", ku: "چاوپێکەوتن (ئەگەر پێویست بوو)", en: "Interview (if required)" },
+    { selector: "#steps .step-card:nth-child(4) p", ku: "وەرگرتنی پەسەندکردن", en: "Receive admission approval" },
+    { selector: "#steps .hero-btn", html: true, ku: "<i class='fas fa-paper-plane'></i> پەیوەندی بکە بۆ تۆمارکردن", en: "<i class='fas fa-paper-plane'></i> Contact us to register" }
+  ],
+  login: [
+    { selector: "title", ku: "چوونەژورەوەی داشبۆرد - ئامادەی پیشەی سیڤەر", en: "Dashboard Login - Sivar Vocational High School" },
+    { selector: ".login-container h2", ku: "چوونەژورەوەی داشبۆرد", en: "Dashboard login" },
+    { selector: ".login-container > p", html: true, ku: "ئەم پەڕەیە بۆ ئەدمین و مامۆستایانە. ئەگەر مامۆستایت، پێویستە ئەدمین ڕۆڵی تۆ بکات بە <strong>teacher</strong>.", en: "This page is for admins and teachers. If you are a teacher, an admin must first set your role to <strong>teacher</strong>." },
+    { selector: "#adminEmail", attr: "placeholder", ku: "ئیمەیڵ", en: "Email" },
+    { selector: "#adminPassword", attr: "placeholder", ku: "وشەی نهێنی", en: "Password" },
+    { selector: "#accessLoginBtn", html: true, ku: "<i class='fas fa-right-to-bracket'></i> چوونەژورەوە", en: "<i class='fas fa-right-to-bracket'></i> Login" },
+    { selector: ".center .outline-btn", html: true, ku: "<i class='fas fa-arrow-right'></i> گەڕانەوە بۆ سەرەکی", en: "<i class='fas fa-arrow-right'></i> Back to home" }
+  ],
+  admin: [
+    { selector: "title", ku: "داشبۆردی قوتابخانە - ئامادەی پیشەی سیڤەر", en: "School Dashboard - Sivar Vocational High School" },
+    { selector: ".admin-header h1", ku: "داشبۆردی قوتابخانە", en: "School dashboard" },
+    { selector: ".admin-header .muted", html: true, ku: "ڕۆڵی ئێستات: <strong id='dashboardRoleBadge'>...</strong>", en: "Your current role: <strong id='dashboardRoleBadge'>...</strong>" },
+    { selector: ".admin-inline-actions .outline-btn", html: true, ku: "<i class='fas fa-house'></i> سەرەکی", en: "<i class='fas fa-house'></i> Home" },
+    { selector: "#logoutAdmin", html: true, ku: "<i class='fas fa-right-from-bracket'></i> چوونە دەرەوە", en: "<i class='fas fa-right-from-bracket'></i> Logout" },
+
+    { selector: ".dashboard-stat:nth-child(1) .dashboard-stat-label", ku: "وانەکان", en: "Lessons" },
+    { selector: ".dashboard-stat:nth-child(2) .dashboard-stat-label", ku: "ڕاگەیاندنەکان", en: "Announcements" },
+    { selector: ".dashboard-stat:nth-child(3) .dashboard-stat-label", ku: "کۆمێنتەکان", en: "Comments" },
+    { selector: ".dashboard-stat:nth-child(4) .dashboard-stat-label", ku: "ڕۆڵی ئێستا", en: "Current role" },
+    { selector: ".admin-card:nth-of-type(1) h2", ku: "ڕێنمایی خێرا", en: "Quick guide" },
+    { selector: ".admin-card:nth-of-type(1) .dashboard-note", ku: "١. مامۆستا یان ئەدمین لە پەڕەی login.html چوونەژورەوە دەکات. ٢. وانەکە بە هەڵبژاردنی بەش، ناونیشان، بابەت و ڤیدیۆ زیاد دەکات. ٣. وانەکە خۆکارانە لە پەڕەی هەمان بەشدا نیشان دەدرێت.", en: "1. A teacher or admin signs in from login.html. 2. Add the lesson by choosing a department, title, subject, and video. 3. The lesson appears automatically on the matching department page." },
+    { selector: ".admin-card:nth-of-type(2) h2", ku: "زیادکردنی وانە ئۆنلاین", en: "Add online lesson" },
+    { selector: ".admin-card:nth-of-type(2) .muted", ku: "ئەم فۆرمە بۆ بارکردنی ڤیدیۆی وانەکانە بۆ هەر یەکێک لە سێ بەشەکە.", en: "Use this form to upload lesson videos for any of the three departments." },
+    { selector: "label[for='lessonDepartment']", ku: "بەش", en: "Department" },
+    { selector: "#lessonDepartment option[value='']", ku: "بەش هەڵبژێرە", en: "Choose department" },
+    { selector: "#lessonDepartment option[value='programming']", ku: "پڕۆگرامسازی", en: "Programming" },
+    { selector: "#lessonDepartment option[value='architecture']", ku: "بیناسازی", en: "Architecture" },
+    { selector: "#lessonDepartment option[value='veterinary']", ku: "ڤێتێرنەری", en: "Veterinary" },
+    { selector: "label[for='lessonTitle']", ku: "ناونیشانی وانە", en: "Lesson title" },
+    { selector: "#lessonTitle", attr: "placeholder", ku: "نموونە: وانەی یەکەم - HTML", en: "Example: Lesson 1 - HTML" },
+    { selector: "label[for='lessonTeacher']", ku: "ناوی مامۆستا", en: "Teacher name" },
+    { selector: "#lessonTeacher", attr: "placeholder", ku: "ناوی مامۆستا", en: "Teacher name" },
+    { selector: "label[for='lessonSubject']", ku: "بابەت", en: "Subject" },
+    { selector: "#lessonSubject", attr: "placeholder", ku: "نموونە: Web Design", en: "Example: Web Design" },
+    { selector: "label[for='lessonDescription']", ku: "کورتە دەربارەی وانە", en: "Short lesson description" },
+    { selector: "#lessonDescription", attr: "placeholder", ku: "کورتە باسێک لەسەر ناوەڕۆکی وانەکە...", en: "A short summary of the lesson content..." },
+    { selector: "label[for='lessonVideo']", ku: "ڤیدیۆی وانە", en: "Lesson video file" },
+    { selector: ".file-note", ku: "باشترە ناوی وانەکە ڕوون بێت. وەک: lesson-1-html.mp4 یان lesson-1.mov", en: "Use a clear file name, for example: lesson-1-html.mp4 or lesson-1.mov" },
+    { selector: "label[for='lessonVideoUrl']", ku: "بەستەری ڤیدیۆ (هەڵبژاردەی دووەم)", en: "Video link (optional fallback)" },
+    { selector: "#lessonVideoUrl", attr: "placeholder", ku: "https://example.com/lesson.mp4", en: "https://example.com/lesson.mp4" },
+    { selector: "#lessonUploadStatus", ku: "دەتوانیت فایل باربکەیت یان ئەگەر پێویست بوو بەستەری ڤیدیۆ بنێریت.", en: "You can upload a file or, if needed, provide a direct video URL." },
+    { selector: "#postLessonBtn", html: true, ku: "<i class='fas fa-cloud-arrow-up'></i> بارکردنی وانە", en: "<i class='fas fa-cloud-arrow-up'></i> Upload lesson" },
+    { selector: ".admin-card:nth-of-type(3) h2", ku: "وانە بارکراوەکان", en: "Uploaded lessons" },
+    { selector: ".admin-card:nth-of-type(3) .muted", ku: "لێرە دەتوانیت هەموو وانە بارکراوەکان ببینیت و ئەگەر پێویست بوو بسڕیتەوە.", en: "Review all uploaded lessons here and remove them if necessary." },
+    { selector: ".admin-card:nth-of-type(4) h2", ku: "ڕاگەیاندن", en: "Announcements" },
+    { selector: "label[for='announcementText']", ku: "دەقی ڕاگەیاندن", en: "Announcement text" },
+    { selector: "#announcementText", attr: "placeholder", ku: "نووسینی ڕاگەیاندن...", en: "Write the announcement..." },
+    { selector: "label[for='announcementImage']", ku: "وێنەی ڕاگەیاندن", en: "Announcement image" },
+    { selector: "#postAnnouncementBtn", html: true, ku: "<i class='fas fa-paper-plane'></i> ناردن", en: "<i class='fas fa-paper-plane'></i> Post" },
+    { selector: "[data-admin-only] h2", ku: "بەڕێوەبردنی ڕۆڵەکان", en: "Manage roles" },
+    { selector: "[data-admin-only] .muted", ku: "ئەم بەشە تەنها بۆ ئەدمینە. مامۆستا سەرەتا تۆمار دەکات، پاشان ئەدمین دەتوانێت ڕۆڵی بکات بە teacher.", en: "This section is for admins only. Teachers register first, then an admin can change their role to teacher." },
+    { selector: "label[for='roleEmail']", ku: "ئیمەیڵی بەکارهێنەر", en: "User email" },
+    { selector: "#roleEmail", attr: "placeholder", ku: "teacher@example.com", en: "teacher@example.com" },
+    { selector: "label[for='roleSelect']", ku: "ڕۆڵ", en: "Role" },
+    { selector: "#roleUpdateBtn", html: true, ku: "<i class='fas fa-user-shield'></i> نوێکردنەوەی ڕۆڵ", en: "<i class='fas fa-user-shield'></i> Update role" },
+    { selector: ".admin-card:last-child h2", ku: "کۆمێنتەکان", en: "Comments" }
+  ],
+  "department-programming": [
+    { selector: "title", ku: "بەشی پڕۆگرامسازی - ئامادەی پیشەی سیڤەر", en: "Programming Department - Sivar Vocational High School" },
+    { selector: ".nav-list a[href='index.html']", html: true, ku: "<i class='fas fa-house'></i> سەرەکی", en: "<i class='fas fa-house'></i> Home" },
+    { selector: ".nav-list a[href='#about-dept']", html: true, ku: "<i class='fas fa-circle-info'></i> دەربارەی بەش", en: "<i class='fas fa-circle-info'></i> About department" },
+    { selector: ".nav-list a[href='#online-lessons']", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-video'></i> Online lessons" },
+    { selector: ".nav-list a[href='#teachers']", html: true, ku: "<i class='fas fa-chalkboard-teacher'></i> مامۆستاکان", en: "<i class='fas fa-chalkboard-teacher'></i> Teachers" },
+    { selector: ".header-actions .login-btn", html: true, ku: "<i class='fas fa-chalkboard-user'></i> داشبۆرد", en: "<i class='fas fa-chalkboard-user'></i> Dashboard" },
+    { selector: ".hero-content h1", ku: "بەشی پڕۆگرامسازی", en: "Programming department" },
+    { selector: ".hero-content p", ku: "پەروەردەی شارەزایانی تەکنەلۆژیا و داهێنان، هەروەها بەردەستکردنی وانە ئۆنلاین بۆ هەموو بابەتەکان", en: "A department for future technology creators, with online lessons available for every core subject." },
+    { selector: ".hero-actions .hero-btn", html: true, ku: "<i class='fas fa-circle-play'></i> بینینی وانەکان", en: "<i class='fas fa-circle-play'></i> View lessons" },
+    { selector: ".hero-actions .secondary-btn", html: true, ku: "<i class='fas fa-cloud-arrow-up'></i> بارکردنی وانە", en: "<i class='fas fa-cloud-arrow-up'></i> Upload lesson" },
+    { selector: "#about-dept .section-title", html: true, ku: "<i class='fas fa-code'></i> دەربارەی بەش", en: "<i class='fas fa-code'></i> About the department" },
+    { selector: "#about-dept .section-subtitle", ku: "ئەم بەشە بۆ ئەو خوێندکارانەیە کە دەتەوێن ببن بە پڕۆگرامساز و لەسەر وێب، مۆبایل، داتابەیس و سیکیوریتی کار بکەن.", en: "This department is designed for students who want to become programmers and work on web, mobile, databases, and security." },
+    { selector: "#online-lessons .section-title", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکانی پڕۆگرامسازی", en: "<i class='fas fa-video'></i> Programming online lessons" },
+    { selector: "#online-lessons .outline-btn", html: true, ku: "<i class='fas fa-arrow-up-from-bracket'></i> چوونە ناو داشبۆرد", en: "<i class='fas fa-arrow-up-from-bracket'></i> Open dashboard" },
+    { selector: "#online-lessons .section-subtitle", ku: "هەر وانەیەک کە لە داشبۆرد زیاد بکرێت، لێرە خۆکارانە دەردەکەوێت. تکایە وانەکان بە ناونیشان و بابەتێکی ڕوون زیاد بکەن.", en: "Every lesson added from the dashboard appears here automatically. Please use clear titles and subjects for each lesson." },
+    { selector: "#teachers .section-title", html: true, ku: "<i class='fas fa-chalkboard-teacher'></i> مامۆستایانی بەش", en: "<i class='fas fa-chalkboard-teacher'></i> Department teachers" },
+    { selector: "#teachers .department-btn span", ku: "گەڕانەوە بۆ سەرەکی", en: "Back to home" }
+  ],
+  "department-architecture": [
+    { selector: "title", ku: "بەشی بیناسازی - ئامادەی پیشەی سیڤەر", en: "Architecture Department - Sivar Vocational High School" },
+    { selector: ".hero-content h1", ku: "بەشی بیناسازی", en: "Architecture department" },
+    { selector: ".hero-content p", ku: "فێربوونی دیزاین، پلانکردن و دروستکردنی پڕۆژەی بیناسازی، هەروەها بەردەستکردنی وانە ئۆنلاین", en: "Study design, planning, and architectural projects with online lessons available for every subject." },
+    { selector: "#about-dept .section-title", html: true, ku: "<i class='fas fa-building'></i> دەربارەی بەش", en: "<i class='fas fa-building'></i> About the department" },
+    { selector: "#about-dept .section-subtitle", ku: "ئەم بەشە بۆ فێربوونی دیزاین، پلانکردن، و وێنە ئەندازەیی و دروستکردنی پڕۆژەی بیناسازییە.", en: "This department focuses on design, planning, drafting, and architectural project work." },
+    { selector: "#online-lessons .section-title", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکانی بیناسازی", en: "<i class='fas fa-video'></i> Architecture online lessons" },
+    { selector: "#teachers .section-title", html: true, ku: "<i class='fas fa-chalkboard-teacher'></i> مامۆستایانی بەش", en: "<i class='fas fa-chalkboard-teacher'></i> Department teachers" },
+    { selector: "#teachers .department-btn span", ku: "گەڕانەوە بۆ سەرەکی", en: "Back to home" }
+  ],
+  "department-veterinary": [
+    { selector: "title", ku: "بەشی ڤێتێرنەری - ئامادەی پیشەی سیڤەر", en: "Veterinary Department - Sivar Vocational High School" },
+    { selector: ".hero-content h1", ku: "بەشی ڤێتێرنەری", en: "Veterinary department" },
+    { selector: ".hero-content p", ku: "پزیشکی ئاژەڵ و پاراستنی تەندروستیان، هەروەها بەردەستکردنی وانە ئۆنلاین", en: "Learn animal health and veterinary care with online lessons available across the department." },
+    { selector: "#about-dept .section-title", html: true, ku: "<i class='fas fa-paw'></i> دەربارەی بەش", en: "<i class='fas fa-paw'></i> About the department" },
+    { selector: "#about-dept .section-subtitle", ku: "ئەم بەشە پەیوەندیدارە بە پزیشکی ئاژەڵ، توێکاری و پاراستنی تەندروستی ئاژەڵان.", en: "This department focuses on animal medicine, diagnosis, and animal health care." },
+    { selector: "#online-lessons .section-title", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکانی ڤێتێرنەری", en: "<i class='fas fa-video'></i> Veterinary online lessons" },
+    { selector: "#teachers .section-title", html: true, ku: "<i class='fas fa-chalkboard-teacher'></i> مامۆستایانی بەش", en: "<i class='fas fa-chalkboard-teacher'></i> Department teachers" },
+    { selector: "#teachers .department-btn span", ku: "گەڕانەوە بۆ سەرەکی", en: "Back to home" }
+  ],
+  "activity-programming": [
+    { selector: "title", ku: "وانە و چالاکییەکانی پڕۆگرامسازی - ئامادەی پیشەی سیڤەر", en: "Programming Lessons and Activities - Sivar Vocational High School" },
+    { selector: ".nav-list a[href='activities.html']", html: true, ku: "<i class='fas fa-arrow-right'></i> گەڕانەوە", en: "<i class='fas fa-arrow-right'></i> Back" },
+    { selector: ".hero-content h1", ku: "وانە و چالاکییەکانی پڕۆگرامسازی", en: "Programming lessons and activities" },
+    { selector: ".hero-content p", ku: "هەموو ڤیدیۆ و وانەکان بۆ بەشی پڕۆگرامسازی", en: "All videos and lessons for the programming department." },
+    { selector: "main .section:nth-child(1) .section-title", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-video'></i> Online lessons" },
+    { selector: "main .section:nth-child(2) .section-title", html: true, ku: "<i class='fas fa-star'></i> نموونەی چالاکی", en: "<i class='fas fa-star'></i> Sample activity" },
+    { selector: ".video-card p", ku: "چالاکی یەکەم", en: "Activity one" }
+  ],
+  "activity-architecture": [
+    { selector: "title", ku: "وانە و چالاکییەکانی بیناسازی - ئامادەی پیشەی سیڤەر", en: "Architecture Lessons and Activities - Sivar Vocational High School" },
+    { selector: ".nav-list a[href='activities.html']", html: true, ku: "<i class='fas fa-arrow-right'></i> گەڕانەوە", en: "<i class='fas fa-arrow-right'></i> Back" },
+    { selector: ".hero-content h1", ku: "وانە و چالاکییەکانی بیناسازی", en: "Architecture lessons and activities" },
+    { selector: ".hero-content p", ku: "هەموو ڤیدیۆ و وانەکان بۆ بەشی بیناسازی", en: "All videos and lessons for the architecture department." },
+    { selector: "main .section:nth-child(1) .section-title", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-video'></i> Online lessons" },
+    { selector: "main .section:nth-child(2) .section-title", html: true, ku: "<i class='fas fa-star'></i> نموونەی چالاکی", en: "<i class='fas fa-star'></i> Sample activity" },
+    { selector: ".video-card p", ku: "چالاکی یەکەم", en: "Activity one" }
+  ],
+  "activity-veterinary": [
+    { selector: "title", ku: "وانە و چالاکییەکانی ڤێتێرنەری - ئامادەی پیشەی سیڤەر", en: "Veterinary Lessons and Activities - Sivar Vocational High School" },
+    { selector: ".nav-list a[href='activities.html']", html: true, ku: "<i class='fas fa-arrow-right'></i> گەڕانەوە", en: "<i class='fas fa-arrow-right'></i> Back" },
+    { selector: ".hero-content h1", ku: "وانە و چالاکییەکانی ڤێتێرنەری", en: "Veterinary lessons and activities" },
+    { selector: ".hero-content p", ku: "هەموو ڤیدیۆ و وانەکان بۆ بەشی ڤێتێرنەری", en: "All videos and lessons for the veterinary department." },
+    { selector: "main .section:nth-child(1) .section-title", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-video'></i> Online lessons" },
+    { selector: "main .section:nth-child(2) .section-title", html: true, ku: "<i class='fas fa-star'></i> نموونەی چالاکی", en: "<i class='fas fa-star'></i> Sample activity" },
+    { selector: ".video-card p", ku: "چالاکی یەکەم", en: "Activity one" }
+  ]
+};
+
+function applyTranslations() {
+  const pageKey = document.body?.dataset.page || "index";
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = currentLang === "en" ? "ltr" : "rtl";
+  document.body?.classList.toggle("lang-en", currentLang === "en");
+  document.body?.classList.toggle("lang-ku", currentLang !== "en");
+  (pageTranslations.common || []).forEach(applyRule);
+  (pageTranslations[pageKey] || []).forEach(applyRule);
+  const heroTitle = qs("#heroTitle");
+  if (heroTitle) heroTitle.setAttribute("data-text", currentLang === "en" ? "Sivar Vocational High School" : "ئامادەی پیشەی سیڤەر");
+  updateLangButtonsUI();
+}
+
+function initLanguageSystem() {
+  qsa(".lang-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const nextLang = btn.getAttribute("data-lang") === "en" ? "en" : "ku";
+      if (nextLang === currentLang) return;
+      currentLang = nextLang;
+      localStorage.setItem("sivar_lang", currentLang);
+      applyTranslations();
+      if (qs("#announcementPublicList")) loadPublicAnnouncements();
+      if (qs("#commentsList")) loadComments();
+      if (qs("#departmentLessonsList")) loadDepartmentLessons();
+      if (qs("#lessonAdminList")) loadAdminLessons();
+      if (qs("#announcementList")) loadAdminAnnouncements();
+      if (qs("#adminCommentsList")) loadAdminComments();
+      if (qs("#heroTitle")) initHeroTyping();
+      if (auth?.currentUser) {
+        ensureUserProfile(auth.currentUser)
+          .then((userData) => applyUserDataToUI(auth.currentUser, userData))
+          .catch(() => applyUserDataToUI(auth.currentUser, null));
+      } else {
+        applyUserDataToUI(null, null);
+      }
+    });
+  });
+  applyTranslations();
+}
+
+function mapDepartmentName(value) {
+  if (value === "programming") return currentLang === "en" ? "Programming" : "پڕۆگرامسازی";
+  if (value === "architecture") return currentLang === "en" ? "Architecture" : "بیناسازی";
+  if (value === "veterinary") return currentLang === "en" ? "Veterinary" : "ڤێتێرنەری";
+  return value;
+}
+
+function formatRelativeTime(date) {
+  if (!date) return "";
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  if (diff < 60000) return t("now");
+  if (diff < 3600000) return `${Math.floor(diff / 60000)} ${t("mins_ago")}`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)} ${t("hours_ago")}`;
+  if (diff < 604800000) return `${Math.floor(diff / 86400000)} ${t("days_ago")}`;
+  return date.toLocaleDateString(currentLang === "en" ? "en-US" : "ar-IQ");
+}
+
+function renderEmptyState(message) {
+  return `
+    <div class="empty-state">
+      <i class="fas fa-inbox" style="font-size:34px; margin-bottom:12px; color:#2f7cf6;"></i>
+      <p>${escapeHtml(message)}</p>
+    </div>
+  `;
+}
+
+function buildUserMenu() {
+  return `
+    <div class="user-menu-item" data-action="profile"><i class="fas fa-user"></i><span>${t("profile_text")}</span></div>
+    <div class="user-menu-item" data-action="dashboard"><i class="fas fa-chalkboard-user"></i><span>${t("dashboard_text")}</span></div>
+    <div class="user-menu-item" data-action="logout" style="color:#c53a3a;"><i class="fas fa-right-from-bracket"></i><span>${t("logout_text")}</span></div>
+  `;
+}
+
+function applyUserDataToUI(user, userData) {
+  const desktopProfile = qs("#userProfile");
+  const mobileProfile = qs("#userProfileMobile");
+  const loginButton = qs("#loginButton");
+  const roleText = userData?.role === "admin" ? t("role_admin") : userData?.role === "teacher" ? t("role_teacher") : t("role_student");
+  const nameText = user?.displayName || userData?.name || (currentLang === "en" ? "User" : "بەکارهێنەر");
+  const avatarUrl = user?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(nameText)}&background=1e4ea8&color=fff&size=160`;
+
+  if (desktopProfile) desktopProfile.style.display = user && window.innerWidth > 992 ? "flex" : "none";
+  if (mobileProfile) mobileProfile.style.display = user && window.innerWidth <= 992 ? "flex" : "none";
+  if (loginButton) loginButton.style.display = user ? "none" : "inline-flex";
+
+  [
+    ["#userDisplayName", nameText], ["#userRole", roleText], ["#userAvatar", avatarUrl, true],
+    ["#userDisplayNameMobile", nameText], ["#userRoleMobile", roleText], ["#userAvatarMobile", avatarUrl, true]
+  ].forEach(([selector, value, isSrc]) => {
+    const el = qs(selector);
+    if (!el) return;
+    if (isSrc) el.src = value;
+    else el.textContent = value;
+  });
+}
+
+function setDashboardRoleState(role) {
+  currentDashboardRole = role;
+  const roleBox = qs("#dashboardRoleBadge");
+  const roleLabel = role === "admin" ? t("role_admin") : role === "teacher" ? t("role_teacher") : (currentLang === "en" ? "Unknown" : "نەناسراو");
+  if (roleBox) {
+    roleBox.textContent = roleLabel;
+  }
+  updateDashboardStat("statRoleValue", roleLabel);
+  qsa("[data-admin-only]").forEach((block) => block.classList.toggle("hidden", role !== "admin"));
+}
+
+function setLessonUploadStatus(message, type = "info") {
+  const target = qs("#lessonUploadStatus");
+  if (!target) return;
+  target.textContent = message;
+  target.style.color = type === "error" ? "#c53a3a" : type === "success" ? "#148a4b" : "var(--muted)";
+}
+
+function updateDashboardStat(id, value) {
+  const target = qs(`#${id}`);
+  if (!target) return;
+  target.textContent = String(value);
+}
+
+async function uploadLessonVideo(file, department) {
+  if (!storage) throw new Error("storage-unavailable");
+  const safeName = sanitizeFilename(file.name || "lesson-video.mp4");
+  const path = `lessons/${department}/${Date.now()}-${safeName}`;
+  const ref = storage.ref(path);
+
+  return await new Promise((resolve, reject) => {
+    const task = ref.put(file, { contentType: file.type || "video/mp4" });
+    task.on(
+      "state_changed",
+      (snapshot) => {
+        const progress = snapshot.totalBytes ? Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100) : 0;
+        setLessonUploadStatus(`${t("lesson_upload_progress")}: ${progress}%`, "info");
+      },
+      (error) => reject(error),
+      async () => {
+        try {
+          const url = await task.snapshot.ref.getDownloadURL();
+          resolve({ url, path });
+        } catch (error) {
+          reject(error);
+        }
+      }
+    );
+  });
+}
+
+async function postLesson(event) {
+  event?.preventDefault();
+  if (!db || !auth) return showNotification(t("not_ready"), "error");
+  const user = auth.currentUser;
+  if (!user) return showNotification(t("need_login"), "error");
+
+  const department = qs("#lessonDepartment")?.value || "";
+  const title = qs("#lessonTitle")?.value.trim() || "";
+  const teacher = qs("#lessonTeacher")?.value.trim() || user.displayName || "";
+  const subject = qs("#lessonSubject")?.value.trim() || "";
+  const description = qs("#lessonDescription")?.value.trim() || "";
+  const videoFile = qs("#lessonVideo")?.files?.[0] || null;
+  const videoUrlInput = qs("#lessonVideoUrl")?.value.trim() || "";
+
+  if (!department || !title || !teacher || !subject || (!videoFile && !videoUrlInput)) {
+    showNotification(t("lesson_missing"), "error");
+    return;
+  }
+
+  const btn = qs("#postLessonBtn");
+  const old = btn?.innerHTML;
+  if (btn) btn.innerHTML = '<span class="loading"></span>';
+  setLessonUploadStatus(videoFile ? t("lesson_uploading") : t("lesson_url_mode"), "info");
+
+  try {
+    let finalUrl = videoUrlInput;
+    let storagePath = "";
+
+    if (videoFile) {
+      const uploaded = await uploadLessonVideo(videoFile, department);
+      finalUrl = uploaded.url;
+      storagePath = uploaded.path;
+      setLessonUploadStatus(t("lesson_processing"), "info");
+    } else if (!/^https?:\/\//i.test(finalUrl)) {
+      throw new Error("invalid-video-link");
+    }
+
+    await db.collection("lessons").add({
+      department,
+      title,
+      teacher,
+      subject,
+      description,
+      videoUrl: finalUrl,
+      storagePath,
+      uploadedBy: user.uid,
+      uploadedByName: user.displayName || teacher,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    qs("#lessonForm")?.reset();
+    setLessonUploadStatus(t("lesson_upload_done"), "success");
+    showNotification(t("lesson_posted"));
+  } catch (error) {
+    console.error("Lesson upload error:", error);
+    let message = currentLang === "en" ? "There was a problem uploading the lesson." : "هەڵە لە بارکردنی وانەکە.";
+    if (error.code === "storage/unauthorized") message = currentLang === "en" ? "Storage rules rejected the upload. Check your Firebase Storage rules." : "یاساکانی Firebase Storage بارکردنەکە ڕەت کرد. تکایە rules ـەکان بپشکنە.";
+    if (error.code === "storage/canceled") message = currentLang === "en" ? "The upload was canceled." : "بارکردنەکە وەستێنرا.";
+    if (error.code === "storage/unknown") message = currentLang === "en" ? "Unknown storage error. Check the selected bucket and storage rules." : "هەڵەی نەناسراوی storage. storage bucket و rules بپشکنە.";
+    if (String(error.message || "") === "invalid-video-link") message = t("invalid_video_link");
+    setLessonUploadStatus(message, "error");
+    showNotification(message, "error");
+  } finally {
+    if (btn && old) btn.innerHTML = old;
+  }
+}
+
+function renderLessonCard(data, options = {}) {
+  const createdAt = data.createdAt?.toDate?.();
+  const showDelete = options.showDelete === true;
+  const lessonId = options.lessonId || "";
+  return `
+    <article class="lesson-card">
+      <video controls preload="metadata">
+        <source src="${data.videoUrl}" type="video/mp4">
+        <source src="${data.videoUrl}" type="video/webm">
+      </video>
+      <div>
+        <h3>${escapeHtml(data.title || (currentLang === "en" ? "Lesson" : "وانە"))}</h3>
+        ${data.description ? `<p>${escapeHtml(data.description)}</p>` : ""}
+        <div class="lesson-meta">
+          <span class="lesson-badge"><i class="fas fa-book"></i>${t("badge_subject")}: ${escapeHtml(data.subject || t("badge_subject"))}</span>
+          <span class="lesson-badge"><i class="fas fa-user"></i>${t("badge_teacher")}: ${escapeHtml(data.teacher || t("badge_teacher"))}</span>
+          <span class="lesson-badge"><i class="fas fa-building"></i>${t("badge_department")}: ${escapeHtml(mapDepartmentName(data.department || ""))}</span>
+        </div>
+      </div>
+      <div class="lesson-date">${createdAt ? formatRelativeTime(createdAt) : ""}</div>
+      ${showDelete ? `<div class="dashboard-item-actions"><button class="danger-btn" data-delete-lesson="${lessonId}"><i class="fas fa-trash"></i> ${t("delete_text")}</button></div>` : ""}
+    </article>
+  `;
+}
+
+function loadDepartmentLessons() {
+  if (!db) return;
+  const container = qs("#departmentLessonsList");
+  if (!container) return;
+  const department = container.getAttribute("data-department") || document.body?.dataset.department || "";
+  if (!department) return;
+  if (departmentLessonsUnsubscribe) departmentLessonsUnsubscribe();
+  departmentLessonsUnsubscribe = db.collection("lessons").where("department", "==", department).orderBy("createdAt", "desc").onSnapshot(
+    (snapshot) => {
+      const lessons = snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() || {}) }));
+      if (!lessons.length) {
+        container.innerHTML = renderEmptyState(t("empty_lessons"));
+        return;
+      }
+      container.innerHTML = lessons.map((lesson) => renderLessonCard(lesson)).join("");
+    },
+    () => {
+      container.innerHTML = renderEmptyState(currentLang === "en" ? "Unable to load lessons." : "نەتوانرا وانەکان باربکرێن.");
+    }
+  );
+}
+
+function loadAdminLessons() {
+  if (!db) return;
+  const container = qs("#lessonAdminList");
+  if (!container) return;
+  if (adminLessonsUnsubscribe) adminLessonsUnsubscribe();
+  adminLessonsUnsubscribe = db.collection("lessons").orderBy("createdAt", "desc").limit(60).onSnapshot((snapshot) => {
+    updateDashboardStat("statLessonsCount", snapshot.size);
+    if (snapshot.empty) {
+      container.innerHTML = renderEmptyState(t("empty_admin_lessons"));
+      return;
+    }
+    container.innerHTML = snapshot.docs.map((doc) => renderLessonCard(doc.data() || {}, { showDelete: true, lessonId: doc.id })).join("");
+    qsa("[data-delete-lesson]", container).forEach((button) => {
+      button.addEventListener("click", async () => {
+        const lessonId = button.getAttribute("data-delete-lesson");
+        if (!confirm(t("lesson_delete_confirm"))) return;
+        try {
+          const lessonRef = db.collection("lessons").doc(lessonId);
+          const snap = await lessonRef.get();
+          const data = snap.data() || {};
+          if (data.storagePath && storage) {
+            try { await storage.ref(data.storagePath).delete(); } catch (err) { console.warn(err); }
+          }
+          await lessonRef.delete();
+          showNotification(t("lesson_deleted"));
+        } catch (error) {
+          showNotification(currentLang === "en" ? "Could not delete the lesson." : "نەتوانرا وانەکە بسڕدرێتەوە.", "error");
+        }
+      });
+    });
+  });
+}
+
+function loadPublicAnnouncements() {
+  if (!db) return;
+  const container = qs("#announcementPublicList");
+  if (!container) return;
+  if (publicAnnouncementsUnsubscribe) publicAnnouncementsUnsubscribe();
+  publicAnnouncementsUnsubscribe = db.collection("announcements").orderBy("createdAt", "desc").limit(12).onSnapshot(
+    (snapshot) => {
+      if (snapshot.empty) {
+        container.innerHTML = renderEmptyState(t("empty_announcements"));
+        return;
+      }
+      container.innerHTML = snapshot.docs.map((doc) => {
+        const data = doc.data() || {};
+        const createdAt = data.createdAt?.toDate?.();
+        return `
+          <article class="announcement-card">
+            <h3><i class="fas fa-bullhorn"></i> ${t("badge_announcement")}</h3>
+            <p>${escapeHtml(data.text || "")}</p>
+            ${data.imageUrl ? `<img class="announcement-image" src="${data.imageUrl}" alt="announcement">` : ""}
+            <div class="lesson-date">${createdAt ? formatRelativeTime(createdAt) : ""}</div>
+          </article>
+        `;
+      }).join("");
+    },
+    () => { container.innerHTML = renderEmptyState(currentLang === "en" ? "Unable to load announcements." : "نەتوانرا ڕاگەیاندنەکان باربکرێن."); }
+  );
+}
+
+function loadAdminAnnouncements() {
+  if (!db) return;
+  const list = qs("#announcementList");
+  if (!list) return;
+  if (adminAnnouncementsUnsubscribe) adminAnnouncementsUnsubscribe();
+  adminAnnouncementsUnsubscribe = db.collection("announcements").orderBy("createdAt", "desc").limit(50).onSnapshot((snapshot) => {
+    updateDashboardStat("statAnnouncementsCount", snapshot.size);
+    if (snapshot.empty) {
+      list.innerHTML = renderEmptyState(t("empty_admin_announcements"));
+      return;
+    }
+    list.innerHTML = snapshot.docs.map((doc) => {
+      const data = doc.data() || {};
+      return `
+        <article class="announcement-card">
+          <h3>${t("badge_announcement")}</h3>
+          <p>${escapeHtml(data.text || "")}</p>
+          ${data.imageUrl ? `<img class="announcement-image" src="${data.imageUrl}" alt="announcement">` : ""}
+          <div class="dashboard-item-actions">
+            <button class="danger-btn" data-delete-announcement="${doc.id}"><i class="fas fa-trash"></i> ${t("delete_text")}</button>
+          </div>
+        </article>
+      `;
+    }).join("");
+    qsa("[data-delete-announcement]", list).forEach((button) => {
+      button.addEventListener("click", async () => {
+        const id = button.getAttribute("data-delete-announcement");
+        if (!confirm(t("announcement_delete_confirm"))) return;
+        await db.collection("announcements").doc(id).delete();
+      });
+    });
+  });
+}
+
+async function postAnnouncement(event) {
+  event?.preventDefault();
+  if (!db) return;
+  const text = qs("#announcementText")?.value.trim() || "";
+  const imageFile = qs("#announcementImage")?.files?.[0] || null;
+  if (!text && !imageFile) return showNotification(t("announcement_missing"), "error");
+  const btn = qs("#postAnnouncementBtn");
+  const old = btn?.innerHTML;
+  if (btn) btn.innerHTML = '<span class="loading"></span>';
+  try {
+    let imageUrl = "";
+    if (imageFile) imageUrl = await uploadToImgBB(imageFile);
+    await db.collection("announcements").add({ text, imageUrl, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    if (qs("#announcementText")) qs("#announcementText").value = "";
+    if (qs("#announcementImage")) qs("#announcementImage").value = "";
+    showNotification(t("announcement_added"));
+  } catch (error) {
+    showNotification(t("announcement_error"), "error");
+  } finally {
+    if (btn && old) btn.innerHTML = old;
+  }
+}
+
+function renderCommentHtml(data) {
+  const createdAt = data.timestamp?.toDate?.();
+  const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.userName || "User")}&background=1e4ea8&color=fff&size=160`;
+  const roleLabel = data.userRole === "teacher" ? t("role_teacher") : data.userRole === "admin" ? t("role_admin") : t("role_student");
+  return `
+    <article class="comment">
+      <div class="comment-header">
+        <div class="comment-user">
+          <img class="comment-avatar" src="${avatar}" alt="${escapeHtml(data.userName || "User")}">
+          <div class="comment-user-info">
+            <h4>${escapeHtml(data.userName || (currentLang === "en" ? "User" : "بەکارهێنەر"))}</h4>
+            <div class="teacher-meta">
+              <span class="teacher-badge">${roleLabel}</span>
+              <span class="comment-time">${createdAt ? formatRelativeTime(createdAt) : ""}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="comment-body">${escapeHtml(data.text || "").replace(/\n/g, "<br>")}</div>
+    </article>
+  `;
+}
+
+function loadComments() {
+  if (!db) return;
+  const list = qs("#commentsList");
+  if (!list) return;
+  if (publicCommentsUnsubscribe) publicCommentsUnsubscribe();
+  publicCommentsUnsubscribe = db.collection("comments").orderBy("timestamp", "desc").limit(20).onSnapshot(
+    (snapshot) => {
+      if (snapshot.empty) { list.innerHTML = renderEmptyState(t("empty_comments")); return; }
+      list.innerHTML = snapshot.docs.map((doc) => renderCommentHtml(doc.data() || {})).join("");
+    },
+    () => { list.innerHTML = renderEmptyState(currentLang === "en" ? "Unable to load comments." : "نەتوانرا کۆمێنتەکان باربکرێن."); }
+  );
+}
+
+function loadAdminComments() {
+  if (!db) return;
+  const container = qs("#adminCommentsList");
+  if (!container) return;
+  if (adminCommentsUnsubscribe) adminCommentsUnsubscribe();
+  adminCommentsUnsubscribe = db.collection("comments").orderBy("timestamp", "desc").limit(50).onSnapshot((snapshot) => {
+    updateDashboardStat("statCommentsCount", snapshot.size);
+    if (snapshot.empty) { container.innerHTML = renderEmptyState(t("empty_admin_comments")); return; }
+    container.innerHTML = snapshot.docs.map((doc) => `
+      <article class="comment">
+        ${renderCommentHtml(doc.data() || {})}
+        <div class="dashboard-item-actions">
+          <button class="danger-btn" data-delete-comment="${doc.id}"><i class="fas fa-trash"></i> ${t("delete_text")}</button>
+        </div>
+      </article>`).join("");
+    qsa("[data-delete-comment]", container).forEach((button) => {
+      button.addEventListener("click", async () => {
+        const id = button.getAttribute("data-delete-comment");
+        if (!confirm(t("comment_delete_confirm"))) return;
+        await db.collection("comments").doc(id).delete();
+      });
+    });
+  });
+}
+
+async function addComment(event) {
+  event?.preventDefault();
+  if (!auth || !db) return showNotification(t("not_ready"), "error");
+  const user = auth.currentUser;
+  if (!user) { openAuthModal(); return showNotification(t("need_login"), "error"); }
+  const textarea = qs("#commentText");
+  const text = textarea?.value.trim() || "";
+  if (text.length < 3) return showNotification(t("comment_min"), "error");
+  const formBtn = qs("#commentForm button[type='submit']");
+  const old = formBtn?.innerHTML;
+  if (formBtn) formBtn.innerHTML = '<span class="loading"></span>';
+  try {
+    const userData = await ensureUserProfile(user);
+    await db.collection("comments").add({
+      userId: user.uid,
+      userName: user.displayName || userData?.name || (currentLang === "en" ? "User" : "بەکارهێنەر"),
+      userRole: userData?.role || "student",
+      text,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    if (textarea) textarea.value = "";
+    showNotification(t("comment_posted"));
+  } catch (error) {
+    showNotification(currentLang === "en" ? "There was a problem sending the comment." : "هەڵە لە ناردنی کۆمێنت.", "error");
+  } finally {
+    if (formBtn && old) formBtn.innerHTML = old;
+  }
+}
+
+async function login(event) {
+  event?.preventDefault();
+  if (!auth) return showNotification(t("not_ready"), "error");
+  const email = qs("#loginEmail")?.value.trim();
+  const password = qs("#loginPassword")?.value || "";
+  if (!email || !password) return showNotification(currentLang === "en" ? "Email and password are required." : "ئیمەیڵ و وشەی نهێنی پێویستن.", "error");
+  const btn = qs("#loginBtn");
+  const old = btn?.innerHTML;
+  if (btn) btn.innerHTML = '<span class="loading"></span>';
+  try {
+    const result = await auth.signInWithEmailAndPassword(email, password);
+    await ensureUserProfile(result.user);
+    showNotification(t("login_success"));
+    closeAuthModal();
+  } catch (error) {
+    let message = t("login_fail");
+    if (error.code === "auth/invalid-email") message = currentLang === "en" ? "The email address is not valid." : "ئیمەیڵەکە دروست نییە.";
+    if (error.code === "auth/user-disabled") message = currentLang === "en" ? "This account is disabled." : "ئەم ئەکاونتە داخراوە.";
+    showNotification(message, "error");
+  } finally {
+    if (btn && old) btn.innerHTML = old;
+  }
+}
+
+async function register(event) {
+  event?.preventDefault();
+  if (!auth || !db) return showNotification(t("not_ready"), "error");
+  const name = qs("#registerName")?.value.trim();
+  const email = qs("#registerEmail")?.value.trim();
+  const password = qs("#registerPassword")?.value || "";
+  const confirm = qs("#registerConfirmPassword")?.value || "";
+  if (!name || !email || !password || !confirm) return showNotification(currentLang === "en" ? "Please fill in all fields." : "تکایە هەموو خانەکان پڕ بکەوە.", "error");
+  if (password !== confirm) return showNotification(currentLang === "en" ? "Passwords do not match." : "وشەی نهێنیەکان یەکسان نین.", "error");
+  if (password.length < 6) return showNotification(currentLang === "en" ? "Password must be at least 6 characters." : "وشەی نهێنی دەبێت لانی کەم ٦ نووسە بێت.", "error");
+  const btn = qs("#registerBtn");
+  const old = btn?.innerHTML;
+  if (btn) btn.innerHTML = '<span class="loading"></span>';
+  try {
+    const result = await auth.createUserWithEmailAndPassword(email, password);
+    await result.user.updateProfile({ displayName: name });
+    await db.collection("users").doc(result.user.uid).set({ name, email, role: "student", createdAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    showNotification(t("register_success"));
+    closeAuthModal();
+  } catch (error) {
+    let message = currentLang === "en" ? "An error occurred." : "هەڵەیەک ڕوویدا.";
+    if (error.code === "auth/email-already-in-use") message = currentLang === "en" ? "This email is already registered." : "ئەم ئیمەیڵە پێشتر تۆمار کراوە.";
+    if (error.code === "auth/invalid-email") message = currentLang === "en" ? "The email address is not valid." : "ئیمەیڵەکە دروست نییە.";
+    if (error.code === "auth/weak-password") message = currentLang === "en" ? "The password is too weak." : "وشەی نهێنی زۆر لاوازە.";
+    showNotification(message, "error");
+  } finally {
+    if (btn && old) btn.innerHTML = old;
+  }
+}
+
+function loginWithFacebook() {
+  showNotification(currentLang === "en" ? "This option will be added later." : "ئەم بەشە دواتر زیاد دەکرێت.", "warning");
+}
+
+function uploadMedia() {
+  showNotification(t("upload_media_info"), "warning");
+}
+
+function initHeroTyping() {
+  const title = qs("#heroTitle");
+  if (!title) return;
+  const text = title.getAttribute("data-text") || (currentLang === "en" ? "Sivar Vocational High School" : "ئامادەی پیشەی سیڤەر");
+  let index = 0;
+  title.textContent = "";
+  const type = () => {
+    if (index < text.length) {
+      title.textContent += text.charAt(index);
+      index += 1;
+      setTimeout(type, currentLang === "en" ? 45 : 75);
+    }
+  };
+  type();
+}
+
+function initPrincipalLightbox() {
+  return;
+}
+
+function initAccessLoginPage() {
+  if (!auth || !db || !isAccessLoginPage()) return;
+  const form = qs("#adminLoginForm");
+  const errorEl = qs("#error");
+  if (!form || form.dataset.bound === "true") return;
+  form.dataset.bound = "true";
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (errorEl) errorEl.textContent = "";
+    const email = qs("#adminEmail")?.value.trim();
+    const password = qs("#adminPassword")?.value || "";
+    const submitBtn = qs("#accessLoginBtn");
+    const old = submitBtn?.innerHTML;
+    if (submitBtn) submitBtn.innerHTML = '<span class="loading"></span>';
+    try {
+      const cred = await auth.signInWithEmailAndPassword(email, password);
+      await ensureUserProfile(cred.user);
+      const role = await getUserRole(cred.user.uid);
+      if (role !== "admin" && role !== "teacher") {
+        await auth.signOut();
+        if (errorEl) errorEl.textContent = currentLang === "en" ? "Only admins or teachers can sign in here." : "تەنها ئەدمین یان مامۆستا دەتوانێت بچێتە ژوورەوە.";
+        return;
+      }
+      window.location.href = "admin.html";
+    } catch (error) {
+      if (errorEl) errorEl.textContent = currentLang === "en" ? "Login failed." : "چوونەژورەوە سەرکەوتوو نەبوو.";
+    } finally {
+      if (submitBtn && old) submitBtn.innerHTML = old;
+    }
+  });
+}
+
+function initResponsiveAccountRefresh() {
+  window.addEventListener("resize", () => {
+    if (auth?.currentUser) ensureUserProfile(auth.currentUser).then((userData) => applyUserDataToUI(auth.currentUser, userData)).catch(() => applyUserDataToUI(auth.currentUser, null));
+    else applyUserDataToUI(null, null);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initLanguageSystem();
+  initResponsiveAccountRefresh();
+});
+
+/* extra translation rules */
+if (pageTranslations["department-architecture"]) {
+  pageTranslations["department-architecture"].push(
+    { selector: ".nav-list a[href='index.html']", html: true, ku: "<i class='fas fa-house'></i> سەرەکی", en: "<i class='fas fa-house'></i> Home" },
+    { selector: ".nav-list a[href='#about-dept']", html: true, ku: "<i class='fas fa-circle-info'></i> دەربارەی بەش", en: "<i class='fas fa-circle-info'></i> About department" },
+    { selector: ".nav-list a[href='#online-lessons']", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-video'></i> Online lessons" },
+    { selector: ".nav-list a[href='#teachers']", html: true, ku: "<i class='fas fa-chalkboard-teacher'></i> مامۆستاکان", en: "<i class='fas fa-chalkboard-teacher'></i> Teachers" },
+    { selector: ".header-actions .login-btn", html: true, ku: "<i class='fas fa-chalkboard-user'></i> داشبۆرد", en: "<i class='fas fa-chalkboard-user'></i> Dashboard" },
+    { selector: ".hero-actions .hero-btn", html: true, ku: "<i class='fas fa-circle-play'></i> بینینی وانەکان", en: "<i class='fas fa-circle-play'></i> View lessons" },
+    { selector: ".hero-actions .secondary-btn", html: true, ku: "<i class='fas fa-cloud-arrow-up'></i> بارکردنی وانە", en: "<i class='fas fa-cloud-arrow-up'></i> Upload lesson" },
+    { selector: "#online-lessons .outline-btn", html: true, ku: "<i class='fas fa-arrow-up-from-bracket'></i> چوونە ناو داشبۆرد", en: "<i class='fas fa-arrow-up-from-bracket'></i> Open dashboard" },
+    { selector: "#online-lessons .section-subtitle", ku: "هەر وانەیەک کە لە داشبۆرد زیاد بکرێت، لێرە خۆکارانە دەردەکەوێت. تکایە وانەکان بە ناونیشان و بابەتێکی ڕوون زیاد بکەن.", en: "Every lesson added from the dashboard appears here automatically. Please use clear titles and subjects for each lesson." }
+  );
+}
+if (pageTranslations["department-veterinary"]) {
+  pageTranslations["department-veterinary"].push(
+    { selector: ".nav-list a[href='index.html']", html: true, ku: "<i class='fas fa-house'></i> سەرەکی", en: "<i class='fas fa-house'></i> Home" },
+    { selector: ".nav-list a[href='#about-dept']", html: true, ku: "<i class='fas fa-circle-info'></i> دەربارەی بەش", en: "<i class='fas fa-circle-info'></i> About department" },
+    { selector: ".nav-list a[href='#online-lessons']", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-video'></i> Online lessons" },
+    { selector: ".nav-list a[href='#teachers']", html: true, ku: "<i class='fas fa-chalkboard-teacher'></i> مامۆستاکان", en: "<i class='fas fa-chalkboard-teacher'></i> Teachers" },
+    { selector: ".header-actions .login-btn", html: true, ku: "<i class='fas fa-chalkboard-user'></i> داشبۆرد", en: "<i class='fas fa-chalkboard-user'></i> Dashboard" },
+    { selector: ".hero-actions .hero-btn", html: true, ku: "<i class='fas fa-circle-play'></i> بینینی وانەکان", en: "<i class='fas fa-circle-play'></i> View lessons" },
+    { selector: ".hero-actions .secondary-btn", html: true, ku: "<i class='fas fa-cloud-arrow-up'></i> بارکردنی وانە", en: "<i class='fas fa-cloud-arrow-up'></i> Upload lesson" },
+    { selector: "#online-lessons .outline-btn", html: true, ku: "<i class='fas fa-arrow-up-from-bracket'></i> چوونە ناو داشبۆرد", en: "<i class='fas fa-arrow-up-from-bracket'></i> Open dashboard" },
+    { selector: "#online-lessons .section-subtitle", ku: "هەر وانەیەک کە لە داشبۆرد زیاد بکرێت، لێرە خۆکارانە دەردەکەوێت. تکایە وانەکان بە ناونیشان و بابەتێکی ڕوون زیاد بکەن.", en: "Every lesson added from the dashboard appears here automatically. Please use clear titles and subjects for each lesson." }
+  );
+}
+if (pageTranslations.index) {
+  pageTranslations.index.push(
+    { selector: "main .section:nth-last-of-type(1) .section-title", html: true, ku: "<i class='fas fa-map-location-dot'></i> شوێنی قوتابخانە", en: "<i class='fas fa-map-location-dot'></i> School location" },
+    { selector: "main .section:nth-last-of-type(1) .section-subtitle", ku: "نەخشەکە پێش پایی ویب‌سایت زیادکراوە بۆ ئەوەی شوێنی قوتابخانە بە ئاشکرا نیشان بدرێت.", en: "The map is placed near the bottom of the website so visitors can find the school easily." }
+  );
+}
+
+
+/* =====================================================
+   2026-03-31 teacher lesson pages upgrade
+   ===================================================== */
+const teacherDirectory = {
+  "programming": [
+    {
+      "slug": "xanda",
+      "name": "مامۆستا خەندە صدیق محمد",
+      "subject": "C++ - SECURITY",
+      "image": "assets/images/Staff/teachers/xanda.jpg"
+    },
+    {
+      "slug": "helin",
+      "name": "مامۆستا هێلین ابراهیم",
+      "subject": "IT - MS",
+      "image": "assets/images/Staff/teachers/helin.jpg"
+    },
+    {
+      "slug": "hunar",
+      "name": "مامۆستا هونەر معسن",
+      "subject": "English",
+      "image": "assets/images/Staff/teachers/hunar.jpg"
+    },
+    {
+      "slug": "delvin",
+      "name": "مامۆستا دلڤین رەشید محمد",
+      "subject": "Human Rights",
+      "image": "assets/images/Staff/teachers/delvin.jpg"
+    },
+    {
+      "slug": "shoxan",
+      "name": "مامۆستا شۆخان عمر",
+      "subject": "Programming",
+      "image": "assets/images/Staff/teachers/shoxan.jpg"
+    },
+    {
+      "slug": "arain",
+      "name": "مامۆستا ئارین",
+      "subject": "Practical Programming",
+      "image": "assets/images/Staff/teachers/arain.jpg"
+    },
+    {
+      "slug": "kamran",
+      "name": "مامۆستا کامران",
+      "subject": "Security",
+      "image": "assets/images/Staff/teachers/kamran.jpg"
+    }
+  ],
+  "architecture": [
+    {
+      "slug": "sapan",
+      "name": "مامۆستا سەپان جەمیل علی",
+      "subject": "بیناسازی",
+      "image": "assets/images/Staff/teachers/sapan.jpg"
+    },
+    {
+      "slug": "shoxan",
+      "name": "مامۆستا شۆخان عمر",
+      "subject": "فیزیک",
+      "image": "assets/images/Staff/teachers/shoxan.jpg"
+    },
+    {
+      "slug": "hunar",
+      "name": "مامۆستا هونەر",
+      "subject": "زمانی ئینگلیزی",
+      "image": "assets/images/Staff/teachers/hunar.jpg"
+    },
+    {
+      "slug": "hassan",
+      "name": "مامۆستا حەسەن",
+      "subject": "زمانی کوردی",
+      "image": "assets/images/Staff/teachers/hassan.jpg"
+    },
+    {
+      "slug": "diar",
+      "name": "مامۆستا دیار",
+      "subject": "بیناسازی",
+      "image": "assets/images/Staff/teachers/diar.jpg"
+    },
+    {
+      "slug": "arain",
+      "name": "مامۆستا ئارین",
+      "subject": "بیناسازی",
+      "image": "assets/images/Staff/teachers/arain.jpg"
+    }
+  ],
+  "veterinary": [
+    {
+      "slug": "sarab",
+      "name": "مامۆستا سراب",
+      "subject": "ڤێتێرنەری",
+      "image": "assets/images/Staff/teachers/sarab.jpg"
+    },
+    {
+      "slug": "faridun",
+      "name": "مامۆستا فەریدون",
+      "subject": "زمانی عەرەبی",
+      "image": "assets/images/Staff/teachers/faridun.jpg"
+    },
+    {
+      "slug": "hazhar",
+      "name": "مامۆستا هەژار خوادا غلام",
+      "subject": "توێکارزانی",
+      "image": "assets/images/Staff/teachers/hazhar.jpg"
+    },
+    {
+      "slug": "hassan-jabar-haji",
+      "name": "مامۆستا حسن جبار حاجی",
+      "subject": "زمانی کوردی",
+      "image": "assets/images/Staff/teachers/hassan.jpg"
+    },
+    {
+      "slug": "diar",
+      "name": "مامۆستا دیار",
+      "subject": "ڤێتێرنەری",
+      "image": "assets/images/Staff/teachers/diar.jpg"
+    }
+  ]
+};
+
+function getDepartmentPageLink(department) {
+  return { programming: 'department-programming.html', architecture: 'department-architecture.html', veterinary: 'department-veterinary.html' }[department] || 'index.html';
+}
+
+function getDepartmentTeacherList(department) {
+  return Array.isArray(teacherDirectory[department]) ? teacherDirectory[department] : [];
+}
+
+function findTeacherData(department, teacherSlug) {
+  return getDepartmentTeacherList(department).find((item) => item.slug === teacherSlug) || null;
+}
+
+function normalizeTeacherToken(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[ً-ٰٟ‌‏]/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+function lessonMatchesTeacher(lesson, teacherData) {
+  if (!teacherData) return false;
+  const lessonSlug = String(lesson.teacherSlug || '').trim();
+  if (lessonSlug && lessonSlug === teacherData.slug) return true;
+  const tokens = [teacherData.name, teacherData.slug, teacherData.subject].map(normalizeTeacherToken).filter(Boolean);
+  const lessonTokens = [lesson.teacher, lesson.uploadedByName].map(normalizeTeacherToken).filter(Boolean);
+  return lessonTokens.some((item) => tokens.includes(item));
+}
+
+function populateLessonTeacherOptions(preferredSlug = '') {
+  const department = qs('#lessonDepartment')?.value || '';
+  const select = qs('#lessonTeacherSelect');
+  const teacherInput = qs('#lessonTeacher');
+  const subjectInput = qs('#lessonSubject');
+  if (!select) return;
+
+  const teachers = getDepartmentTeacherList(department);
+  const placeholder = currentLang === 'en' ? 'Choose teacher' : 'مامۆستا هەڵبژێرە';
+  select.innerHTML = `<option value="">${placeholder}</option>` + teachers.map((teacher) => `<option value="${teacher.slug}">${escapeHtml(teacher.name)}</option>`).join('');
+
+  const targetSlug = preferredSlug && teachers.some((teacher) => teacher.slug === preferredSlug) ? preferredSlug : '';
+  select.value = targetSlug;
+
+  if (!teachers.length) {
+    if (teacherInput) { teacherInput.value = ''; teacherInput.readOnly = false; }
+    return;
+  }
+
+  if (teacherInput) teacherInput.readOnly = true;
+  syncTeacherSelectionFields();
+
+  if (subjectInput && !subjectInput.value.trim() && targetSlug) {
+    const selected = findTeacherData(department, targetSlug);
+    if (selected?.subject) subjectInput.value = selected.subject;
+  }
+}
+
+function syncTeacherSelectionFields() {
+  const department = qs('#lessonDepartment')?.value || '';
+  const select = qs('#lessonTeacherSelect');
+  const teacherInput = qs('#lessonTeacher');
+  const subjectInput = qs('#lessonSubject');
+  if (!select || !teacherInput) return;
+
+  const teacherData = findTeacherData(department, select.value || '');
+  if (!teacherData) {
+    teacherInput.value = '';
+    teacherInput.readOnly = false;
+    return;
+  }
+
+  teacherInput.value = teacherData.name || '';
+  teacherInput.readOnly = true;
+  if (subjectInput && !subjectInput.value.trim() && teacherData.subject) {
+    subjectInput.value = teacherData.subject;
+  }
+}
+
+function getTeacherPageState() {
+  const params = new URLSearchParams(window.location.search);
+  const department = params.get('department') || '';
+  const teacherSlug = params.get('teacher') || '';
+  const teacherData = findTeacherData(department, teacherSlug);
+  return { department, teacherSlug, teacherData };
+}
+
+function syncTeacherPageContent() {
+  if (document.body?.dataset.page !== 'teacher-lessons') return;
+
+  const { department, teacherData } = getTeacherPageState();
+  const pageName = qs('#teacherPageName');
+  const pagePhoto = qs('#teacherPagePhoto');
+  const subject = qs('#teacherPageSubject');
+  const deptBadge = qs('#teacherDepartmentBadge');
+  const heading = qs('#teacherPageHeading');
+  const heroText = qs('#teacherHeroText');
+  const desc = qs('#teacherPageDescription');
+  const lessonsTitle = qs('#teacherLessonsTitle');
+  const lessonsSubtitle = qs('#teacherLessonsSubtitle');
+  const backBtn = qs('#teacherBackButton');
+  const deptLink = qs('#teacherDepartmentLink');
+  const dashLink = qs('#teacherDashboardLink');
+  const overviewNav = qs('#teacherNavOverview');
+  const lessonsNav = qs('#teacherNavLessons');
+  const headerDash = qs('.header-actions .login-btn');
+
+  const fallbackName = currentLang === 'en' ? 'Teacher lessons' : 'وانەکانی مامۆستا';
+  const teacherName = teacherData?.name || fallbackName;
+  const teacherSubject = teacherData?.subject || (currentLang === 'en' ? 'Department teacher' : 'مامۆستای بەش');
+  const departmentName = mapDepartmentName(department);
+
+  document.title = currentLang === 'en' ? `${teacherName} - Lessons | Sivar Vocational High School` : `${teacherName} - وانەکان | ئامادەی پیشەی سیڤەر`;
+  if (pageName) pageName.textContent = teacherName;
+  if (pagePhoto) {
+    pagePhoto.src = teacherData?.image || 'assets/images/Staff/teachers/shoxan.jpg';
+    pagePhoto.alt = teacherName;
+  }
+  if (subject) subject.textContent = teacherSubject;
+  if (deptBadge) deptBadge.textContent = `${currentLang === 'en' ? 'Department' : 'بەش'}: ${departmentName}`;
+  if (heading) heading.textContent = currentLang === 'en' ? `${teacherName} lessons` : `وانەکانی ${teacherName}`;
+  if (heroText) heroText.textContent = currentLang === 'en' ? 'All online lesson videos for this teacher are collected here in one place.' : 'هەموو ڤیدیۆ و وانە ئۆنلاینەکانی ئەم مامۆستایە لێرە لە یەک شوێندا کۆ کراونەتەوە.';
+  if (desc) desc.textContent = currentLang === 'en' ? 'Use this page to reach the exact teacher videos quickly and without confusion.' : 'ئەم پەڕەیە بۆ گەیشتن بە ڤیدیۆکانی هەمان مامۆستایە بە شێوەیەکی ڕێکخراو و خێرا.';
+  if (lessonsTitle) lessonsTitle.innerHTML = `<i class="fas fa-video"></i> ${currentLang === 'en' ? 'Teacher lessons' : 'وانە ئۆنلاینەکان'}`;
+  if (lessonsSubtitle) lessonsSubtitle.textContent = currentLang === 'en' ? 'Only the uploaded lessons that belong to this teacher appear below.' : 'تەنها ئەو وانانەی بۆ ئەم مامۆستایە بارکراون، لە خوارەوە نیشان دەدرێن.';
+  const deptHref = getDepartmentPageLink(department);
+  if (backBtn) { backBtn.href = deptHref; backBtn.innerHTML = currentLang === 'en' ? '<i class="fas fa-arrow-left"></i> Back to department' : '<i class="fas fa-arrow-left"></i> گەڕانەوە بۆ بەش'; }
+  if (deptLink) { deptLink.href = deptHref; deptLink.innerHTML = currentLang === 'en' ? '<i class="fas fa-building"></i> Department page' : '<i class="fas fa-building"></i> پەڕەی بەش'; }
+  if (dashLink) dashLink.innerHTML = currentLang === 'en' ? '<i class="fas fa-arrow-up-from-bracket"></i> Open dashboard' : '<i class="fas fa-arrow-up-from-bracket"></i> چوونە ناو داشبۆرد';
+  if (overviewNav) overviewNav.innerHTML = currentLang === 'en' ? '<i class="fas fa-user"></i> Teacher' : '<i class="fas fa-user"></i> مامۆستا';
+  if (lessonsNav) lessonsNav.innerHTML = currentLang === 'en' ? '<i class="fas fa-video"></i> Lessons' : '<i class="fas fa-video"></i> وانەکان';
+  if (headerDash) headerDash.innerHTML = currentLang === 'en' ? '<i class="fas fa-chalkboard-user"></i> Dashboard' : '<i class="fas fa-chalkboard-user"></i> داشبۆرد';
+
+  qsa('[data-ku][data-en]').forEach((element) => {
+    const next = currentLang === 'en' ? element.getAttribute('data-en') : element.getAttribute('data-ku');
+    if (next) element.textContent = next;
+  });
+}
+
+function loadTeacherLessonsPage() {
+  if (!db || document.body?.dataset.page !== 'teacher-lessons') return;
+  const container = qs('#teacherLessonsList');
+  if (!container) return;
+  const { department, teacherData } = getTeacherPageState();
+  if (!department || !teacherData) {
+    container.innerHTML = renderEmptyState(currentLang === 'en' ? 'Teacher page data is missing.' : 'زانیاری مامۆستا تەواو نییە.');
+    return;
+  }
+
+  if (departmentLessonsUnsubscribe) departmentLessonsUnsubscribe();
+  departmentLessonsUnsubscribe = db.collection('lessons').where('department', '==', department).orderBy('createdAt', 'desc').onSnapshot(
+    (snapshot) => {
+      const lessons = snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() || {}) })).filter((lesson) => lessonMatchesTeacher(lesson, teacherData));
+      if (!lessons.length) {
+        container.innerHTML = renderEmptyState(currentLang === 'en' ? 'No lessons have been uploaded for this teacher yet.' : 'هێشتا هیچ وانەیەک بۆ ئەم مامۆستایە بارنەکراوە.');
+        return;
+      }
+      container.innerHTML = lessons.map((lesson) => renderLessonCard(lesson)).join('');
+    },
+    () => {
+      container.innerHTML = renderEmptyState(currentLang === 'en' ? 'Unable to load teacher lessons.' : 'نەتوانرا وانەکانی مامۆستا باربکرێن.');
+    }
+  );
+}
+
+function initDashboard() {
+  const dashboard = qs('#dashboardReady');
+  if (!dashboard || dashboard.getAttribute('data-ready') === 'true') return;
+  dashboard.setAttribute('data-ready', 'true');
+
+  qs('#announcementForm')?.addEventListener('submit', postAnnouncement);
+  qs('#lessonForm')?.addEventListener('submit', postLesson);
+  qs('#roleForm')?.addEventListener('submit', updateUserRole);
+  qs('#logoutAdmin')?.addEventListener('click', async () => {
+    await logout();
+    window.location.replace('index.html');
+  });
+
+  qs('#lessonDepartment')?.addEventListener('change', () => populateLessonTeacherOptions());
+  qs('#lessonTeacherSelect')?.addEventListener('change', () => syncTeacherSelectionFields());
+
+  qs('#lessonVideo')?.addEventListener('change', (event) => {
+    const file = event.target?.files?.[0];
+    if (!file) {
+      setLessonUploadStatus(t('lesson_url_mode'), 'info');
+      return;
+    }
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+    setLessonUploadStatus(`${file.name} • ${sizeMb} MB`, 'info');
+  });
+
+  qs('#lessonVideoUrl')?.addEventListener('input', (event) => {
+    const value = event.target?.value?.trim() || '';
+    if (!value) return;
+    setLessonUploadStatus(t('lesson_url_mode'), 'info');
+  });
+
+  populateLessonTeacherOptions();
+  loadAdminAnnouncements();
+  loadAdminLessons();
+  loadAdminComments();
+}
+
+async function postLesson(event) {
+  event?.preventDefault();
+  if (!db || !auth) return showNotification(t('not_ready'), 'error');
+  const user = auth.currentUser;
+  if (!user) return showNotification(t('need_login'), 'error');
+
+  const department = qs('#lessonDepartment')?.value || '';
+  const teacherSelect = qs('#lessonTeacherSelect');
+  const teacherSlug = teacherSelect?.value || '';
+  const teacherMeta = findTeacherData(department, teacherSlug);
+  const title = qs('#lessonTitle')?.value.trim() || '';
+  const teacher = (teacherMeta?.name || qs('#lessonTeacher')?.value.trim() || user.displayName || '').trim();
+  const subject = qs('#lessonSubject')?.value.trim() || teacherMeta?.subject || '';
+  const description = qs('#lessonDescription')?.value.trim() || '';
+  const videoFile = qs('#lessonVideo')?.files?.[0] || null;
+  const videoUrlInput = qs('#lessonVideoUrl')?.value.trim() || '';
+
+  if (!department || !title || !teacher || !subject || (!videoFile && !videoUrlInput)) {
+    showNotification(t('lesson_missing'), 'error');
+    return;
+  }
+
+  const btn = qs('#postLessonBtn');
+  const old = btn?.innerHTML;
+  if (btn) btn.innerHTML = '<span class="loading"></span>';
+  setLessonUploadStatus(videoFile ? t('lesson_uploading') : t('lesson_url_mode'), 'info');
+
+  try {
+    let finalUrl = videoUrlInput;
+    let storagePath = '';
+
+    if (videoFile) {
+      const uploaded = await uploadLessonVideo(videoFile, department);
+      finalUrl = uploaded.url;
+      storagePath = uploaded.path;
+      setLessonUploadStatus(t('lesson_processing'), 'info');
+    } else if (!/^https?:\/\//i.test(finalUrl)) {
+      throw new Error('invalid-video-link');
+    }
+
+    await db.collection('lessons').add({
+      department,
+      teacher,
+      teacherSlug: teacherMeta?.slug || teacherSlug || '',
+      teacherImage: teacherMeta?.image || '',
+      title,
+      subject,
+      description,
+      videoUrl: finalUrl,
+      storagePath,
+      uploadedBy: user.uid,
+      uploadedByName: user.displayName || teacher,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    qs('#lessonForm')?.reset();
+    populateLessonTeacherOptions();
+    setLessonUploadStatus(t('lesson_upload_done'), 'success');
+    showNotification(t('lesson_posted'));
+  } catch (error) {
+    console.error('Lesson upload error:', error);
+    let message = currentLang === 'en' ? 'There was a problem uploading the lesson.' : 'هەڵە لە بارکردنی وانەکە.';
+    if (error.code === 'storage/unauthorized') message = currentLang === 'en' ? 'Storage rules rejected the upload. Check your Firebase Storage rules.' : 'یاساکانی Firebase Storage بارکردنەکە ڕەت کرد. تکایە rules ـەکان بپشکنە.';
+    if (error.code === 'storage/canceled') message = currentLang === 'en' ? 'The upload was canceled.' : 'بارکردنەکە وەستێنرا.';
+    if (error.code === 'storage/unknown') message = currentLang === 'en' ? 'Unknown storage error. Check the selected bucket and storage rules.' : 'هەڵەی نەناسراوی storage. storage bucket و rules بپشکنە.';
+    if (String(error.message || '') === 'invalid-video-link') message = t('invalid_video_link');
+    setLessonUploadStatus(message, 'error');
+    showNotification(message, 'error');
+  } finally {
+    if (btn && old) btn.innerHTML = old;
+  }
+}
+
+function applyTranslations() {
+  const pageKey = document.body?.dataset.page || 'index';
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = currentLang === 'en' ? 'ltr' : 'rtl';
+  document.body?.classList.toggle('lang-en', currentLang === 'en');
+  document.body?.classList.toggle('lang-ku', currentLang !== 'en');
+  (pageTranslations.common || []).forEach(applyRule);
+  (pageTranslations[pageKey] || []).forEach(applyRule);
+  const heroTitle = qs('#heroTitle');
+  if (heroTitle) heroTitle.setAttribute('data-text', currentLang === 'en' ? 'Sivar Vocational High School' : 'ئامادەی پیشەی سیڤەر');
+  updateLangButtonsUI();
+  syncTeacherPageContent();
+  populateLessonTeacherOptions(qs('#lessonTeacherSelect')?.value || '');
+  loadTeacherLessonsPage();
+  qsa('[data-ku][data-en]').forEach((element) => {
+    const next = currentLang === 'en' ? element.getAttribute('data-en') : element.getAttribute('data-ku');
+    if (next) element.textContent = next;
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  syncTeacherPageContent();
+  loadTeacherLessonsPage();
+  populateLessonTeacherOptions();
+});
+
+
+/* =====================================================
+   2026-03-31 v5 polish + upload reliability patch
+   ===================================================== */
+(function () {
+  function getStorageCandidatesV5() {
+    const candidates = [];
+    const seen = new Set();
+    const pushBucket = (bucket) => {
+      if (!bucket || seen.has(bucket)) return;
+      seen.add(bucket);
+      candidates.push(bucket);
+    };
+    pushBucket(firebaseConfig.storageBucket);
+    pushBucket('sivarvocationalhighschoo-513aa.appspot.com');
+    pushBucket('sivarvocationalhighschoo-513aa.firebasestorage.app');
+    return candidates;
+  }
+
+  function getStorageInstanceV5(bucketName) {
+    if (typeof firebase === 'undefined') return null;
+    try {
+      return firebase.app().storage('gs://' + bucketName);
+    } catch (error) {
+      try { return firebase.storage(); } catch (e) { return null; }
+    }
+  }
+
+  function syncHeaderAuthVisibilityV5(user = auth?.currentUser || null) {
+    const loginButton = qs('#loginButton');
+    const desktopProfile = qs('#userProfile');
+    const mobileProfile = qs('#userProfileMobile');
+    const wide = window.innerWidth > 992;
+    if (loginButton) loginButton.style.display = user ? 'none' : 'inline-flex';
+    if (desktopProfile) desktopProfile.style.display = user && wide ? 'flex' : 'none';
+    if (mobileProfile) mobileProfile.style.display = user && !wide ? 'flex' : 'none';
+    document.body?.classList.toggle('has-auth-user', !!user);
+  }
+
+  window.addEventListener('resize', () => syncHeaderAuthVisibilityV5());
+
+  applyUserDataToUI = function (user, userData) {
+    const roleText = userData?.role === 'admin' ? t('role_admin') : userData?.role === 'teacher' ? t('role_teacher') : t('role_student');
+    const nameText = user?.displayName || userData?.name || (currentLang === 'en' ? 'User' : 'بەکارهێنەر');
+    const avatarUrl = user?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(nameText)}&background=1e4ea8&color=fff&size=160`;
+    [["#userDisplayName", nameText], ["#userRole", roleText], ["#userAvatar", avatarUrl, true], ["#userDisplayNameMobile", nameText], ["#userRoleMobile", roleText], ["#userAvatarMobile", avatarUrl, true]].forEach(([selector, value, isSrc]) => {
+      const el = qs(selector);
+      if (!el) return;
+      if (isSrc) el.src = value;
+      else el.textContent = value;
+    });
+    syncHeaderAuthVisibilityV5(user);
+  };
+
+  function buildTeacherPageUrlV5(department, teacherSlug) {
+    return `teacher-lessons.html?department=${encodeURIComponent(department)}&teacher=${encodeURIComponent(teacherSlug)}`;
+  }
+
+  function updateLessonTargetPreviewV5() {
+    const preview = qs('#lessonTargetPreview');
+    if (!preview) return;
+    const department = qs('#lessonDepartment')?.value || '';
+    const teacherSlug = qs('#lessonTeacherSelect')?.value || '';
+    const teacherMeta = findTeacherData(department, teacherSlug);
+    if (!department || !teacherSlug || !teacherMeta) {
+      preview.textContent = currentLang === 'en' ? 'Choose a department and teacher to target the lesson page.' : 'بەش و مامۆستا هەڵبژێرە بۆ دیاریکردنی پەڕەی وانەکان.';
+      return;
+    }
+    const departmentName = mapDepartmentName(department);
+    preview.innerHTML = `${currentLang === 'en' ? 'Target page' : 'پەڕەی ئامانج'}: <strong>${escapeHtml(teacherMeta.name)}</strong> — ${escapeHtml(departmentName)}<br><span>${escapeHtml(buildTeacherPageUrlV5(department, teacherSlug))}</span>`;
+  }
+
+  const _oldPopulateLessonTeacherOptions = populateLessonTeacherOptions;
+  populateLessonTeacherOptions = function (preferredSlug = '') {
+    _oldPopulateLessonTeacherOptions(preferredSlug);
+    updateLessonTargetPreviewV5();
+  };
+
+  const _oldSyncTeacherSelectionFields = syncTeacherSelectionFields;
+  syncTeacherSelectionFields = function () {
+    _oldSyncTeacherSelectionFields();
+    updateLessonTargetPreviewV5();
+  };
+
+  uploadLessonVideo = async function (file, department, teacherSlug = 'general') {
+    const safeName = sanitizeFilename(file.name || 'lesson-video.mp4');
+    const buckets = getStorageCandidatesV5();
+    let lastError = null;
+
+    for (const bucketName of buckets) {
+      const storageInstance = getStorageInstanceV5(bucketName);
+      if (!storageInstance) continue;
+      const path = `lessons/${department}/${teacherSlug}/${Date.now()}-${safeName}`;
+      const ref = storageInstance.ref(path);
+      try {
+        const result = await new Promise((resolve, reject) => {
+          let lastProgressAt = Date.now();
+          const timeout = setInterval(() => {
+            if (Date.now() - lastProgressAt > 120000) {
+              clearInterval(timeout);
+              reject(new Error('upload-timeout'));
+            }
+          }, 5000);
+          const task = ref.put(file, {
+            contentType: file.type || 'video/mp4',
+            customMetadata: { department: department || '', teacherSlug: teacherSlug || 'general' }
+          });
+          task.on('state_changed', (snapshot) => {
+            lastProgressAt = Date.now();
+            const progress = snapshot.totalBytes ? Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100) : 0;
+            setLessonUploadStatus(`${t('lesson_upload_progress')}: ${progress}%`, 'info');
+          }, (error) => {
+            clearInterval(timeout);
+            reject(error);
+          }, async () => {
+            clearInterval(timeout);
+            try {
+              const url = await task.snapshot.ref.getDownloadURL();
+              resolve({ url, path });
+            } catch (error) {
+              reject(error);
+            }
+          });
+        });
+        return result;
+      } catch (error) {
+        lastError = error;
+        if (error?.code === 'storage/unauthorized' || error?.message === 'upload-timeout') {
+          break;
+        }
+      }
+    }
+    throw lastError || new Error('storage-unavailable');
+  };
+
+  postLesson = async function (event) {
+    event?.preventDefault();
+    if (!db || !auth) return showNotification(t('not_ready'), 'error');
+    const user = auth.currentUser;
+    if (!user) return showNotification(t('need_login'), 'error');
+
+    const department = qs('#lessonDepartment')?.value || '';
+    const teacherSelect = qs('#lessonTeacherSelect');
+    const teacherSlug = teacherSelect?.value || '';
+    const teacherMeta = findTeacherData(department, teacherSlug);
+    const title = qs('#lessonTitle')?.value.trim() || '';
+    const teacher = (teacherMeta?.name || qs('#lessonTeacher')?.value.trim() || user.displayName || '').trim();
+    const subject = qs('#lessonSubject')?.value.trim() || teacherMeta?.subject || '';
+    const description = qs('#lessonDescription')?.value.trim() || '';
+    const videoFile = qs('#lessonVideo')?.files?.[0] || null;
+    const videoUrlInput = qs('#lessonVideoUrl')?.value.trim() || '';
+
+    if (!department || !title || !teacher || !subject || !teacherSlug || (!videoFile && !videoUrlInput)) {
+      showNotification(currentLang === 'en' ? 'Please complete department, teacher, title, subject, and video.' : 'تکایە بەش، مامۆستا، ناونیشان، بابەت و ڤیدیۆ پڕ بکەوە.', 'error');
+      return;
+    }
+    if (videoFile && videoFile.size > 350 * 1024 * 1024) {
+      const tooLarge = currentLang === 'en' ? 'Please choose a video smaller than 350 MB.' : 'تکایە ڤیدیۆیەک هەڵبژێرە کە بچووکتر بێت لە ٣٥٠ مێگابایت.';
+      setLessonUploadStatus(tooLarge, 'error');
+      return showNotification(tooLarge, 'error');
+    }
+
+    const btn = qs('#postLessonBtn');
+    const old = btn?.innerHTML;
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="loading"></span>'; }
+    setLessonUploadStatus(videoFile ? t('lesson_uploading') : t('lesson_url_mode'), 'info');
+
+    try {
+      let finalUrl = videoUrlInput;
+      let storagePath = '';
+      if (videoFile) {
+        const uploaded = await uploadLessonVideo(videoFile, department, teacherSlug);
+        finalUrl = uploaded.url;
+        storagePath = uploaded.path;
+      } else if (!/^https?:\/\//i.test(finalUrl)) {
+        throw new Error('invalid-video-link');
+      }
+
+      await db.collection('lessons').add({
+        department,
+        teacher,
+        teacherSlug,
+        teacherImage: teacherMeta?.image || '',
+        title,
+        subject,
+        description,
+        videoUrl: finalUrl,
+        storagePath,
+        uploadedBy: user.uid,
+        uploadedByName: user.displayName || teacher,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      qs('#lessonForm')?.reset();
+      populateLessonTeacherOptions();
+      setLessonUploadStatus(t('lesson_upload_done'), 'success');
+      showNotification(currentLang === 'en' ? 'Lesson uploaded to the teacher page successfully.' : 'وانەکە بە سەرکەوتوویی بۆ پەڕەی مامۆستا زیادکرا.');
+    } catch (error) {
+      console.error('Lesson upload error:', error);
+      let message = currentLang === 'en' ? 'There was a problem uploading the lesson.' : 'هەڵە لە بارکردنی وانەکە.';
+      if (error.message === 'upload-timeout') message = currentLang === 'en' ? 'The upload took too long. Check your internet or paste a direct video link.' : 'بارکردنەکە زۆر درێژەی کێشا. ئینتەرنێت بپشکنە یان بەستەری ڤیدیۆ دابنێ.';
+      if (error.code === 'storage/unauthorized') message = currentLang === 'en' ? 'Firebase Storage rejected the upload. Check the storage bucket and rules.' : 'Firebase Storage بارکردنەکە ڕەت کرد. storage bucket و rules بپشکنە.';
+      if (error.code === 'storage/unknown') message = currentLang === 'en' ? 'Unknown storage error. Confirm the storage bucket name and that Storage is enabled.' : 'هەڵەی نەناسراوی storage. دڵنیابە لە ناوی storage bucket و چالاکبوونی Storage.';
+      if (error.message === 'invalid-video-link') message = t('invalid_video_link');
+      setLessonUploadStatus(message, 'error');
+      showNotification(message, 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = old || btn.innerHTML; }
+    }
+  };
+
+  applyTranslations = function () {
+    const pageKey = document.body?.dataset.page || 'index';
+    document.documentElement.lang = currentLang;
+    document.documentElement.dir = 'rtl';
+    document.body?.classList.toggle('lang-en', currentLang === 'en');
+    document.body?.classList.toggle('lang-ku', currentLang !== 'en');
+    (pageTranslations.common || []).forEach(applyRule);
+    (pageTranslations[pageKey] || []).forEach(applyRule);
+    const heroTitle = qs('#heroTitle');
+    if (heroTitle) heroTitle.setAttribute('data-text', currentLang === 'en' ? 'Sivar Vocational High School' : 'ئامادەی پیشەی سیڤەر');
+    updateLangButtonsUI();
+    syncTeacherPageContent();
+    populateLessonTeacherOptions(qs('#lessonTeacherSelect')?.value || '');
+    loadTeacherLessonsPage();
+    qsa('[data-ku][data-en]').forEach((element) => {
+      const next = currentLang === 'en' ? element.getAttribute('data-en') : element.getAttribute('data-ku');
+      if (next) element.textContent = next;
+    });
+    updateLessonTargetPreviewV5();
+    syncHeaderAuthVisibilityV5();
+  };
+
+  if (pageTranslations.index) {
+    pageTranslations.index.push(
+      { selector: '.principal-content p:nth-of-type(1)', ku: 'بەخێرهاتن بۆ ئامادەیی پیشەیی سیڤەر، ئێمە باوەڕمان وایە کە زانست بنچینەی هەر سەرکەوتنێکی پیشەییە، لەم ڕووەوە ئەم پلاتفۆرمە دامەزراوە بۆ گرنگی دان لە نێوان فێربوونی ئەکادیمی و داواکارییەکانی جیهانی کار.', en: 'Welcome to Sivar Vocational High School. We believe knowledge is the foundation of every professional success, so this platform bridges academic learning with the real needs of work life.' },
+      { selector: '.principal-content p:nth-of-type(2)', ku: 'ئامانجمان پێشکەشکردنی ژینگەیەکی فێربوونی ڕێکخراو و متمانەپێکراوە، بۆ ئەوەی قوتابیان بتوانن زانیاری بگۆڕن بۆ توانا و سەرکەوتنی پیشەیی.', en: 'Our goal is to offer an organized and trusted learning environment so students can turn knowledge into skill and professional success.' },
+      { selector: '.principal-name', ku: 'بەڕێوەبەری گشتی - شێروان جبار حاجی', en: 'General Principal - Sherwan Jabar Haji' },
+      { selector: '#media .media-item:nth-child(1) h3', ku: 'بینینی نموونەی میدیای ئامادەیی پیشەیی سیڤەر', en: 'Sample media from Sivar Vocational High School' },
+      { selector: '#media .media-item:nth-child(2) h3', ku: 'خوێندن لە ئامادەیی پیشەیی سیڤەر', en: 'Learning at Sivar Vocational High School' },
+      { selector: '#media .media-item:nth-child(3) h3', ku: 'مامۆستا وانە دەڵێتەوە', en: 'Teacher giving a lesson' },
+      { selector: 'footer .footer-section:nth-child(1) h3', html: true, ku: '<i class="fas fa-graduation-cap"></i> ئامادەیی پیشەیی سیڤەر', en: '<i class="fas fa-graduation-cap"></i> Sivar Vocational High School' },
+      { selector: 'footer .footer-section:nth-child(1) p:nth-of-type(1)', ku: 'لە سەرکەوتنەکانت مەترسە، تۆ لە ئامادەیی پیشەیی سیڤەری .', en: 'Do not fear your success, you are with Sivar Vocational High School.' },
+      { selector: 'footer .footer-section:nth-child(1) p:nth-of-type(2)', ku: 'سەرجەم بابەتەکان بە زمانی کوردی و بە شێوەیەکی سادە و ڕوون ڕێکخراون', en: 'All subjects are organized clearly and simply.' },
+      { selector: '.map-details .map-info-row:nth-child(1) p', ku: 'ناونیشان / هەولێر - شەقامی ٦٠مەتری نزیک سوپەرمارکێتی نیوستی', en: 'Address / Erbil - 60 Meter Street near New East Supermarket' },
+      { selector: 'footer .footer-section:nth-child(2) p:nth-of-type(1)', html: true, ku: '<i class="fas fa-map-pin"></i> ناونیشان / هەولێر - شەقامی ٦٠مەتری نزیک سوپەرمارکێتی نیوستی', en: '<i class="fas fa-map-pin"></i> Address / Erbil - 60 Meter Street near New East Supermarket' },
+      { selector: '#departments .department-card:nth-child(3) h3', html: true, ku: '<i class="fas fa-paw"></i> ڤێتێرنەری', en: '<i class="fas fa-paw"></i> Veterinary' },
+      { selector: '#departments .department-card:nth-child(3) .muted', ku: 'بەشی ڤێتێرنەری پێک دێت لە توێکاری، نەخۆشییەکان و پزیشکی ئاژەڵ.', en: 'The veterinary department covers animal health, diseases, and practical veterinary care.' },
+      { selector: '#online-lessons .quick-card:nth-child(4) h3', html: true, ku: '<i class="fas fa-paw"></i> ڤێتێرنەری', en: '<i class="fas fa-paw"></i> Veterinary' },
+      { selector: '#online-lessons .quick-card:nth-child(4) p', ku: 'وانە ئۆنلاینەکانی ڤێتێرنەری بە جیا لە پەڕەی بەشەکەدا دەنرێن.', en: 'Veterinary online lessons are listed separately on the department page.' }
+    );
+  }
+  if (pageTranslations['department-programming']) {
+    pageTranslations['department-programming'].push(
+      { selector: '#about-dept .section-subtitle', ku: 'بەشی پرۆگرامسازی بۆ قوتابیان و فێرخوازان دامەزراوە بۆ پەروەردەی توانا و زانستەکانی پرۆگرامسازی، لە ڕووی کۆد و لۆجیکەوە. ئەم بەشە پەیوەندییەکی ڕاستەقینە دروست دەکات نێوان فێربوونی ئەکادیمی بۆ جیهانی دیجیتاڵ و پیشەیی. قوتابیان لێرە فێر دەبن لە بواری پرۆگرامسازی، وێب سایت، مۆبایل، داتابەیس و سیکیوریتی کار بکەن.', en: 'The programming department develops student skills in coding and logic, linking academic learning to the digital and professional world through programming, websites, mobile apps, databases, and security.' }
+    );
+  }
+  ['department-veterinary','activity-veterinary'].forEach((key) => {
+    if (pageTranslations[key]) {
+      pageTranslations[key].push(
+        { selector: 'title', ku: key === 'department-veterinary' ? 'بەشی ڤێتێرنەری - ئامادەی پیشەی سیڤەر' : 'وانە و چالاکییەکانی ڤێتێرنەری - ئامادەی پیشەی سیڤەر', en: key === 'department-veterinary' ? 'Veterinary Department - Sivar Vocational High School' : 'Veterinary Lessons and Activities - Sivar Vocational High School' },
+        { selector: '.hero-content h1', ku: key === 'department-veterinary' ? 'بەشی ڤێتێرنەری' : 'وانە و چالاکییەکانی ڤێتێرنەری', en: key === 'department-veterinary' ? 'Veterinary department' : 'Veterinary lessons and activities' }
+      );
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    qs('#lessonDepartment')?.addEventListener('change', updateLessonTargetPreviewV5);
+    qs('#lessonTeacherSelect')?.addEventListener('change', updateLessonTargetPreviewV5);
+    updateLessonTargetPreviewV5();
+    syncHeaderAuthVisibilityV5();
+  });
+})();

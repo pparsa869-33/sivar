@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>وانەکانی مامۆستا - ئامادەی پیشەی سیڤەر</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+</head>
+<body class="teacher-page lang-ku" data-page="teacher-lessons">
+  <header>
+    <div class="container header-container">
+      <a class="logo" href="index.html">
+        <img src="logo.png" alt="Logo" class="logo-img">
+        <div class="logo-text">ئامادەی پیشەی سیڤەر<span>پەروەردەی شارەزایانەی داهاتوو</span></div>
+      </a>
+      <nav class="main-nav" id="mainNav">
+        <ul class="nav-list">
+          <li><a href="index.html"><i class="fas fa-house"></i> سەرەکی</a></li>
+          <li><a href="#teacher-overview" id="teacherNavOverview"><i class="fas fa-user"></i> مامۆستا</a></li>
+          <li><a href="#teacher-lessons" id="teacherNavLessons"><i class="fas fa-video"></i> وانەکان</a></li>
+        </ul>
+      </nav>
+      <button class="menu-toggle" type="button"><i class="fas fa-bars"></i></button>
+      <div class="header-actions">
+        <div class="lang-switch" role="group" aria-label="Language switch">
+          <button class="lang-btn active" type="button" data-lang="ku">KU</button>
+          <button class="lang-btn" type="button" data-lang="en">EN</button>
+        </div>
+        <a class="login-btn" href="login.html"><i class="fas fa-chalkboard-user"></i> داشبۆرد</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero teacher-page-hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1 id="teacherPageHeading">وانەکانی مامۆستا</h1>
+      <p id="teacherHeroText">هەموو ڤیدیۆ و وانە ئۆنلاینەکانی ئەم مامۆستایە لێرە کۆ کراونەتەوە.</p>
+      <div class="hero-actions">
+        <a id="teacherBackButton" href="index.html" class="hero-btn"><i class="fas fa-arrow-left"></i> گەڕانەوە بۆ بەش</a>
+        <a href="login.html" class="secondary-btn"><i class="fas fa-cloud-arrow-up"></i> بارکردنی وانە</a>
+      </div>
+    </div>
+  </section>
+
+  <main class="container">
+    <section id="teacher-overview" class="section teacher-overview-section">
+      <div class="teacher-profile-card">
+        <div class="teacher-profile-media">
+          <img id="teacherPagePhoto" src="assets/images/Staff/teachers/shoxan.jpg" alt="Teacher photo" class="teacher-profile-photo">
+        </div>
+        <div class="teacher-profile-content">
+          <div class="teacher-page-chip" id="teacherDepartmentBadge">بەش</div>
+          <h2 id="teacherPageName">مامۆستا</h2>
+          <p id="teacherPageSubject" class="teacher-page-subject">بابەت</p>
+          <p id="teacherPageDescription" class="section-subtitle compact">لێرە هەموو وانەکانت لەسەر یەک پەڕە دەتوانیت بدۆزیتەوە.</p>
+          <div class="teacher-profile-actions">
+            <a id="teacherDepartmentLink" class="outline-btn" href="index.html"><i class="fas fa-building"></i> گەڕانەوە بۆ پەڕەی بەش</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="teacher-lessons" class="section">
+      <div class="lesson-section-head">
+        <h2 class="section-title" id="teacherLessonsTitle"><i class="fas fa-video"></i> وانە ئۆنلاینەکان</h2>
+        <a href="login.html" class="outline-btn" id="teacherDashboardLink"><i class="fas fa-arrow-up-from-bracket"></i> چوونە ناو داشبۆرد</a>
+      </div>
+      <p class="section-subtitle" id="teacherLessonsSubtitle">وانەکان بەپێی مامۆستا ڕێکخراون بۆ ئەوەی خوێندکاران بە ئاسانی بگەن بە ناوەڕۆکەکە.</p>
+      <div id="teacherLessonsList" class="video-grid"></div>
+    </section>
+  </main>
+
+  <button id="scrollTopBtn" type="button" aria-label="گەڕانەوە بۆ سەرەوە"><i class="fas fa-arrow-up"></i></button>
+  <script src="script.js"></script>
+</body>
+</html>

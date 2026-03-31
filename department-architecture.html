@@ -1,130 +1,154 @@
 <!DOCTYPE html>
 <html lang="ku" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>بەشی بیناسازی - ئامادەی پیشەی سیڤەر</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 </head>
-
-<body class="department-page">
-
-  <!-- Header -->
+<body class="department-page lang-ku" data-department="architecture" data-page="department-architecture">
   <header>
     <div class="container header-container">
-      <div class="logo">
-        <div class="logo-icon"><i class="fas fa-graduation-cap"></i></div>
-        <div class="logo-text">
-          ئامادەی پیشەی سیڤەر
-          <span>پەروەردەی شارەزایانەی داهاتوو</span>
-        </div>
-      </div>
-
-      <nav>
-        <ul>
-          <li><a href="index.html"><i class="fas fa-arrow-right"></i> گەڕانەوە</a></li>
+      <a class="logo" href="index.html">
+        <img src="logo.png" alt="Logo" class="logo-img">
+        <div class="logo-text">ئامادەی پیشەی سیڤەر<span>پەروەردەی شارەزایانەی داهاتوو</span></div>
+      </a>
+      <nav class="main-nav" id="mainNav">
+        <ul class="nav-list">
+          <li><a href="index.html"><i class="fas fa-house"></i> سەرەکی</a></li>
+          <li><a href="#about-dept"><i class="fas fa-circle-info"></i> دەربارەی بەش</a></li>
+          <li><a href="#online-lessons"><i class="fas fa-video"></i> وانە ئۆنلاینەکان</a></li>
+          <li><a href="#teachers"><i class="fas fa-chalkboard-teacher"></i> مامۆستاکان</a></li>
         </ul>
       </nav>
-
-      <button class="login-btn" onclick="window.location.href='index.html'">
-        <i class="fas fa-home"></i>
-        بەشەکان
-      </button>
+      <button class="menu-toggle" type="button"><i class="fas fa-bars"></i></button>
+      <div class="header-actions">
+        <div class="lang-switch" role="group" aria-label="Language switch">
+          <button class="lang-btn active" type="button" data-lang="ku">KU</button>
+          <button class="lang-btn" type="button" data-lang="en">EN</button>
+        </div>
+              <a class="login-btn" href="login.html"><i class="fas fa-chalkboard-user"></i> داشبۆرد</a>
+      </div>
     </div>
   </header>
 
-  <!-- Hero -->
   <section class="hero">
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <h1>بەشی بیناسازی</h1>
-      <p>فێربوونی دیزاین، پلانکردن و دروستکردنی پرۆژەی بیناسازی</p>
+      <p>فێربوونی دیزاین، پلانکردن و دروستکردنی پرۆژەی بیناسازی، لەگەڵ بەردەستبوونی وانە ئۆنلاین بۆ هەموو بابەتەکان</p>
+      <div class="hero-actions">
+        <a href="#online-lessons" class="hero-btn"><i class="fas fa-circle-play"></i> بینینی وانەکان</a>
+        <a href="login.html" class="secondary-btn"><i class="fas fa-cloud-arrow-up"></i> بارکردنی وانە</a>
+      </div>
     </div>
   </section>
 
-  <!-- Main Content -->
   <main class="container">
-
-    <!-- About -->
-    <section class="section">
-      <h2 class="section-title">
-        <i class="fas fa-info-circle"></i>
-        دەربارەی بەش
-      </h2>
-
-      <p>
-        ئەم بەشە بۆ فێربوونی دیزاین، پلانکردن، و وێنە ئەندازەیی
-        و دروستکردنی پرۆژەی بیناسازییە.
-      </p>
-    </section>
-
-    <!-- Curriculum -->
-    <section class="section">
-      <h2 class="section-title">
-        <i class="fas fa-list-check"></i>
-        ناوەڕۆکی خوێندن
-      </h2>
-
+    <section id="about-dept" class="section">
+      <h2 class="section-title"><i class="fas fa-building"></i> دەربارەی بەش</h2>
+      <p class="section-subtitle">ئەم بەشە بۆ فێربوونی دیزاین، پلانکردن، وێنە ئەندازەیی و دروستکردنی پرۆژەی بیناسازییە.</p>
       <ul class="dept-meta">
         <li><i class="fas fa-check"></i> بنەمای دیزاین و پلان</li>
         <li><i class="fas fa-check"></i> وێنە ئەندازەیی و CAD</li>
         <li><i class="fas fa-check"></i> ماددە و تەکنیکی بیناسازی</li>
-        <li><i class="fas fa-check"></i> پرۆژەی تیمی + پرۆژەی کۆتایی</li>
+        <li><i class="fas fa-check"></i> پرۆژەی تیمی و پرۆژەی کۆتایی</li>
         <li><i class="fas fa-check"></i> پراکتیک لەسەر شێوازە نوێکان</li>
       </ul>
     </section>
 
-    <!-- Teachers -->
-    <section class="section">
-      <h2 class="section-title">
-        <i class="fas fa-chalkboard-teacher"></i>
-        مامۆستایانی بەش
-      </h2>
-
-      <p class="muted" style="margin-bottom:20px;">
-        هەموو مامۆستا کانمان شارەزای تەواویان لەسەر ئەو بەشانە هەیە کەوا وانەی تیادا دەڵینەوە
-      </p>
-
-      <div class="teachers-grid">
-
-          <div class="teacher-card">
-    <img class="teacher-photo" src="sapan.jpg" alt="مامۆستا سەپان">
-    <div class="teacher-name">مامۆستا سەپان جەمیل علی</div>
-    <div class="teacher-role">بیناسازی</div>
-  </div>
-
-        <div class="teacher-card">
-          <img class="teacher-photo" src="shoxan.jpg" alt="مامۆستا شۆخان عمر">
-          <div class="teacher-body">
-            <div class="teacher-name">مامۆستا شۆخان عمر</div>
-            <span class="teacher-badge">فیزیک</span>
-          </div>
-        </div>
-
-        <div class="teacher-card">
-    <img class="teacher-photo" src="hunar.jpg" alt="مامۆستا هونەر">
-    <div class="teacher-name">مامۆستا هونەر</div>
-    <div class="teacher-role">مامۆستای زمانی ئینگلیزی</div>
-        </div>
-  <div class="teacher-card">
-    <img class="teacher-photo" src="hassan.jpg" alt="مامۆستا حەسەن">
-    <div class="teacher-name">مامۆستا حەسەن</div>
-    <div class="teacher-role">مامۆستای زمانی کوردی</div>
-  </div>
-
-
-      <div class="center mt-40">
-        <button class="department-btn" onclick="window.location.href='index.html'">
-          <span>گەڕانەوە</span>
-          <i class="fas fa-arrow-left"></i>
-        </button>
+    <section id="online-lessons" class="section">
+      <div class="lesson-section-head">
+        <h2 class="section-title"><i class="fas fa-video"></i> وانە ئۆنلاینەکانی بیناسازی</h2>
+        <a href="login.html" class="outline-btn"><i class="fas fa-arrow-up-from-bracket"></i> چوونە ناو داشبۆرد</a>
       </div>
-
+      <p class="section-subtitle">هەر وانەیەک کە بۆ بیناسازی زیاد بکرێت، لێرە خۆکارانە دەردەکەوێت و خوێندکاران دەتوانن بە ئاسانی بیبینن.</p>
+      <div id="departmentLessonsList" class="video-grid" data-department="architecture"></div>
     </section>
 
+    <section id="teachers" class="section">
+      <h2 class="section-title"><i class="fas fa-chalkboard-teacher"></i> مامۆستایانی بەش</h2>
+      <p id="teachersHint" class="section-subtitle compact" data-ku="مامۆستایەک هەڵبژێرە بۆ بینینی هەموو وانە ئۆنلاینەکانی." data-en="Choose a teacher to open a separate page with all of that teacher's online lessons.">مامۆستایەک هەڵبژێرە بۆ بینینی هەموو وانە ئۆنلاینەکانی.</p>
+      <div class="teachers-grid">
+        <a class="teacher-card teacher-link" href="teacher-lessons.html?department=architecture&teacher=sapan" data-teacher-link="true">
+<img class="teacher-photo" src="assets/images/Staff/teachers/sapan.jpg" alt="مامۆستا سەپان جەمیل علی">
+          <div class="teacher-body">
+            <div class="teacher-name">مامۆستا سەپان جەمیل علی</div>
+            <div class="teacher-meta"><span class="teacher-badge">بیناسازی</span></div>
+          </div>
+          <div class="teacher-link-row">
+            <span class="teacher-link-label" data-ku="بینینی وانەکان" data-en="View lessons">بینینی وانەکان</span>
+            <i class="fas fa-arrow-up-left-from-circle"></i>
+          </div>
+        </a>
+        <a class="teacher-card teacher-link" href="teacher-lessons.html?department=architecture&teacher=shoxan" data-teacher-link="true">
+<img class="teacher-photo" src="assets/images/Staff/teachers/shoxan.jpg" alt="مامۆستا شۆخان عمر">
+          <div class="teacher-body">
+            <div class="teacher-name">مامۆستا شۆخان عمر</div>
+            <div class="teacher-meta"><span class="teacher-badge">فیزیک</span></div>
+          </div>
+          <div class="teacher-link-row">
+            <span class="teacher-link-label" data-ku="بینینی وانەکان" data-en="View lessons">بینینی وانەکان</span>
+            <i class="fas fa-arrow-up-left-from-circle"></i>
+          </div>
+        </a>
+        <a class="teacher-card teacher-link" href="teacher-lessons.html?department=architecture&teacher=hunar" data-teacher-link="true">
+<img class="teacher-photo" src="assets/images/Staff/teachers/hunar.jpg" alt="مامۆستا هونەر">
+          <div class="teacher-body">
+            <div class="teacher-name">مامۆستا هونەر</div>
+            <div class="teacher-meta"><span class="teacher-badge">زمانی ئینگلیزی</span></div>
+          </div>
+          <div class="teacher-link-row">
+            <span class="teacher-link-label" data-ku="بینینی وانەکان" data-en="View lessons">بینینی وانەکان</span>
+            <i class="fas fa-arrow-up-left-from-circle"></i>
+          </div>
+        </a>
+        <a class="teacher-card teacher-link" href="teacher-lessons.html?department=architecture&teacher=hassan" data-teacher-link="true">
+<img class="teacher-photo" src="assets/images/Staff/teachers/hassan.jpg" alt="مامۆستا حەسەن">
+          <div class="teacher-body">
+            <div class="teacher-name">مامۆستا حەسەن</div>
+            <div class="teacher-meta"><span class="teacher-badge">زمانی کوردی</span></div>
+          </div>
+          <div class="teacher-link-row">
+            <span class="teacher-link-label" data-ku="بینینی وانەکان" data-en="View lessons">بینینی وانەکان</span>
+            <i class="fas fa-arrow-up-left-from-circle"></i>
+          </div>
+        </a>
+        <a class="teacher-card teacher-link" href="teacher-lessons.html?department=architecture&teacher=diar" data-teacher-link="true">
+<img class="teacher-photo" src="assets/images/Staff/teachers/diar.jpg" alt="مامۆستا دیار">
+          <div class="teacher-body">
+            <div class="teacher-name">مامۆستا دیار</div>
+            <div class="teacher-meta"><span class="teacher-badge">بیناسازی</span></div>
+          </div>
+          <div class="teacher-link-row">
+            <span class="teacher-link-label" data-ku="بینینی وانەکان" data-en="View lessons">بینینی وانەکان</span>
+            <i class="fas fa-arrow-up-left-from-circle"></i>
+          </div>
+        </a>
+        <a class="teacher-card teacher-link" href="teacher-lessons.html?department=architecture&teacher=arain" data-teacher-link="true">
+<img class="teacher-photo" src="assets/images/Staff/teachers/arain.jpg" alt="مامۆستا ئارین">
+          <div class="teacher-body">
+            <div class="teacher-name">مامۆستا ئارین</div>
+            <div class="teacher-meta"><span class="teacher-badge">بیناسازی</span></div>
+          </div>
+          <div class="teacher-link-row">
+            <span class="teacher-link-label" data-ku="بینینی وانەکان" data-en="View lessons">بینینی وانەکان</span>
+            <i class="fas fa-arrow-up-left-from-circle"></i>
+          </div>
+        </a>
+      </div>
+      <div class="center mt-40">
+        <a class="department-btn" href="index.html"><span>گەڕانەوە بۆ سەرەکی</span><i class="fas fa-arrow-left"></i></a>
+      </div>
+    </section>
   </main>
 
+  <button id="scrollTopBtn" type="button" aria-label="گەڕانەوە بۆ سەرەوە"><i class="fas fa-arrow-up"></i></button>
   <script src="script.js"></script>
 </body>
 </html>

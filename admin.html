@@ -1,171 +1,178 @@
 <!DOCTYPE html>
 <html lang="ku" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>Admin Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>داشبۆردی قوتابخانە - ئامادەی پیشەی سیڤەر</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 </head>
+<body class="admin-body lang-ku" data-page="admin">
+  <div class="admin-shell">
+    <div class="container">
+      <div class="admin-header">
+        <div>
+          <h1>داشبۆردی قوتابخانە</h1>
+          <p class="muted">ڕۆڵی ئێستات: <strong id="dashboardRoleBadge">...</strong></p>
+        </div>
+        <div class="admin-inline-actions">
+          <div class="lang-switch" role="group" aria-label="Language switch">
+          <button class="lang-btn active" type="button" data-lang="ku">KU</button>
+          <button class="lang-btn" type="button" data-lang="en">EN</button>
+        </div>
+          <a href="index.html" class="outline-btn"><i class="fas fa-house"></i> سەرەکی</a>
+          <button id="logoutAdmin" class="admin-btn" type="button"><i class="fas fa-right-from-bracket"></i> چوونە دەرەوە</button>
+        </div>
+      </div>
 
-<body class="admin-body">
-  <div class="admin-container">
+      <div id="dashboardReady" class="admin-panel">
+<div class="dashboard-grid">
+        <article class="dashboard-stat">
+          <div class="dashboard-stat-label">وانەکان</div>
+          <div class="dashboard-stat-value" id="statLessonsCount">0</div>
+        </article>
+        <article class="dashboard-stat">
+          <div class="dashboard-stat-label">ڕاگەیاندنەکان</div>
+          <div class="dashboard-stat-value" id="statAnnouncementsCount">0</div>
+        </article>
+        <article class="dashboard-stat">
+          <div class="dashboard-stat-label">کۆمێنتەکان</div>
+          <div class="dashboard-stat-value" id="statCommentsCount">0</div>
+        </article>
+        <article class="dashboard-stat">
+          <div class="dashboard-stat-label">ڕۆڵی ئێستا</div>
+          <div class="dashboard-stat-value" id="statRoleValue">-</div>
+        </article>
+      </div>
 
-    <!-- Header -->
-    <div class="admin-header">
-      <h1>پەڕەی بەڕێوەبردن</h1>
-      <button id="logoutAdmin" class="admin-logout">Logout</button>
+        <section class="admin-card">
+          <h2>ڕێنمایی خێرا</h2>
+          <div class="dashboard-note">
+            ١. مامۆستا یان ئەدمین لە پەڕەی login.html چوونەژورەوە دەکات. ٢. بەش و مامۆستا هەڵدەبژێرێت. ٣. وانەکە بە ڤیدیۆ یان بەستەر زیاد دەکات. ٤. وانەکە خۆکارانە لە پەڕەی تایبەتی هەمان مامۆستا و لە پەڕەی بەشەکەدا نیشان دەدرێت.
+          </div>
+        </section>
+
+        <section class="admin-card">
+          <h2>زیادکردنی وانە ئۆنلاین</h2>
+          <p class="muted">ئەم فۆرمە بۆ بارکردنی ڤیدیۆی وانەکانە بۆ هەر یەکێک لە سێ بەشەکە.</p>
+          <form id="lessonForm">
+            <div class="lesson-form-grid">
+              <div>
+                <label for="lessonDepartment">بەش</label>
+                <select id="lessonDepartment" required>
+                  <option value="">بەش هەڵبژێرە</option>
+                  <option value="programming">پڕۆگرامسازی</option>
+                  <option value="architecture">بیناسازی</option>
+                  <option value="veterinary">ڤێتێرنەری</option>
+                </select>
+              </div>
+              <div>
+                <label for="lessonTitle">ناونیشانی وانە</label>
+                <input id="lessonTitle" type="text" placeholder="نموونە: وانەی یەکەم - HTML" required>
+              </div>
+              <div>
+                <label for="lessonTeacherSelect" data-ku="مامۆستا" data-en="Teacher">مامۆستا</label>
+                <select id="lessonTeacherSelect" required>
+                  <option value="">مامۆستا هەڵبژێرە</option>
+                </select>
+                <div class="file-note teacher-help" data-ku="وانەکە لە پەڕەی تایبەتی ئەم مامۆستایە و هەروەها لە پەڕەی بەشەکەدا نیشان دەدرێت." data-en="This lesson appears on the selected teacher page and on the department page.">وانەکە لە پەڕەی تایبەتی ئەم مامۆستایە و هەروەها لە پەڕەی بەشەکەدا نیشان دەدرێت.</div>
+                <div id="lessonTargetPreview" class="target-preview">هێشتا پەڕەی مامۆستا هەڵنەبژێردراوە.</div>
+              </div>
+              <div>
+                <label for="lessonTeacher">ناوی مامۆستا</label>
+                <input id="lessonTeacher" type="text" placeholder="ناوی مامۆستا" required readonly>
+              </div>
+              <div>
+                <label for="lessonSubject">بابەت</label>
+                <input id="lessonSubject" type="text" placeholder="نموونە: Web Design" required>
+              </div>
+              <div class="full-span">
+                <label for="lessonDescription">کورتە دەربارەی وانە</label>
+                <textarea id="lessonDescription" placeholder="کورتە باسێک لەسەر ناوەڕۆکی وانەکە..."></textarea>
+              </div>
+              <div class="full-span">
+                <label for="lessonVideo">ڤیدیۆی وانە</label>
+                <input id="lessonVideo" type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-m4v">
+                <div class="file-note">باشترە MP4 بەکاربهێنرێت. ئەگەر فایل زۆر گەورە بوو، دەتوانیت بەستەری ڤیدیۆ دابنێیت.</div>
+              </div>
+              <div class="full-span">
+                <label for="lessonVideoUrl">بەستەری ڤیدیۆ (هەڵبژاردەی دووەم)</label>
+                <input id="lessonVideoUrl" type="url" placeholder="https://example.com/lesson.mp4">
+                <div id="lessonUploadStatus" class="file-note">دەتوانیت فایل باربکەیت یان ئەگەر پێویست بوو بەستەری ڤیدیۆ بنێریت.</div>
+              </div>
+            </div>
+            <div class="mt-24">
+              <button id="postLessonBtn" class="admin-btn" type="submit"><i class="fas fa-cloud-arrow-up"></i> بارکردنی وانە</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="admin-card">
+          <div class="dashboard-head">
+            <div>
+              <h2>وانە بارکراوەکان</h2>
+              <p class="muted">لێرە دەتوانیت هەموو وانە بارکراوەکان ببینیت و ئەگەر پێویست بوو بسڕیتەوە.</p>
+            </div>
+          </div>
+          <div id="lessonAdminList" class="video-grid"></div>
+        </section>
+
+        <section class="admin-card">
+          <h2>ڕاگەیاندن</h2>
+          <form id="announcementForm">
+            <div class="lesson-form-grid">
+              <div class="full-span">
+                <label for="announcementText">دەقی ڕاگەیاندن</label>
+                <textarea id="announcementText" placeholder="نووسینی ڕاگەیاندن..."></textarea>
+              </div>
+              <div class="full-span">
+                <label for="announcementImage">وێنەی ڕاگەیاندن</label>
+                <input type="file" id="announcementImage" accept="image/*">
+              </div>
+            </div>
+            <div class="mt-24">
+              <button id="postAnnouncementBtn" class="admin-btn" type="submit"><i class="fas fa-paper-plane"></i> ناردن</button>
+            </div>
+          </form>
+          <div id="announcementList" class="announcement-list mt-24"></div>
+        </section>
+
+        <section class="admin-card" data-admin-only>
+          <h2>بەڕێوەبردنی ڕۆڵەکان</h2>
+          <p class="muted">ئەم بەشە تەنها بۆ ئەدمینە. مامۆستا سەرەتا تۆمار دەکات، پاشان ئەدمین دەتوانێت ڕۆڵی بکات بە teacher.</p>
+          <form id="roleForm">
+            <div class="lesson-form-grid">
+              <div>
+                <label for="roleEmail">ئیمەیڵی بەکارهێنەر</label>
+                <input id="roleEmail" type="email" placeholder="teacher@example.com" required>
+              </div>
+              <div>
+                <label for="roleSelect">ڕۆڵ</label>
+                <select id="roleSelect" required>
+                  <option value="teacher">teacher</option>
+                  <option value="student">student</option>
+                  <option value="admin">admin</option>
+                </select>
+              </div>
+            </div>
+            <div class="mt-24">
+              <button id="roleUpdateBtn" class="role-action" type="submit"><i class="fas fa-user-shield"></i> نوێکردنەوەی ڕۆڵ</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="admin-card">
+          <h2>کۆمێنتەکان</h2>
+          <div id="adminCommentsList" class="comments-list"></div>
+        </section>
+      </div>
     </div>
-
-    <!-- Announcements -->
-    <div class="admin-card">
-      <h2>ڕاگەیاندن</h2>
-      <textarea id="announcementText" placeholder="نووسینی ڕاگەیاندن..."></textarea>
-      <input type="file" id="announcementImage" accept="image/*" />
-      <button onclick="postAnnouncement()">ناردن</button>
-      <div id="announcementList"></div>
-    </div>
-
-    <!-- Upload media (disabled for now) -->
-    <div class="admin-card">
-      <h2>بارکردنی میدیا</h2>
-      <p>ئەم بەشە دواتر زیاد دەکرێت</p>
-    </div>
-
-    <!-- Comments control -->
-    <div class="admin-card">
-      <h2>کۆمێنتەکان</h2>
-      <div id="commentsList"></div>
-    </div>
-
   </div>
 
-  <!-- Firebase scripts -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
-
-  <!-- Admin logic -->
-  <script>
-    // PROTECT ADMIN PAGE (localStorage login)
-    const isLoggedIn = localStorage.getItem("isAdminLoggedIn");
-    if (isLoggedIn !== "true") {
-      window.location.replace("login.html");
-    }
-
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyCHdHnK0Lz8TITlrkWYgSdV8AmFZU3F7_0",
-      authDomain: "sivarvocationalhighschoo-513aa.firebaseapp.com",
-      projectId: "sivarvocationalhighschoo-513aa",
-      storageBucket: "sivarvocationalhighschoo-513aa.appspot.com",
-      messagingSenderId: "498314470915",
-      appId: "1:498314470915:web:1d75488d20372f81e71036",
-    };
-
-    // Init Firebase
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const storage = firebase.storage();
-
-    // Logout
-    const btn = document.getElementById("logoutAdmin");
-    if (btn) {
-      btn.addEventListener("click", async () => {
-        localStorage.removeItem("isAdminLoggedIn");
-        await auth.signOut();
-        window.location.replace("login.html");
-      });
-    }
-
-    // Post announcement with optional image
-    async function postAnnouncement() {
-      const text = document.getElementById("announcementText").value.trim();
-      const fileInput = document.getElementById("announcementImage");
-      const file = fileInput.files[0];
-
-      if (!text && !file) {
-        alert("تکایە دەق یان وێنە زیاد بکە");
-        return;
-      }
-
-      let imageUrl = "";
-
-      // Upload image to ImgBB
-      if (file) {
-        const formData = new FormData();
-        formData.append("image", file);
-
-        const res = await fetch(
-          "https://api.imgbb.com/1/upload?key=a60d17c9e2a12b41ef35cd6ef4f10115",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        const data = await res.json();
-        imageUrl = data.data.url;
-      }
-
-      // Save to Firestore
-      await db.collection("announcements").add({
-        text: text,
-        imageUrl: imageUrl,
-        createdAt: new Date()
-      });
-
-      // Reset form
-      document.getElementById("announcementText").value = "";
-      fileInput.value = "";
-
-      alert("ڕاگەیاندن زیادکرا");
-    }
-
-    // Load announcements in admin
-    function loadAnnouncements() {
-      db.collection("announcements")
-        .orderBy("createdAt", "desc")
-        .onSnapshot((snapshot) => {
-          const list = document.getElementById("announcementList");
-          if (!list) return;
-
-          list.innerHTML = "";
-
-          snapshot.forEach((doc) => {
-            const data = doc.data();
-
-            const item = document.createElement("div");
-            item.className = "admin-announcement";
-
-            item.innerHTML = `
-              <span>${data.text || ""}</span>
-              ${
-                data.imageUrl
-                  ? `<img src="${data.imageUrl}" style="max-width:120px;display:block;margin-top:6px;">`
-                  : ""
-              }
-              <button onclick="deleteAnnouncement('${doc.id}')">حذف</button>
-            `;
-
-            list.appendChild(item);
-          });
-        });
-    }
-
-    // Delete announcement
-    function deleteAnnouncement(id) {
-      if (confirm("دڵنیای لە سڕینەوەی ئەم ڕاگەیاندنە؟")) {
-        db.collection("announcements").doc(id).delete();
-      }
-    }
-
-    // Start loading
-    loadAnnouncements();
-  </script>
-
+  <script src="script.js"></script>
 </body>
 </html>

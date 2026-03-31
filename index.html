@@ -1,130 +1,94 @@
 <!DOCTYPE html>
 <html lang="ku" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ئامادەی پیشەی سیڤەر</title>
-
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- Firebase (Compat) SDKs (ke global `firebase` drews dekawn) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 </head>
+<body data-page="index" class="lang-ku">
+  <div id="scrollProgress"></div>
+  <div id="loader"><div class="spinner"></div></div>
 
-<body>
-  <!-- Authentication Modal -->
   <div id="authModal" class="auth-modal" aria-hidden="true">
     <div class="auth-container" role="dialog" aria-modal="true" aria-labelledby="authTitle">
       <div class="auth-header">
-        <div class="close-auth" onclick="closeAuthModal()" aria-label="داخستن">
+        <button id="closeAuthBtn" class="close-auth" type="button" onclick="closeAuthModal()" aria-label="داخستن">
           <i class="fas fa-times"></i>
-        </div>
-
+        </button>
         <h2 id="authTitle">بەخێربێیت</h2>
         <p>تکایە چوونەژورەوە بکە یان تۆمار ببە</p>
-
         <div class="auth-tabs">
-          <div class="auth-tab active" onclick="switchAuthTab('login', this)">چوونەژورەوە</div>
-          <div class="auth-tab" onclick="switchAuthTab('register', this)">تۆمارکردن</div>
+          <button class="auth-tab active" type="button" data-tab="login">چوونەژورەوە</button>
+          <button class="auth-tab" type="button" data-tab="register">تۆمارکردن</button>
         </div>
       </div>
 
       <div class="auth-content">
-        <!-- Login Form -->
         <div id="loginForm" class="auth-form active">
-          <form id="loginFormElement" onsubmit="login(event)">
+          <form id="loginFormElement">
             <div class="form-group">
-              <label for="loginEmail">
-                <i class="fas fa-envelope"></i>
-                ئیمەیڵ
-              </label>
+              <label for="loginEmail"><i class="fas fa-envelope"></i> ئیمەیڵ</label>
               <span class="input-icon"><i class="fas fa-envelope"></i></span>
-              <input type="email" id="loginEmail" placeholder="نموونە@gmail.com" required />
+              <input type="email" id="loginEmail" placeholder="example@gmail.com" required>
             </div>
 
             <div class="form-group">
-              <label for="loginPassword">
-                <i class="fas fa-lock"></i>
-                وشەی نهێنی
-              </label>
+              <label for="loginPassword"><i class="fas fa-lock"></i> وشەی نهێنی</label>
               <span class="input-icon"><i class="fas fa-lock"></i></span>
-              <input type="password" id="loginPassword" placeholder="وشەی نهێنی" required />
-              <span class="password-toggle" onclick="togglePassword('loginPassword')" title="نیشاندان/شاردنەوە">
-                <i class="fas fa-eye"></i>
-              </span>
+              <input type="password" id="loginPassword" placeholder="وشەی نهێنی" required>
+              <span class="password-toggle" data-target="loginPassword"><i class="fas fa-eye"></i></span>
             </div>
 
-            <button type="submit" class="auth-btn" id="loginBtn">
+            <button id="loginBtn" type="submit" class="auth-btn">
               <span>چوونەژورەوە</span>
-              <i class="fas fa-sign-in-alt"></i>
+              <i class="fas fa-right-to-bracket"></i>
             </button>
           </form>
 
           <div class="social-login">
             <p>یان چوونەژورەوە بە</p>
             <div class="social-buttons">
-              <button class="social-btn google" onclick="loginWithGoogle()">
-                <i class="fab fa-google"></i>
-                گووگڵ
-              </button>
-              <button class="social-btn facebook" onclick="loginWithFacebook()">
-                <i class="fab fa-facebook-f"></i>
-                فەیسبووک
-              </button>
+              <button class="social-btn" type="button" onclick="loginWithGoogle()"><i class="fab fa-google"></i> گووگڵ</button>
+              <button class="social-btn" type="button" onclick="loginWithFacebook()"><i class="fab fa-facebook-f"></i> فەیسبووک</button>
             </div>
           </div>
         </div>
 
-        <!-- Register Form -->
         <div id="registerForm" class="auth-form">
-          <form id="registerFormElement" onsubmit="register(event)">
+          <form id="registerFormElement">
             <div class="form-group">
-              <label for="registerName">
-                <i class="fas fa-user"></i>
-                ناوی تەواو
-              </label>
+              <label for="registerName"><i class="fas fa-user"></i> ناوی تەواو</label>
               <span class="input-icon"><i class="fas fa-user"></i></span>
-              <input type="text" id="registerName" placeholder="ناوی تەواو" required />
+              <input type="text" id="registerName" placeholder="ناوی تەواو" required>
             </div>
 
             <div class="form-group">
-              <label for="registerEmail">
-                <i class="fas fa-envelope"></i>
-                ئیمەیڵ
-              </label>
+              <label for="registerEmail"><i class="fas fa-envelope"></i> ئیمەیڵ</label>
               <span class="input-icon"><i class="fas fa-envelope"></i></span>
-              <input type="email" id="registerEmail" placeholder="نموونە@gmail.com" required />
+              <input type="email" id="registerEmail" placeholder="example@gmail.com" required>
             </div>
 
             <div class="form-group">
-              <label for="registerPassword">
-                <i class="fas fa-lock"></i>
-                وشەی نهێنی
-              </label>
+              <label for="registerPassword"><i class="fas fa-lock"></i> وشەی نهێنی</label>
               <span class="input-icon"><i class="fas fa-lock"></i></span>
-              <input type="password" id="registerPassword" placeholder="وشەی نهێنی (لانی کەم ٦ نووسە)" required />
-              <span class="password-toggle" onclick="togglePassword('registerPassword')" title="نیشاندان/شاردنەوە">
-                <i class="fas fa-eye"></i>
-              </span>
+              <input type="password" id="registerPassword" placeholder="وشەی نهێنی (لانی کەم ٦ نووسە)" required>
+              <span class="password-toggle" data-target="registerPassword"><i class="fas fa-eye"></i></span>
             </div>
 
             <div class="form-group">
-              <label for="registerConfirmPassword">
-                <i class="fas fa-lock"></i>
-                دووبارەکردنەوەی وشەی نهێنی
-              </label>
+              <label for="registerConfirmPassword"><i class="fas fa-lock"></i> دووبارەکردنەوەی وشەی نهێنی</label>
               <span class="input-icon"><i class="fas fa-lock"></i></span>
-              <input type="password" id="registerConfirmPassword" placeholder="دووبارەکردنەوەی وشەی نهێنی" required />
-              <span class="password-toggle" onclick="togglePassword('registerConfirmPassword')" title="نیشاندان/شاردنەوە">
-                <i class="fas fa-eye"></i>
-              </span>
+              <input type="password" id="registerConfirmPassword" placeholder="دووبارەکردنەوەی وشەی نهێنی" required>
+              <span class="password-toggle" data-target="registerConfirmPassword"><i class="fas fa-eye"></i></span>
             </div>
 
-            <button type="submit" class="auth-btn" id="registerBtn">
+            <button id="registerBtn" type="submit" class="auth-btn">
               <span>تۆمارکردن</span>
               <i class="fas fa-user-plus"></i>
             </button>
@@ -134,142 +98,118 @@
     </div>
   </div>
 
-  <!-- Header -->
   <header>
     <div class="container header-container">
-
-  <div class="logo">
-  <img src="logo.png" class="logo-img" alt="School Logo">
-  <div class="logo-text">
-    ئامادەی پیشەی سیڤەر
-    <span>پەروەردەی شارەزایانەی داهاتوو</span>
-  </div>
-</div>
-
-
-  <!-- Mobile Menu Button (moved outside logo) -->
-  <button class="menu-toggle" onclick="toggleMenu()">
-    <i class="fas fa-bars"></i>
-  </button>
-
-  
-   <nav class="main-nav" id="mainNav">
-  <ul class="nav-list">
-    <li><a href="#home" class="active"><i class="fas fa-home"></i> سەرەتا</a></li>
-
-    <!-- Departments (submenu) -->
-    <li class="has-submenu" id="departmentsItem">
-      <a href="#" class="dept-toggle" onclick="toggleDepartments(event)">
-        <i class="fas fa-book"></i> بەشەکان
-        <i class="fas fa-chevron-down caret"></i>
+      <a class="logo" href="index.html" aria-label="سەرەکی">
+        <img src="logo.png" class="logo-img" alt="School Logo">
+        <div class="logo-text">
+          ئامادەی پیشەی سیڤەر
+          <span>پەروەردەی شارەزایانەی داهاتوو</span>
+        </div>
       </a>
 
-      <ul class="submenu" id="departmentsMenu">
-        <li><a href="department-programming.html">پڕۆگرامسازی</a></li>
-        <li><a href="department-architecture.html">بیناسازی</a></li>
-        <li><a href="department-veterinary.html">ڤێتەرنەری</a></li>
-      </ul>
-    </li>
+      <button class="menu-toggle" type="button" aria-label="کردنەوەی مێنو">
+        <i class="fas fa-bars"></i>
+      </button>
 
-    <li><a href="#media"><i class="fas fa-photo-video"></i> میدیا</a></li>
-    <li><a href="#stats"><i class="fas fa-chart-line"></i> ئامارەکان</a></li>
-    <li><a href="#comments"><i class="fas fa-comments"></i> کۆمێنت</a></li>
-    <li><a href="#about"><i class="fas fa-info-circle"></i> دەربارە</a></li>
-  </ul>
+      <nav id="mainNav" class="main-nav" aria-label="مێنوی سەرەکی">
+        <ul class="nav-list">
+          <li><a href="#home" class="active"><i class="fas fa-house"></i> سەرەتا</a></li>
+          <li class="has-submenu" id="departmentsItem">
+            <button type="button" class="dept-toggle" aria-expanded="false" aria-controls="departmentsSubmenu">
+              <span><i class="fas fa-book"></i> بەشەکان</span>
+              <i class="fas fa-chevron-down"></i>
+            </button>
+            <ul id="departmentsSubmenu" class="submenu">
+              <li><a href="department-programming.html">پڕۆگرامسازی</a></li>
+              <li><a href="department-architecture.html">بیناسازی</a></li>
+              <li><a href="department-veterinary.html">ڤێتێرنەری</a></li>
+            </ul>
+          </li>
+          <li><a href="#online-lessons"><i class="fas fa-video"></i> وانە ئۆنلاینەکان</a></li>
+          <li><a href="#announcements"><i class="fas fa-bullhorn"></i> ڕاگەیاندن</a></li>
+          <li><a href="#comments"><i class="fas fa-comments"></i> کۆمێنت</a></li>
+          <li><a href="#about"><i class="fas fa-circle-info"></i> دەربارە</a></li>
+        </ul>
+      </nav>
 
-  </nav>
+      <div class="header-actions">
+        <div class="lang-switch" role="group" aria-label="Language switch">
+          <button class="lang-btn active" type="button" data-lang="ku">KU</button>
+          <button class="lang-btn" type="button" data-lang="en">EN</button>
+        </div>
+        <div id="userProfileMobile" class="user-profile mobile-profile">
+          <img src="" alt="User" class="user-avatar" id="userAvatarMobile">
+          <div class="user-info">
+            <div class="user-name" id="userDisplayNameMobile"></div>
+            <div class="user-role" id="userRoleMobile">خوێندکار</div>
+          </div>
+          <i class="fas fa-chevron-down"></i>
+        </div>
 
-  <div id="userProfile" class="user-profile" onclick="toggleUserMenu()">
-    <img src="" alt="User" class="user-avatar" id="userAvatar" />
-    <div class="user-info">
-      <div class="user-name" id="userDisplayName"></div>
-      <div class="user-role" id="userRole">خوێندکار</div>
-    </div>
-    <i class="fas fa-chevron-down"></i>
-  </div>
+        <div id="userProfile" class="user-profile desktop-profile">
+          <img src="" alt="User" class="user-avatar" id="userAvatar">
+          <div class="user-info">
+            <div class="user-name" id="userDisplayName"></div>
+            <div class="user-role" id="userRole">خوێندکار</div>
+          </div>
+          <i class="fas fa-chevron-down"></i>
+        </div>
 
-  <button id="loginButton" class="login-btn" onclick="openAuthModal()">
-    <i class="fas fa-sign-in-alt"></i>
-    چوونەژورەوە
-  </button>
-
-</div>
-  </header>
-  <!-- Hero Section -->
-<section class="hero">
-  <div class="hero-overlay"></div>
-
-  <div class="hero-content">
-    <h1>ئامادەی پیشەی سیڤەر</h1>
-    <p>پەروەردەی شارەزایانەی داهاتوو لە بواری تەکنەلۆژیا و پیشەسازی</p>
-    <a href="#departments" class="hero-btn">
-      <i class="fas fa-book"></i>
-      بەشەکان ببینە
-    </a>
-  </div>
-</section>
-<section class="principal-section">
-  <div class="container principal-wrap">
-
-    <div class="principal-image">
-  <img src="principal.png" alt="بەڕێوەبەر" class="principal-img">
-    </div>
-
-    <div class="principal-content">
-      <h2 class="section-title">
-        <i class="fas fa-user-tie"></i>
-        پەیامی بەڕێوەبەر
-      </h2>
-
-      <p>
-        بەخێرهاتن بۆ ئامادەی پیشەی سیڤەر. ئامانجی ئێمە تەنها فێربوونی زانیاری نییە،
-        بەڵکو دروستکردنی کادیرێکی توانا و سەربەخۆیە کە بتوانێت لە بازاڕی کاردا
-        بە شێوەیەکی کاریگەر بەشداری بکات.
-      </p>
-
-      <p>
-        هەوڵ دەدەین ژینگەیەکی ئەکادیمی سەردەمی و پڕ لە پەرەپێدان بۆ خوێندکاران
-        دابین بکەین، بۆ ئەوەی داهاتوویەکی سەقامگیر بۆ خۆیان دروست بکەن.
-      </p>
-
-      <div class="principal-name">
-        — بەڕێوەبەری گشتی
+        <button id="loginButton" class="login-btn" type="button" data-open-auth>
+          <i class="fas fa-right-to-bracket"></i>
+          چوونەژورەوە
+        </button>
       </div>
     </div>
+  </header>
 
-  </div>
-</section>
-  <!-- Main Content -->
+  <section class="hero" id="home">
+    <img src="school.jpg" class="hero-img" alt="School building">
+    <div class="floating-shapes">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1 id="heroTitle" data-text="ئامادەی پیشەی سیڤەر"></h1>
+      <p>پەروەردەی شارەزایانەی داهاتوو لە بواری تەکنەلۆژیا، پیشەسازی و فێربوونی کارا</p>
+      <div class="hero-actions">
+        <a href="#departments" class="hero-btn"><i class="fas fa-book-open"></i> بەشەکان ببینە</a>
+        <a href="#online-lessons" class="secondary-btn"><i class="fas fa-circle-play"></i> وانە ئۆنلاینەکان</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="principal-section">
+    <div class="container principal-wrap">
+      <div class="principal-image">
+        <img src="assets/images/Staff/principal/principal.png" alt="بەڕێوەبەر" class="principal-img">
+      </div>
+      <div class="section principal-content">
+        <h2 class="section-title"><i class="fas fa-user-tie"></i> پەیامی بەڕێوەبەر</h2>
+        <p>بەخێرهاتن بۆ ئامادەیی پیشەیی سیڤەر، ئێمە باوەڕمان وایە کە زانست بنچینەی هەر سەرکەوتنێکی پیشەییە، لەم ڕووەوە ئەم پلاتفۆرمە دامەزراوە بۆ گرنگی دان لە نێوان فێربوونی ئەکادیمی و داواکارییەکانی جیهانی کار.</p>
+        <p>ئامانجمان پێشکەشکردنی ژینگەیەکی فێربوونی ڕێکخراو و متمانەپێکراوە، بۆ ئەوەی قوتابیان بتوانن زانیاری بگۆڕن بۆ توانا و سەرکەوتنی پیشەیی.</p>
+        <div class="principal-name">بەڕێوەبەری گشتی - شێروان جبار حاجی</div>
+      </div>
+    </div>
+  </section>
+
   <main class="container">
     <section id="announcements" class="section">
-  <h2 class="section-title">
-    <i class="fas fa-bullhorn"></i>
-    ڕاگەیاندن
-  </h2>
+      <div class="lesson-section-head">
+        <h2 class="section-title"><i class="fas fa-bullhorn"></i> ڕاگەیاندنەکان</h2>
+        <a href="login.html" class="outline-btn"><i class="fas fa-chalkboard-user"></i> چوونە ناو داشبۆرد</a>
+      </div>
+      <p class="section-subtitle">ڕاگەیاندنەکان و هەواڵی نوێ لێرە بە شێوەی ئۆتۆماتیکی نیشان دەدرێن.</p>
+      <div id="announcementPublicList" class="quick-grid"></div>
+    </section>
 
-  <div id="announcementPublicList"></div>
-</section>
-
-    <!-- Welcome Section -->
-    <section id="home" class="section">
-      <h2 class="section-title">
-        <i class="fas fa-graduation-cap"></i>
-        بەخێربێیت بۆ ئامادەی پیشەی سیڤەر
-      </h2>
-
+    <section class="section">
+      <h2 class="section-title"><i class="fas fa-graduation-cap"></i> بەخێربێیت بۆ ئامادەی پیشەی سیڤەر</h2>
       <div class="welcome-wrap">
-        <p class="welcome-quote">
-          <i class="fas fa-quote-right"></i>
-          ئامانجەکەت لە ئامادەی پیشەی سیڤەر بەدی بهێنە
-          <i class="fas fa-quote-left"></i>
-        </p>
-
+        <p class="welcome-quote"><i class="fas fa-quote-right"></i> ئامانجەکەت لە ئامادەی پیشەی سیڤەر بەدی بهێنە <i class="fas fa-quote-left"></i></p>
         <div class="welcome-goals">
-          <h3>
-            <i class="fas fa-bullseye"></i>
-            ئامانجەکانی ئێمە
-          </h3>
-
+          <h3><i class="fas fa-bullseye"></i> ئامانجەکانی ئێمە</h3>
           <ul>
             <li><i class="fas fa-check-circle"></i> پەروەردەی کادیرێکی کاریگەر لە بواری تەکنەلۆژیای زانیاری</li>
             <li><i class="fas fa-check-circle"></i> دابینکردنی سەرچاوەی نوێ بۆ خوێندکاران</li>
@@ -280,435 +220,244 @@
       </div>
     </section>
 
-    <!-- Departments Section -->
     <section id="departments" class="section">
-      <h2 class="section-title">
-        <i class="fas fa-book"></i>
-        بەشەکانی ئامادەی سیڤەر
-      </h2>
-
+      <h2 class="section-title"><i class="fas fa-book"></i> بەشەکانی ئامادەی سیڤەر</h2>
+      <p class="section-subtitle">هەر بەشێک پەڕەی تایبەتی خۆی هەیە و وانە ئۆنلاینەکانیش لە هەمان پەڕەدا نیشان دەدرێن.</p>
       <div class="departments-grid">
-        <div class="department-card">
+        <article class="department-card">
           <div class="department-icon"><i class="fas fa-code"></i></div>
           <div class="department-info">
             <h3><i class="fas fa-code"></i> پڕۆگرامسازی</h3>
-            <p class="muted">
-              بەشی پڕۆگرامسازی پێک دێت لە خوێندنی پڕۆگرامسازی، داتابەیس، سیکیوریتی، و IT.
-            </p>
+            <p class="muted">بەشی پڕۆگرامسازی پێک دێت لە خوێندنی پڕۆگرامسازی، داتابەیس، سیکیوریتی و IT.</p>
             <ul class="dept-meta">
               <li><i class="fas fa-check"></i> ماوەی خوێندن: ٣ ساڵ</li>
               <li><i class="fas fa-check"></i> بابەتەکان: ١٣ بابەت</li>
-              <li><i class="fas fa-check"></i> ئاست: کادیری کارا</li>
+              <li><i class="fas fa-check"></i> وانە ئۆنلاین: بەردەست</li>
             </ul>
-            <button class="department-btn" onclick="openDepartmentPage('programming')">
-              <span>زیاتر بزانە</span>
-              <i class="fas fa-arrow-left"></i>
-            </button>
+            <button class="department-btn" type="button" onclick="openDepartmentPage('programming')"><span>بڕۆ بۆ پەڕەی بەش</span><i class="fas fa-arrow-left"></i></button>
           </div>
-        </div>
+        </article>
 
-        <div class="department-card">
-          <div class="department-icon"><i class="fas fa-paw"></i></div>
-          <div class="department-info">
-            <h3><i class="fas fa-paw"></i> ڤێتەرنەری</h3>
-            <p class="muted">
-              بەشی ڤێتەرنەری پێک دێت لە توێکاری، نەخۆشییەکان، و پزیشکی ئاژەڵ.
-            </p>
-            <ul class="dept-meta">
-              <li><i class="fas fa-check"></i> ماوەی خوێندن: ٣ ساڵ</li>
-              <li><i class="fas fa-check"></i> بابەتەکان: ١٥ بابەت</li>
-              <li><i class="fas fa-check"></i> ئاست: کادیری کارا</li>
-            </ul>
-            <button class="department-btn" onclick="openDepartmentPage('veterinary')">
-              <span>زیاتر بزانە</span>
-              <i class="fas fa-arrow-left"></i>
-            </button>
-          </div>
-        </div>
-
-        <div class="department-card">
+        <article class="department-card">
           <div class="department-icon"><i class="fas fa-building"></i></div>
           <div class="department-info">
             <h3><i class="fas fa-building"></i> بیناسازی</h3>
-            <p class="muted">
-              بەشی بیناسازی پێک دێت لە وێنە ئەندازەیی، لکاندن، و دیزاینی بینا.
-            </p>
+            <p class="muted">بەشی بیناسازی پێک دێت لە وێنە ئەندازەیی، لکاندن و دیزاینی بینا.</p>
             <ul class="dept-meta">
               <li><i class="fas fa-check"></i> ماوەی خوێندن: ٣ ساڵ</li>
               <li><i class="fas fa-check"></i> بابەتەکان: ١٠ بابەت</li>
-              <li><i class="fas fa-check"></i> ئاست: کادیری کارا</li>
+              <li><i class="fas fa-check"></i> وانە ئۆنلاین: بەردەست</li>
             </ul>
-            <button class="department-btn" onclick="openDepartmentPage('architecture')">
-              <span>زیاتر بزانە</span>
-              <i class="fas fa-arrow-left"></i>
-            </button>
+            <button class="department-btn" type="button" onclick="openDepartmentPage('architecture')"><span>بڕۆ بۆ پەڕەی بەش</span><i class="fas fa-arrow-left"></i></button>
           </div>
-        </div>
+        </article>
+
+        <article class="department-card">
+          <div class="department-icon"><i class="fas fa-paw"></i></div>
+          <div class="department-info">
+            <h3><i class="fas fa-paw"></i> ڤێتێرنەری</h3>
+            <p class="muted">بەشی ڤێتێرنەری پێک دێت لە توێکاری، نەخۆشییەکان و پزیشکی ئاژەڵ.</p>
+            <ul class="dept-meta">
+              <li><i class="fas fa-check"></i> ماوەی خوێندن: ٣ ساڵ</li>
+              <li><i class="fas fa-check"></i> بابەتەکان: ١٥ بابەت</li>
+              <li><i class="fas fa-check"></i> وانە ئۆنلاین: بەردەست</li>
+            </ul>
+            <button class="department-btn" type="button" onclick="openDepartmentPage('veterinary')"><span>بڕۆ بۆ پەڕەی بەش</span><i class="fas fa-arrow-left"></i></button>
+          </div>
+        </article>
       </div>
     </section>
-    <section id="news" class="section">
-  <h2 class="section-title">
-    <i class="fas fa-newspaper"></i>
-    دواهەمین هەواڵ و چالاکییەکان
-  </h2>
 
-  <div class="news-grid">
-
-    <div class="news-card">
-      <img src="https://images.unsplash.com/photo-1523580494863-6f3031224c94" alt="News">
-      <div class="news-content">
-        <div class="news-date">١٠ی ئەیلوول ٢٠٢٦</div>
-        <h3>چالاکییەکی تایبەت بۆ خوێندکاران</h3>
-        <p>چالاکییەکی نوێ لە پەیمانگا بە مەبەستی پەرەپێدانی توانا پیشەییەکان.</p>
-        <a href="#" class="news-btn">زیاتر بخوێنەوە</a>
+    <section id="online-lessons" class="section">
+      <h2 class="section-title"><i class="fas fa-video"></i> سیستەمی وانە ئۆنلاینەکان</h2>
+      <p class="section-subtitle">مامۆستاکان دەتوانن لە داشبۆردەوە وانە باربکەن. هەر وانەیەک بەش، ناونیشان، بابەت و ناوی مامۆستا دەبێت و لە پەڕەی بەشی خۆیدا خۆکارانە دەردەکەوێت.</p>
+      <div class="quick-grid">
+        <article class="quick-card">
+          <h3><i class="fas fa-chalkboard-user"></i> بۆ مامۆستاکان</h3>
+          <p>لە پەڕەی login.html بچۆ، چوونەژورەوە بکە، پاشان لە داشبۆردەوە وانەکە بە بابەت و بەشەکەی خۆی زیاد بکە.</p>
+          <a href="login.html" class="primary-btn mt-24"><i class="fas fa-arrow-left"></i> چوونە ناو داشبۆرد</a>
+        </article>
+        <article class="quick-card">
+          <h3><i class="fas fa-code"></i> پڕۆگرامسازی</h3>
+          <p>هەموو وانە ئۆنلاینەکانی بەشی پڕۆگرامسازی لە پەڕەی بەشەکەدا نیشان دەدرێن.</p>
+          <a href="department-programming.html" class="outline-btn mt-24"><i class="fas fa-arrow-left"></i> بینینی وانەکان</a>
+        </article>
+        <article class="quick-card">
+          <h3><i class="fas fa-building"></i> بیناسازی</h3>
+          <p>وانە و ڤیدیۆکانی بیناسازی بە شێوەی ڕێکخراو لە پەڕەی بەشەکەدا هەن.</p>
+          <a href="department-architecture.html" class="outline-btn mt-24"><i class="fas fa-arrow-left"></i> بینینی وانەکان</a>
+        </article>
+        <article class="quick-card">
+          <h3><i class="fas fa-paw"></i> ڤێتێرنەری</h3>
+          <p>وانە ئۆنلاینەکانی ڤێتێرنەری بە جیا لە پەڕەی بەشەکەدا دەنرێن.</p>
+          <a href="department-veterinary.html" class="outline-btn mt-24"><i class="fas fa-arrow-left"></i> بینینی وانەکان</a>
+        </article>
       </div>
-    </div>
+    </section>
 
-    <div class="news-card">
-      <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7" alt="News">
-      <div class="news-content">
-        <div class="news-date">٥ی ئەیلوول ٢٠٢٦</div>
-        <h3>ڕاهێنان لەگەڵ کۆمپانیایەکی تەکنەلۆژیا</h3>
-        <p>خوێندکارانمان بەشداری ڕاهێنانێکی تایبەتیان کرد بۆ ئامادەبوون بۆ بازاڕی کار.</p>
-        <a href="#" class="news-btn">زیاتر بخوێنەوە</a>
-      </div>
-    </div>
-
-    <div class="news-card">
-      <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644" alt="News">
-      <div class="news-content">
-        <div class="news-date">١ی ئەیلوول ٢٠٢٦</div>
-        <h3>دەستپێکردنی ساڵی خوێندن</h3>
-        <p>بە خۆشحاڵی ساڵی خوێندنی نوێمان دەست پێ کرد بە ئامادەبوونی خوێندکاران.</p>
-        <a href="#" class="news-btn">زیاتر بخوێنەوە</a>
-      </div>
-    </div>
-
-  </div>
-</section>
-<section class="admissions-section">
-  <div class="container admissions-wrap">
-
-    <div class="admissions-content">
-      <h2 class="section-title">
-        <i class="fas fa-user-graduate"></i>
-        وەرگرتنی خوێندکاران
-      </h2>
-
-      <p>
-        ئەگەر دەتەوێت ببیتە بەشێک لە ئامادەی پیشەی سیڤەر،
-        ئێستا کاتی ئەوەیە داواکاری بنێریت و داهاتووی خۆت دەست پێ بکەیت.
-      </p>
-
-      <ul class="admission-points">
-        <li>✔️ پێویستی بە بڕوانامەی پێشوو</li>
-        <li>✔️ تاقیکردنەوەی وەرگرتن</li>
-        <li>✔️ گفتوگۆی تایبەت</li>
-      </ul>
-
-      <a href="admissions.html" class="admission-btn">
-        داواکاری ئێستا بکە
-      </a>
-    </div>
-
-    <div class="admissions-box">
-      <div class="admission-highlight">
-        <h3>دەستپێکردن:</h3>
-        <p>١ی تشرینی دووەم ٢٠٢٦</p>
-      </div>
-
-      <div class="admission-highlight">
-        <h3>کۆتایی:</h3>
-        <p>٣٠ی تشرینی دووەم ٢٠٢٦</p>
-      </div>
-
-      <div class="admission-highlight">
-        <h3>ژمارەی قبوڵکراوان:</h3>
-        <p>١٢٠ خوێندکار</p>
-      </div>
-    </div>
-
-  </div>
-</section>
-    <!-- Stats Section -->
     <section id="stats" class="section">
-      <h2 class="section-title">
-        <i class="fas fa-chart-line"></i>
-        ئامارەکان
-      </h2>
-
+      <h2 class="section-title"><i class="fas fa-chart-line"></i> ئامارەکان</h2>
       <div class="stats-container">
-        <div class="stat-card">
+        <article class="stat-card">
           <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
-          <div class="stat-number" id="studentsCount">140+</div>
+          <div class="stat-number" id="studentsCount">0</div>
           <div class="stat-text">خوێندکار</div>
-        </div>
-
-        <div class="stat-card">
+        </article>
+        <article class="stat-card">
           <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
-          <div class="stat-number" id="teachersCount">١٣+</div>
+          <div class="stat-number" id="teachersCount">0</div>
           <div class="stat-text">مامۆستا</div>
-        </div>
-
-        <div class="stat-card">
+        </article>
+        <article class="stat-card">
           <div class="stat-icon"><i class="fas fa-building"></i></div>
-          <div class="stat-number" id="departmentsCount">٣</div>
+          <div class="stat-number" id="departmentsCount">0</div>
           <div class="stat-text">بەش</div>
-        </div>
+        </article>
       </div>
     </section>
 
-    <!-- Media Section -->
     <section id="media" class="section">
-      <h2 class="section-title">
-        <i class="fas fa-photo-video"></i>
-        وێنە و ڤیدیۆ
-      </h2>
-
-      <p class="section-subtitle">
-        ئێرە دەتوانیت وێنە و ڤیدیۆ باربکەیت یان سەیری ئەو وێنانە و ڤیدیۆیانە بکەیت کە خەڵکی تر بارکردوون.
-      </p>
-
+      <h2 class="section-title"><i class="fas fa-photo-video"></i> وێنە و ڤیدیۆ</h2>
+      <p class="section-subtitle">نمونەیەک لە وێنە و ڤیدیۆکانی خوێندکاران و ژیانی خوێندن لە قوتابخانە.</p>
       <div class="media-container">
-        <div class="media-item">
-          <img
-            src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-            alt="خوێندن لە پەیمانگا"
-          />
+        <article class="media-item">
+          <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80" alt="خوێندن لە قوتابخانە">
           <div class="media-info">
-            <h3>خوێندن لە ئامادەیەکەمان</h3>
-            <p>خوێندکاران لە قوتابخانە لە کاتی وانەدا</p>
+            <h3>بینینی نموونەی میدیای ئامادەیی پیشەیی سیڤەر</h3>
+            <p>خوێندکاران لە کاتی وانە و ئەنجامدانی چاڵاکییەکان.</p>
           </div>
-        </div>
-
-        <div class="media-item">
-          <video
-            controls
-            poster="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-          >
-            <source
-              src="https://assets.mixkit.co/videos/preview/mixkit-group-of-students-sharing-a-video-42565-large.mp4"
-              type="video/mp4"
-            />
-            وێبگەڕەکەت پشتیوانی ڤیدیۆ ناکات.
+        </article>
+        <article class="media-item">
+          <video controls poster="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80">
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-group-of-students-sharing-a-video-42565-large.mp4" type="video/mp4">
           </video>
           <div class="media-info">
-            <h3>خوێندکاران وانە دەگرنەوە</h3>
-            <p>خوێندکاران لە کاتی وانەگرتنەوەدا</p>
+            <h3>خوێندن لە ئامادەیی پیشەیی سیڤەر</h3>
+            <p>بەشی پرۆژە و کارە عملییەکانی خوێندکاران.</p>
           </div>
-        </div>
-
-        <div class="media-item">
-          <img
-            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-            alt="مامۆستا وانە دەڵێت"
-          />
+        </article>
+        <article class="media-item">
+          <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80" alt="مامۆستا وانە دەڵێت">
           <div class="media-info">
-            <h3>مامۆستا وانە دەڵێت</h3>
-            <p>مامۆستایان لە کاتی وانەوتندا</p>
+            <h3>مامۆستا وانە دەڵێتەوە</h3>
+            <p>مامۆستایان لە کاتی وانەوتن و ڕاهێناندا.</p>
           </div>
-        </div>
+        </article>
       </div>
-
       <div class="center mt-40">
-        <button class="auth-btn upload-btn" id="uploadMediaBtn" onclick="uploadMedia()">
-          <i class="fas fa-cloud-upload-alt"></i>
-          بارکردنی میدیا
-        </button>
+        <button class="auth-btn" type="button" onclick="uploadMedia()"><i class="fas fa-cloud-arrow-up"></i> بارکردنی میدیا</button>
       </div>
     </section>
 
-    <!-- Comments Section -->
     <section id="comments" class="section">
-      <h2 class="section-title">
-        <i class="fas fa-comments"></i>
-        کۆمێنتەکان
-      </h2>
+      <h2 class="section-title"><i class="fas fa-comments"></i> کۆمێنتەکان</h2>
+      <div class="comment-form">
+        <h3>کۆمێنتێک بنووسە</h3>
+        <form id="commentForm" onsubmit="addComment(event)">
+          <textarea id="commentText" placeholder="کۆمێنتەکەت لێرە بنووسە..." required></textarea>
+          <div class="mt-24">
+            <button type="submit" class="auth-btn"><span>ناردنی کۆمێنت</span><i class="fas fa-paper-plane"></i></button>
+          </div>
+        </form>
+      </div>
+      <h3 class="comments-title">کۆمێنتەکانی خەڵک</h3>
+      <div id="commentsList" class="comments-list"></div>
+    </section>
 
-      <div class="comment-section">
-        <div class="comment-form">
-          <h3>کۆمێنتێک بنووسە</h3>
-          <form id="commentForm" onsubmit="addComment(event)">
-            <textarea id="commentText" placeholder="کۆمێنتەکەت لێرە بنووسە..." required></textarea>
-            <button type="submit" class="auth-btn">
-              <span>ناردنی کۆمێنت</span>
-              <i class="fas fa-paper-plane"></i>
-            </button>
-          </form>
+    <section id="about" class="section">
+      <h2 class="section-title"><i class="fas fa-circle-info"></i> دەربارەی ئێمە</h2>
+      <div class="about-text">
+        <p>ئامادەیی پیشەیی سیڤەر لە ساڵی 2025 دامەزراوە و وەک دامەزراوەیەکی ئەکادیمی ئامانجی پەرەپێدانی قوتابیان هەیە بە بنەمای زانستی و پێویستییە ڕاستەقینەکانی بازاڕی کار.</p>
+        <p>پڕۆگرامەکانمان لەسەر تێکەڵکردنی زانیاری ئەکادیمی، توانا پیشەیی و دروستکردنی کەسایەتییەکی پیشەیی سەقامگیر و توانا‌دار دامەزرابووە.</p>
+        <div class="quick-grid mt-24">
+          <article class="quick-card">
+            <h3><i class="fas fa-award"></i> خەڵاتەکان</h3>
+            <p>خەڵاتی باشترین پەیمانگای پێشەنگی لە هەرێمی کوردستان.</p>
+          </article>
+          <article class="quick-card">
+            <h3><i class="fas fa-handshake"></i> هاوپەیمانییەکان</h3>
+            <p>هاوپەیمانی لەگەڵ ٢٠+ کۆمپانیای تەکنەلۆژیا.</p>
+          </article>
+          <article class="quick-card">
+            <h3><i class="fas fa-briefcase"></i> ڕێژەی کار</h3>
+            <p>٨٥٪ی خوێندکاران دوای تەواوکردن کار دەکەنەوە.</p>
+          </article>
         </div>
-
-        <h3 class="comments-title">کۆمێنتەکانی خەڵک</h3>
-
-        <div class="comments-list" id="commentsList"></div>
       </div>
     </section>
 
-    <!-- About Section -->
-    <section id="about" class="section">
-      <h2 class="section-title">
-        <i class="fas fa-info-circle"></i>
-        دەربارەی ئێمە
-      </h2>
-
-      <div class="about-text">
-        <p>
-      ئامادەیی پیشەیی سیڤەر : لە ساڵی 2025 دامەزراوە، وەک دامەزراوەیەکی ئەکادیمی
-      کە ئامانجمان پەرەپێدانی قوتابیانە، بە بنەمای زانستی و پێویستییە ڕاستەقینەکانی
-      بازاڕی کار. پڕۆگرامەکانمان لەسەر تێکەڵکردنی زانیاری ئەکادیمی،
-      توانا پیشەیی، بۆ دروستکردنی کەسایەتییەکی پیشەیی سەقامگیر و توانا‌دار.
-    </p>
-
-    <p>
-      لە ئامادەیی پیشەیی سیڤەر تەنها فێربوونی زانیاری نییە، بەڵکو پڕۆسەیەکی
-      بەردەوامە کە گەشەپێدانی بیرکردنەوەی ستراتیژی، ئەخلاقی کار و توانای
-      گونجاندن لەگەڵ گۆڕانکارییەکانی ژینگەی کار لەخۆ دەگرێت. بۆیە هەوڵ دەدەین
-      تاکەکان ئامادە بکەین بۆ ئەوەی بتوانن بە شێوەیەکی کارامە و بەرپرسیارانە
-      بچنە ناو جیهانی کار و بەشداری کاریگەری لە پەرەپێدانی دامەزراوەکان و
-      کۆمەڵگادا بکەن.
-    </p>
-
-
-        <div class="about-highlights">
-          <h3><i class="fas fa-star"></i> پێشکەوتنەکانی ئێمە</h3>
-
-          <div class="highlight-grid">
-            <div class="highlight-card">
-              <h4><i class="fas fa-award"></i> خەڵاتەکان</h4>
-              <p>خەڵاتی باشترین پەیمانگای پێشەنگی لە هەرێمی کوردستان</p>
-            </div>
-
-            <div class="highlight-card">
-              <h4><i class="fas fa-handshake"></i> هاوپەیمانییەکان</h4>
-              <p>هاوپەیمانی لەگەڵ ٢٠+ کۆمپانیای تەکنەلۆژیا</p>
-            </div>
-
-            <div class="highlight-card">
-              <h4><i class="fas fa-briefcase"></i> ڕێژەی کار</h4>
-              <p>٨٥٪ی خوێندکاران دوای تەواوکردن کار دەکەنەوە</p>
-            </div>
-          </div>
-        </div>
+    <section class="section">
+      <h2 class="section-title"><i class="fas fa-map-location-dot"></i> شوێنی قوتابخانە</h2>
+      <p class="section-subtitle">نەخشەکە پێش پایی ویب‌سایت زیادکراوە بۆ ئەوەی شوێنی قوتابخانە بە ئاشکرا نیشان بدرێت.</p>
+      <div class="map-grid">
+        <article class="map-card">
+          <iframe src="https://www.google.com/maps?q=%D9%87%DB%95%D9%88%D9%84%DB%8E%D8%B1%20-%20%D8%B4%DB%95%D9%82%D8%A7%D9%85%DB%8C%20%DB%B6%DB%B0%D9%85%DB%95%D8%AA%D8%B1%DB%8C%20%D9%86%D8%B2%DB%8C%DA%A9%20%D8%B3%D9%88%D9%BE%DB%95%D8%B1%D9%85%D8%A7%D8%B1%DA%A9%DB%8E%D8%AA%DB%8C%20%D9%86%DB%8C%D9%88%D8%B3%D8%AA&z=17&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Map"></iframe>
+        </article>
+        <article class="map-card map-details">
+          <div class="map-info-row"><i class="fas fa-location-dot"></i><div><strong>ناونیشان</strong><p>ناونیشان / هەولێر - شەقامی ٦٠مەتری نزیک سوپەرمارکێتی نیوستی</p></div></div>
+          <div class="map-info-row"><i class="fas fa-phone"></i><div><strong>پەیوەندی</strong><p>٠٧٥٠٣٢٩٢٩٠٧ - ٠٧٥٠٩٧٣٧٧٧٣</p></div></div>
+          <div class="map-info-row"><i class="fas fa-envelope"></i><div><strong>ئیمەیڵ</strong><p>info@savar.edu.krd</p></div></div>
+          <a class="primary-btn" href="https://maps.app.goo.gl/LeR7njKiYo51Gv8Q9" target="_blank" rel="noopener noreferrer"><i class="fas fa-diamond-turn-right"></i> کردنەوەی نەخشە</a>
+        </article>
       </div>
     </section>
   </main>
-  <!-- Goals Section -->
-<section class="goals">
-  <div class="container">
 
-    <h2>ئامانجی ئامادەیی پیشەیی سیڤەر</h2>
-
-    <div class="goals-grid">
-
-      <div class="goal-card">
-        <i class="fas fa-bullseye"></i>
-        <span>هاندان بۆ دیاریکردنی ئامانجی پیشەیی</span>
+  <section class="goals">
+    <div class="container">
+      <div class="section">
+        <h2 class="section-title"><i class="fas fa-bullseye"></i> ئامانجەکانی ئامادەیی پیشەیی سیڤەر</h2>
+        <div class="goals-grid">
+          <article class="goal-card"><i class="fas fa-bullseye"></i><span>هاندان بۆ دیاریکردنی ئامانجی پیشەیی</span></article>
+          <article class="goal-card"><i class="fas fa-map"></i><span>ڕێنمایی لە پلاندانان و هەنگاوەکان</span></article>
+          <article class="goal-card"><i class="fas fa-briefcase"></i><span>ئامادەبوون بۆ گونجاندن لەگەڵ بازاڕی کار</span></article>
+          <article class="goal-card"><i class="fas fa-smile"></i><span>دروستکردنی هەڵوێستی پۆزەتیڤ</span></article>
+          <article class="goal-card"><i class="fas fa-users"></i><span>بەشداری کارا لە تیم و کۆمەڵگا</span></article>
+          <article class="goal-card"><i class="fas fa-shield-alt"></i><span>فێربوونی بەرپرسیارێتی</span></article>
+          <article class="goal-card"><i class="fas fa-rocket"></i><span>داهاتوویەکی سەقامگیر و توانا‌دار</span></article>
+        </div>
       </div>
-
-      <div class="goal-card">
-        <i class="fas fa-map"></i>
-        <span>ڕێنمایی لە پلاندانان و هەنگاوەکان</span>
-      </div>
-
-      <div class="goal-card">
-        <i class="fas fa-briefcase"></i>
-        <span>ئامادەبوون بۆ گونجاندن لەگەڵ بازاڕی کار</span>
-      </div>
-
-      <div class="goal-card">
-        <i class="fas fa-smile"></i>
-        <span>دروستکردنی هەڵوێستی پۆزەتیڤ</span>
-      </div>
-
-      <div class="goal-card">
-        <i class="fas fa-users"></i>
-        <span>بەشداری کارا لە تیم و کۆمەڵگا</span>
-      </div>
-
-      <div class="goal-card">
-        <i class="fas fa-shield-alt"></i>
-        <span>فێربوونی بەرپرسیارێتی</span>
-      </div>
-
-      <div class="goal-card">
-        <i class="fas fa-rocket"></i>
-        <span>داهاتوویەکی سەقامگیر و توانا‌دار</span>
-      </div>
-
     </div>
-  </div>
-</section>
+  </section>
 
-
-
-
-  <!-- Footer -->
   <footer>
     <div class="container">
       <div class="footer-content">
         <div class="footer-section">
-          <h3><i class="fas fa-graduation-cap"></i> سیڤەر ئامادەی پیشەیی</h3>
-          <p>لە سەرکەوتنەکانت مەترسە تۆ لە ئامادەی سیڤەری</p>
-          <p>هەموو بابەتەکان بە زمانی کوردی و بە شێوەیەکی سادە و ڕوون ڕێکخراون.</p>
-
+          <h3><i class="fas fa-graduation-cap"></i> ئامادەیی پیشەیی سیڤەر</h3>
+          <p>لە سەرکەوتنەکانت مەترسە، تۆ لە ئامادەیی پیشەیی سیڤەری .</p>
+          <p>سەرجەم بابەتەکان بە زمانی کوردی و بە شێوەیەکی سادە و ڕوون ڕێکخراون</p>
           <div class="social-links">
-            <a href="#"><i class="fab fa-facebook-f"></i></a>
-            <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fab fa-instagram"></i></a>
-            <a href="#"><i class="fab fa-youtube"></i></a>
-            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+            <a href="https://www.tiktok.com/@sivar_vocationa_school1?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" aria-label="Tiktok"><i class="fab fa-tiktok"></i></a>
+            <a href="https://www.facebook.com/sivarschool/albums/122096576486293505/" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+            <a href="https://www.instagram.com/sivar_vocational_high/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://www.youtube.com/@SivarSchool" target="_blank" rel="noopener noreferrer" aria-label="Youtube"><i class="fab fa-youtube"></i></a>
           </div>
         </div>
-
         <div class="footer-section">
-          <h3><i class="fas fa-map-marker-alt"></i> پەیوەندی</h3>
-          <p><i class="fas fa-map-pin"></i> هەولێر، هەرێمی کوردستان</p>
+          <h3><i class="fas fa-address-book"></i> پەیوەندی</h3>
+          <p><i class="fas fa-map-pin"></i> ناونیشان / هەولێر - شەقامی ٦٠مەتری نزیک سوپەرمارکێتی نیوستی</p>
           <p><i class="fas fa-phone"></i> ٠٧٥٠٣٢٩٢٩٠٧ - ٠٧٥٠٩٧٣٧٧٧٣</p>
           <p><i class="fas fa-envelope"></i> info@savar.edu.krd</p>
         </div>
-
         <div class="footer-section">
           <h3><i class="fas fa-link"></i> بەستەرە خێراکان</h3>
-          <p><a href="#home"><i class="fas fa-home"></i> سەرەتا</a></p>
+          <p><a href="#home"><i class="fas fa-house"></i> سەرەتا</a></p>
           <p><a href="#departments"><i class="fas fa-book"></i> بەشەکان</a></p>
-          <p><a href="#media"><i class="fas fa-photo-video"></i> میدیا</a></p>
+          <p><a href="#online-lessons"><i class="fas fa-video"></i> وانە ئۆنلاینەکان</a></p>
           <p><a href="#comments"><i class="fas fa-comments"></i> کۆمێنت</a></p>
-          <p><a href="#about"><i class="fas fa-info-circle"></i> دەربارە</a></p>
+          <p><a href="#about"><i class="fas fa-circle-info"></i> دەربارە</a></p>
         </div>
       </div>
-
       <div class="copyright">
-        <p>© ٢٠٢٦ هەموو مافەکان پارێزراون بۆ بەشی پڕۆگرامسازی.</p>
-        <p>ئامادەی پیشەی سیڤەر - هەرێمی کوردستان</p>
+        <p>© ٢٠٢٦ هەموو مافەکان پارێزراون بۆ ئامادەی پیشەی سیڤەر.</p>
+        <p>هەرێمی کوردستان - هەولێر</p>
       </div>
     </div>
   </footer>
 
+  <button id="scrollTopBtn" type="button" aria-label="گەڕانەوە بۆ سەرەوە"><i class="fas fa-arrow-up"></i></button>
+
   <script src="script.js"></script>
 </body>
-</script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCHdHnK0Lz8TITlrkWYgSdV8AmFZU3F7_0",
-    authDomain: "sivarvocationalhighschoo-513aa.firebaseapp.com",
-    projectId: "sivarvocationalhighschoo-513aa",
-    storageBucket: "sivarvocationalhighschoo-513aa.firebasestorage.app",
-    messagingSenderId: "498314470915",
-    appId: "1:498314470915:web:1d75488d20372f81e71036"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  addDoc(collection(db, "submissions"), {
-    status: "it works",
-    time: new Date().toISOString()
-  })
-  .then(() => console.log("✅ FIRESTORE CONNECTED"))
-  .catch(err => console.error("❌ FIRESTORE ERROR:", err));
-</script>
-
 </html>
-

@@ -1,21 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ku" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>Admin Login</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>چوونەژورەوەی داشبۆرد - ئامادەی پیشەی سیڤەر</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
-<body>
-
-<div class="login-container">
-    <h2>Admin Login</h2>
-    <form id="loginForm">
-        <input type="password" id="password" placeholder="Enter password" required>
-        <button type="submit">Login</button>
-        <p id="error" style="color:red;"></p>
+<body class="admin-login lang-ku" data-page="login">
+  <div class="login-container">
+    <div class="login-topbar">
+      <div class="lang-switch" role="group" aria-label="Language switch">
+          <button class="lang-btn active" type="button" data-lang="ku">KU</button>
+          <button class="lang-btn" type="button" data-lang="en">EN</button>
+        </div>
+    </div>
+    <h2>چوونەژورەوەی داشبۆرد</h2>
+    <p>ئەم پەڕەیە بۆ ئەدمین و مامۆستایانە. ئەگەر مامۆستایت، پێویستە ئەدمین ڕۆڵی تۆ بکات بە <strong>teacher</strong>.</p>
+    <form id="adminLoginForm">
+      <input type="email" id="adminEmail" placeholder="ئیمەیڵ" required>
+      <input type="password" id="adminPassword" placeholder="وشەی نهێنی" required>
+      <button id="accessLoginBtn" class="admin-btn" type="submit"><i class="fas fa-right-to-bracket"></i> چوونەژورەوە</button>
+      <p id="error"></p>
     </form>
-</div>
-
-<script src="script.js"></script>
+    <div class="mt-24 center">
+      <a href="index.html" class="outline-btn"><i class="fas fa-arrow-right"></i> گەڕانەوە بۆ سەرەکی</a>
+    </div>
+  </div>
+  <script src="script.js"></script>
 </body>
 </html>
