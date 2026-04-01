@@ -846,33 +846,79 @@ async function postLesson(event) {
 function mapDepartmentName(value) {
   if (value === "programming") return "پڕۆگرامسازی";
   if (value === "architecture") return "بیناسازی";
-  if (value === "veterinary") return "ڤێتێرنەری";
+  if (value === "veterinary") return "ڤێتەرنەری";
   return value;
+}
+
+function getYouTubeEmbedUrl(url) {
+  const value = String(url || '').trim();
+  if (!value) return '';
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/i,
+    /[?&]v=([A-Za-z0-9_-]{11})/i
+  ];
+  for (const pattern of patterns) {
+    const match = value.match(pattern);
+    if (match && match[1]) return `https://www.youtube.com/embed/${match[1]}`;
+  }
+  return '';
+}
+
+function renderLessonMedia(data, options = {}) {
+  const videoUrl = String(data.videoUrl || '').trim();
+  if (!videoUrl) {
+    return `<div class="lesson-media-placeholder"><i class="fas fa-video"></i></div>`;
+  }
+
+  const youtubeEmbed = getYouTubeEmbedUrl(videoUrl);
+  if (youtubeEmbed) {
+    return `
+      <div class="lesson-media-frame${options.compactMedia ? ' compact' : ''}">
+        <iframe src="${youtubeEmbed}" title="${escapeHtml(data.title || 'Lesson video')}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="lesson-media-frame${options.compactMedia ? ' compact' : ''}">
+      <video controls preload="metadata">
+        <source src="${videoUrl}" type="video/mp4">
+        <source src="${videoUrl}" type="video/webm">
+        <source src="${videoUrl}" type="video/ogg">
+      </video>
+    </div>
+  `;
 }
 
 function renderLessonCard(data, options = {}) {
   const createdAt = data.createdAt?.toDate?.();
   const showDelete = options.showDelete === true;
   const lessonId = options.lessonId || "";
-
+  const openUrl = String(data.videoUrl || '').trim();
+  const compactMedia = options.compactMedia === true;
   return `
-    <article class="lesson-card">
-      <video controls preload="metadata">
-        <source src="${data.videoUrl}" type="video/mp4">
-        <source src="${data.videoUrl}" type="video/webm">
-        وێبگەڕەکەت پشتیوانی ڤیدیۆ ناکات.
-      </video>
-      <div>
-        <h3>${escapeHtml(data.title || "وانە")}</h3>
-        <div class="lesson-meta">
-          <span class="lesson-badge"><i class="fas fa-book"></i>${escapeHtml(data.subject || "بابەت")}</span>
-          <span class="lesson-badge"><i class="fas fa-user"></i>${escapeHtml(data.teacher || "مامۆستا")}</span>
-          <span class="lesson-badge"><i class="fas fa-building"></i>${escapeHtml(mapDepartmentName(data.department || ""))}</span>
+    <article class="lesson-card${compactMedia ? ' compact-media' : ''}">
+      <div class="lesson-card-media">
+        ${renderLessonMedia(data, options)}
+      </div>
+      <div class="lesson-card-body">
+        <div>
+          <h3>${escapeHtml(data.title || (currentLang === "en" ? "Lesson" : "وانە"))}</h3>
+          ${data.description ? `<p>${escapeHtml(data.description)}</p>` : ""}
+          <div class="lesson-meta">
+            <span class="lesson-badge"><i class="fas fa-book"></i>${t("badge_subject")}: ${escapeHtml(data.subject || t("badge_subject"))}</span>
+            <span class="lesson-badge"><i class="fas fa-user"></i>${t("badge_teacher")}: ${escapeHtml(data.teacher || t("badge_teacher"))}</span>
+            <span class="lesson-badge"><i class="fas fa-building"></i>${t("badge_department")}: ${escapeHtml(mapDepartmentName(data.department || ""))}</span>
+          </div>
+        </div>
+        <div class="lesson-card-footer">
+          <div class="lesson-date">${createdAt ? formatRelativeTime(createdAt) : ""}</div>
+          <div class="lesson-card-actions">
+            ${openUrl ? `<a class="outline-btn small" href="${escapeHtml(openUrl)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-up-right-from-square"></i> ${currentLang === 'en' ? 'Open' : 'کردنەوە'}</a>` : ""}
+            ${showDelete ? `<button class="danger-btn" data-delete-lesson="${lessonId}"><i class="fas fa-trash"></i> ${t("delete_text")}</button>` : ""}
+          </div>
         </div>
       </div>
-      <p>${escapeHtml(data.description || "")}</p>
-      <div class="lesson-date">${createdAt ? formatRelativeTime(createdAt) : ""}</div>
-      ${showDelete ? `<div class="dashboard-item-actions"><button class="danger-btn" data-delete-lesson="${lessonId}"><i class="fas fa-trash"></i> سڕینەوە</button></div>` : ""}
     </article>
   `;
 }
@@ -1052,7 +1098,7 @@ function initializeStatsOnView() {
 
   const targets = [
     { id: "studentsCount", value: 140, suffix: "+" },
-    { id: "teachersCount", value: 13, suffix: "+" },
+    { id: "teachersCount", value: 12, suffix: "+" },
     { id: "departmentsCount", value: 3, suffix: "" }
   ];
 
@@ -1239,7 +1285,7 @@ function initHeroTyping() {
   const title = qs("#heroTitle");
   if (!title) return;
 
-  const text = title.getAttribute("data-text") || "ئامادەی پیشەی سیڤەر";
+  const text = title.getAttribute("data-text") || "ئامادەیی پیشەیی سیڤەر";
   let index = 0;
   title.textContent = "";
 
@@ -1387,7 +1433,8 @@ window.uploadMedia = uploadMedia;
 /* =====================================================
    2026-03-30 upgrades: language, mobile UX, upload fixes
    ===================================================== */
-let currentLang = localStorage.getItem("sivar_lang") === "en" ? "en" : "ku";
+let currentLang = "ku";
+localStorage.setItem("sivar_lang", "ku");
 
 const runtimeText = {
   badge_subject: { ku: "بابەت", en: "Subject" },
@@ -1465,11 +1512,11 @@ function applyRule(rule) {
 const pageTranslations = {
   common: [
     { selector: "title", ku: document.title, en: document.title },
-    { selector: ".logo-text", html: true, ku: "ئامادەی پیشەی سیڤەر<span>پەروەردەی شارەزایانەی داهاتوو</span>", en: "Sivar Vocational HS<span>Smart education for the future</span>" },
+    { selector: ".logo-text", html: true, ku: "ئامادەیی پیشەیی سیڤەر<span>پەروەردەی شارەزایانەی داهاتوو</span>", en: "Sivar Vocational HS<span>Smart education for the future</span>" },
     { selector: ".lang-switch", attr: "aria-label", ku: "گۆڕینی زمان", en: "Change language" }
   ],
   index: [
-    { selector: "title", ku: "ئامادەی پیشەی سیڤەر", en: "Sivar Vocational High School" },
+    { selector: "title", ku: "ئامادەیی پیشەیی سیڤەر", en: "Sivar Vocational High School" },
     { selector: "#authTitle", ku: "بەخێربێیت", en: "Welcome" },
     { selector: ".auth-header p", ku: "تکایە چوونەژورەوە بکە یان تۆمار ببە", en: "Please sign in or create an account." },
     { selector: ".auth-tab[data-tab='login']", ku: "چوونەژورەوە", en: "Login" },
@@ -1495,7 +1542,7 @@ const pageTranslations = {
     { selector: ".dept-toggle span", html: true, ku: "<i class='fas fa-book'></i> بەشەکان", en: "<i class='fas fa-book'></i> Departments" },
     { selector: "#departmentsSubmenu a[href='department-programming.html']", ku: "پڕۆگرامسازی", en: "Programming" },
     { selector: "#departmentsSubmenu a[href='department-architecture.html']", ku: "بیناسازی", en: "Architecture" },
-    { selector: "#departmentsSubmenu a[href='department-veterinary.html']", ku: "ڤێتێرنەری", en: "Veterinary" },
+    { selector: "#departmentsSubmenu a[href='department-veterinary.html']", ku: "ڤێتەرنەری", en: "Veterinary" },
     { selector: ".nav-list a[href='#online-lessons']", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-video'></i> Online lessons" },
     { selector: ".nav-list a[href='#announcements']", html: true, ku: "<i class='fas fa-bullhorn'></i> ڕاگەیاندن", en: "<i class='fas fa-bullhorn'></i> Announcements" },
     { selector: ".nav-list a[href='#comments']", html: true, ku: "<i class='fas fa-comments'></i> کۆمێنت", en: "<i class='fas fa-comments'></i> Comments" },
@@ -1505,14 +1552,14 @@ const pageTranslations = {
     { selector: ".hero-actions .hero-btn", html: true, ku: "<i class='fas fa-book-open'></i> بەشەکان ببینە", en: "<i class='fas fa-book-open'></i> Explore departments" },
     { selector: ".hero-actions .secondary-btn", html: true, ku: "<i class='fas fa-circle-play'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-circle-play'></i> Online lessons" },
     { selector: ".principal-content .section-title", html: true, ku: "<i class='fas fa-user-tie'></i> پەیامی بەڕێوەبەر", en: "<i class='fas fa-user-tie'></i> Principal's message" },
-    { selector: ".principal-content p:nth-of-type(1)", ku: "بەخێرهاتن بۆ ئامادەی پیشەی سیڤەر. ئامانجی ئێمە تەنها فێربوونی زانیاری نییە، بەڵکو دروستکردنی کادیرێکی توانا و سەربەخۆیە کە بتوانێت لە بازاڕی کاردا بە شێوەیەکی کاریگەر بەشداری بکات.", en: "Welcome to Sivar Vocational High School. Our goal is not only to teach knowledge, but also to build confident and capable graduates who can contribute effectively in the job market." },
+    { selector: ".principal-content p:nth-of-type(1)", ku: "بەخێرهاتن بۆ ئامادەیی پیشەیی سیڤەر. ئامانجی ئێمە تەنها فێربوونی زانیاری نییە، بەڵکو دروستکردنی کادیرێکی توانا و سەربەخۆیە کە بتوانێت لە بازاڕی کاردا بە شێوەیەکی کاریگەر بەشداری بکات.", en: "Welcome to Sivar Vocational High School. Our goal is not only to teach knowledge, but also to build confident and capable graduates who can contribute effectively in the job market." },
     { selector: ".principal-content p:nth-of-type(2)", ku: "هەوڵ دەدەین ژینگەیەکی ئەکادیمی سەردەمی و پڕ لە پەرەپێدان بۆ خوێندکاران دابین بکەین، بۆ ئەوەی داهاتوویەکی سەقامگیر بۆ خۆیان دروست بکەن.", en: "We strive to provide a modern academic environment full of growth, so our students can build a strong and stable future for themselves." },
     { selector: ".principal-name", ku: "— بەڕێوەبەری گشتی، شێروان جەبار حاجی", en: "— General Principal, Sherwan Jabar Haji" },
     { selector: "#announcements .section-title", html: true, ku: "<i class='fas fa-bullhorn'></i> ڕاگەیاندنەکان", en: "<i class='fas fa-bullhorn'></i> Announcements" },
     { selector: "#announcements .outline-btn", html: true, ku: "<i class='fas fa-chalkboard-user'></i> چوونە ناو داشبۆرد", en: "<i class='fas fa-chalkboard-user'></i> Open dashboard" },
     { selector: "#announcements .section-subtitle", ku: "ڕاگەیاندنەکان و هەواڵی نوێ لێرە بە شێوەی ئۆتۆماتیکی نیشان دەدرێن.", en: "New announcements and updates will appear here automatically." },
-    { selector: "main .section:nth-of-type(2) .section-title", html: true, ku: "<i class='fas fa-graduation-cap'></i> بەخێربێیت بۆ ئامادەی پیشەی سیڤەر", en: "<i class='fas fa-graduation-cap'></i> Welcome to Sivar Vocational High School" },
-    { selector: ".welcome-quote", html: true, ku: "<i class='fas fa-quote-right'></i> ئامانجەکەت لە ئامادەی پیشەی سیڤەر بەدی بهێنە <i class='fas fa-quote-left'></i>", en: "<i class='fas fa-quote-right'></i> Reach your goals at Sivar Vocational High School <i class='fas fa-quote-left'></i>" },
+    { selector: "main .section:nth-of-type(2) .section-title", html: true, ku: "<i class='fas fa-graduation-cap'></i> بەخێربێیت بۆ ئامادەیی پیشەیی سیڤەر", en: "<i class='fas fa-graduation-cap'></i> Welcome to Sivar Vocational High School" },
+    { selector: ".welcome-quote", html: true, ku: "<i class='fas fa-quote-right'></i> ئامانجەکەت لە ئامادەیی پیشەیی سیڤەر بەدی بهێنە <i class='fas fa-quote-left'></i>", en: "<i class='fas fa-quote-right'></i> Reach your goals at Sivar Vocational High School <i class='fas fa-quote-left'></i>" },
     { selector: ".welcome-goals h3", html: true, ku: "<i class='fas fa-bullseye'></i> ئامانجەکانی ئێمە", en: "<i class='fas fa-bullseye'></i> Our goals" },
     { selector: ".welcome-goals li:nth-child(1)", html: true, ku: "<i class='fas fa-check-circle'></i> پەروەردەی کادیرێکی کاریگەر لە بواری تەکنەلۆژیای زانیاری", en: "<i class='fas fa-check-circle'></i> Train capable graduates in information technology" },
     { selector: ".welcome-goals li:nth-child(2)", html: true, ku: "<i class='fas fa-check-circle'></i> دابینکردنی سەرچاوەی نوێ بۆ خوێندکاران", en: "<i class='fas fa-check-circle'></i> Provide modern learning resources for students" },
@@ -1524,8 +1571,8 @@ const pageTranslations = {
     { selector: "#departments .department-card:nth-child(1) .dept-meta li:nth-child(1)", html: true, ku: "<i class='fas fa-check'></i> ماوەی خوێندن: ٣ ساڵ", en: "<i class='fas fa-check'></i> Study duration: 3 years" },
     { selector: "#departments .department-card:nth-child(1) .dept-meta li:nth-child(2)", html: true, ku: "<i class='fas fa-check'></i> بابەتەکان: ١٣ بابەت", en: "<i class='fas fa-check'></i> Subjects: 13" },
     { selector: "#departments .department-card:nth-child(1) .dept-meta li:nth-child(3)", html: true, ku: "<i class='fas fa-check'></i> ئاست: کادیری کارا", en: "<i class='fas fa-check'></i> Outcome: job-ready graduate" },
-    { selector: "#departments .department-card:nth-child(2) h3", html: true, ku: "<i class='fas fa-paw'></i> ڤێتێرنەری", en: "<i class='fas fa-paw'></i> Veterinary" },
-    { selector: "#departments .department-card:nth-child(2) .muted", ku: "بەشی ڤێتێرنەری پێک دێت لە توێکاری، نەخۆشییەکان، و پزیشکی ئاژەڵ.", en: "The veterinary department covers animal health, diseases, and practical veterinary care." },
+    { selector: "#departments .department-card:nth-child(2) h3", html: true, ku: "<i class='fas fa-paw'></i> ڤێتەرنەری", en: "<i class='fas fa-paw'></i> Veterinary" },
+    { selector: "#departments .department-card:nth-child(2) .muted", ku: "بەشی ڤێتەرنەری پێک دێت لە توێکاری، نەخۆشییەکان، و پزیشکی ئاژەڵ.", en: "The veterinary department covers animal health, diseases, and practical veterinary care." },
     { selector: "#departments .department-card:nth-child(2) .dept-meta li:nth-child(1)", html: true, ku: "<i class='fas fa-check'></i> ماوەی خوێندن: ٣ ساڵ", en: "<i class='fas fa-check'></i> Study duration: 3 years" },
     { selector: "#departments .department-card:nth-child(2) .dept-meta li:nth-child(2)", html: true, ku: "<i class='fas fa-check'></i> بابەتەکان: ١٥ بابەت", en: "<i class='fas fa-check'></i> Subjects: 15" },
     { selector: "#departments .department-card:nth-child(2) .dept-meta li:nth-child(3)", html: true, ku: "<i class='fas fa-check'></i> ئاست: کادیری کارا", en: "<i class='fas fa-check'></i> Outcome: job-ready graduate" },
@@ -1564,7 +1611,7 @@ const pageTranslations = {
     { selector: ".map-grid .section-title", html: true, ku: "<i class='fas fa-map-location-dot'></i> شوێنی قوتابخانە", en: "<i class='fas fa-map-location-dot'></i> School location" },
     { selector: "main .section:nth-last-of-type(1) .section-subtitle", ku: "نەخشەکە پێش پایی ویب‌سایت زیادکراوە بۆ ئەوەی شوێنی قوتابخانە بە ئاشکرا نیشان بدرێت.", en: "The map is placed near the bottom of the website so visitors can find the school easily." },
     { selector: ".map-info-row:nth-child(1) strong", ku: "ناونیشان", en: "Address" },
-    { selector: ".map-info-row:nth-child(1) p", ku: "ئامادەی پیشەی سیڤەر - هەولێر، هەرێمی کوردستان", en: "Sivar Vocational High School - Erbil, Kurdistan Region" },
+    { selector: ".map-info-row:nth-child(1) p", ku: "هەولێر - شەقامی ٦٠مەتری نزیک سوپەرمارکێتی نیوستی", en: "Sivar Vocational High School - Erbil, Kurdistan Region" },
     { selector: ".map-info-row:nth-child(2) strong", ku: "پەیوەندی", en: "Phone" },
     { selector: ".map-info-row:nth-child(3) strong", ku: "ئیمەیڵ", en: "Email" },
     { selector: ".map-details .primary-btn", html: true, ku: "<i class='fas fa-diamond-turn-right'></i> کردنەوەی نەخشە", en: "<i class='fas fa-diamond-turn-right'></i> Open map" },
@@ -1586,27 +1633,27 @@ const pageTranslations = {
     { selector: "footer .footer-section:nth-child(3) a[href='#online-lessons']", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-video'></i> Online lessons" },
     { selector: "footer .footer-section:nth-child(3) a[href='#comments']", html: true, ku: "<i class='fas fa-comments'></i> کۆمێنت", en: "<i class='fas fa-comments'></i> Comments" },
     { selector: "footer .footer-section:nth-child(3) a[href='#about']", html: true, ku: "<i class='fas fa-circle-info'></i> دەربارە", en: "<i class='fas fa-circle-info'></i> About" },
-    { selector: ".copyright p:nth-child(1)", ku: "© ٢٠٢٦ هەموو مافەکان پارێزراون بۆ ئامادەی پیشەی سیڤەر.", en: "© 2026 All rights reserved by Sivar Vocational High School." },
+    { selector: ".copyright p:nth-child(1)", ku: "© ٢٠٢٦ هەموو مافەکان پارێزراون بۆ ئامادەیی پیشەیی سیڤەر.", en: "© 2026 All rights reserved by Sivar Vocational High School." },
     { selector: ".copyright p:nth-child(2)", ku: "هەرێمی کوردستان - هەولێر", en: "Erbil - Kurdistan Region" }
   ],
   activities: [
-    { selector: "title", ku: "وانە و چالاکییەکان - ئامادەی پیشەی سیڤەر", en: "Lessons and Activities - Sivar Vocational High School" },
+    { selector: "title", ku: "وانە و چالاکییەکان - ئامادەیی پیشەیی سیڤەر", en: "Lessons and Activities - Sivar Vocational High School" },
     { selector: ".nav-list a[href='index.html']", html: true, ku: "<i class='fas fa-house'></i> سەرەکی", en: "<i class='fas fa-house'></i> Home" },
     { selector: ".nav-list a[href='activity-programming.html']", html: true, ku: "<i class='fas fa-code'></i> پڕۆگرامسازی", en: "<i class='fas fa-code'></i> Programming" },
     { selector: ".nav-list a[href='activity-architecture.html']", html: true, ku: "<i class='fas fa-building'></i> بیناسازی", en: "<i class='fas fa-building'></i> Architecture" },
-    { selector: ".nav-list a[href='activity-veterinary.html']", html: true, ku: "<i class='fas fa-paw'></i> ڤێتێرنەری", en: "<i class='fas fa-paw'></i> Veterinary" },
+    { selector: ".nav-list a[href='activity-veterinary.html']", html: true, ku: "<i class='fas fa-paw'></i> ڤێتەرنەری", en: "<i class='fas fa-paw'></i> Veterinary" },
     { selector: ".hero-content h1", ku: "وانە و چالاکییەکان", en: "Lessons and activities" },
     { selector: ".hero-content p", ku: "هەموو بەشەکان لە یەک شوێندا بۆ گەیشتن بە وانە و ڤیدیۆکان", en: "All departments in one place for easy access to lessons and videos." },
     { selector: ".section-title", html: true, ku: "<i class='fas fa-clapperboard'></i> بەشەکان هەڵبژێرە", en: "<i class='fas fa-clapperboard'></i> Choose a department" },
     { selector: ".quick-card:nth-child(1) h3", html: true, ku: "<i class='fas fa-code'></i> پڕۆگرامسازی", en: "<i class='fas fa-code'></i> Programming" },
     { selector: ".quick-card:nth-child(1) p", ku: "وانە و ڤیدیۆکانی پڕۆگرامسازی.", en: "Programming lessons and videos." },
-    { selector: ".quick-card:nth-child(2) h3", html: true, ku: "<i class='fas fa-building'></i> بیناسازی", en: "<i class='fas fa-building'></i> Architecture" },
-    { selector: ".quick-card:nth-child(2) p", ku: "وانە و ڤیدیۆکانی بیناسازی.", en: "Architecture lessons and videos." },
-    { selector: ".quick-card:nth-child(3) h3", html: true, ku: "<i class='fas fa-paw'></i> ڤێتێرنەری", en: "<i class='fas fa-paw'></i> Veterinary" },
-    { selector: ".quick-card:nth-child(3) p", ku: "وانە و ڤیدیۆکانی ڤێتێرنەری.", en: "Veterinary lessons and videos." }
+    { selector: ".quick-card:nth-child(2) h3", html: true, ku: "<i class='fas fa-paw'></i> ڤێتەرنەری", en: "<i class='fas fa-paw'></i> Veterinary" },
+    { selector: ".quick-card:nth-child(2) p", ku: "وانە و ڤیدیۆکانی ڤێتەرنەری.", en: "Veterinary lessons and videos." },
+    { selector: ".quick-card:nth-child(3) h3", html: true, ku: "<i class='fas fa-building'></i> بیناسازی", en: "<i class='fas fa-building'></i> Architecture" },
+    { selector: ".quick-card:nth-child(3) p", ku: "وانە و ڤیدیۆکانی بیناسازی.", en: "Architecture lessons and videos." }
   ],
   admissions: [
-    { selector: "title", ku: "وەرگرتن و تۆمارکردن - ئامادەی پیشەی سیڤەر", en: "Admissions and Registration - Sivar Vocational High School" },
+    { selector: "title", ku: "وەرگرتن و تۆمارکردن - ئامادەیی پیشەیی سیڤەر", en: "Admissions and Registration - Sivar Vocational High School" },
     { selector: ".nav-list a[href='index.html']", html: true, ku: "<i class='fas fa-house'></i> سەرەکی", en: "<i class='fas fa-house'></i> Home" },
     { selector: ".nav-list a[href='#requirements']", html: true, ku: "<i class='fas fa-file-lines'></i> مەرجەکان", en: "<i class='fas fa-file-lines'></i> Requirements" },
     { selector: ".nav-list a[href='#documents']", html: true, ku: "<i class='fas fa-folder-open'></i> بەڵگەنامەکان", en: "<i class='fas fa-folder-open'></i> Documents" },
@@ -1634,7 +1681,7 @@ const pageTranslations = {
     { selector: "#steps .hero-btn", html: true, ku: "<i class='fas fa-paper-plane'></i> پەیوەندی بکە بۆ تۆمارکردن", en: "<i class='fas fa-paper-plane'></i> Contact us to register" }
   ],
   login: [
-    { selector: "title", ku: "چوونەژورەوەی داشبۆرد - ئامادەی پیشەی سیڤەر", en: "Dashboard Login - Sivar Vocational High School" },
+    { selector: "title", ku: "چوونەژورەوەی داشبۆرد - ئامادەیی پیشەیی سیڤەر", en: "Dashboard Login - Sivar Vocational High School" },
     { selector: ".login-container h2", ku: "چوونەژورەوەی داشبۆرد", en: "Dashboard login" },
     { selector: ".login-container > p", html: true, ku: "ئەم پەڕەیە بۆ ئەدمین و مامۆستایانە. ئەگەر مامۆستایت، پێویستە ئەدمین ڕۆڵی تۆ بکات بە <strong>teacher</strong>.", en: "This page is for admins and teachers. If you are a teacher, an admin must first set your role to <strong>teacher</strong>." },
     { selector: "#adminEmail", attr: "placeholder", ku: "ئیمەیڵ", en: "Email" },
@@ -1643,7 +1690,7 @@ const pageTranslations = {
     { selector: ".center .outline-btn", html: true, ku: "<i class='fas fa-arrow-right'></i> گەڕانەوە بۆ سەرەکی", en: "<i class='fas fa-arrow-right'></i> Back to home" }
   ],
   admin: [
-    { selector: "title", ku: "داشبۆردی قوتابخانە - ئامادەی پیشەی سیڤەر", en: "School Dashboard - Sivar Vocational High School" },
+    { selector: "title", ku: "داشبۆردی قوتابخانە - ئامادەیی پیشەیی سیڤەر", en: "School Dashboard - Sivar Vocational High School" },
     { selector: ".admin-header h1", ku: "داشبۆردی قوتابخانە", en: "School dashboard" },
     { selector: ".admin-header .muted", html: true, ku: "ڕۆڵی ئێستات: <strong id='dashboardRoleBadge'>...</strong>", en: "Your current role: <strong id='dashboardRoleBadge'>...</strong>" },
     { selector: ".admin-inline-actions .outline-btn", html: true, ku: "<i class='fas fa-house'></i> سەرەکی", en: "<i class='fas fa-house'></i> Home" },
@@ -1661,7 +1708,7 @@ const pageTranslations = {
     { selector: "#lessonDepartment option[value='']", ku: "بەش هەڵبژێرە", en: "Choose department" },
     { selector: "#lessonDepartment option[value='programming']", ku: "پڕۆگرامسازی", en: "Programming" },
     { selector: "#lessonDepartment option[value='architecture']", ku: "بیناسازی", en: "Architecture" },
-    { selector: "#lessonDepartment option[value='veterinary']", ku: "ڤێتێرنەری", en: "Veterinary" },
+    { selector: "#lessonDepartment option[value='veterinary']", ku: "ڤێتەرنەری", en: "Veterinary" },
     { selector: "label[for='lessonTitle']", ku: "ناونیشانی وانە", en: "Lesson title" },
     { selector: "#lessonTitle", attr: "placeholder", ku: "نموونە: وانەی یەکەم - HTML", en: "Example: Lesson 1 - HTML" },
     { selector: "label[for='lessonTeacher']", ku: "ناوی مامۆستا", en: "Teacher name" },
@@ -1692,7 +1739,7 @@ const pageTranslations = {
     { selector: ".admin-card:last-child h2", ku: "کۆمێنتەکان", en: "Comments" }
   ],
   "department-programming": [
-    { selector: "title", ku: "بەشی پڕۆگرامسازی - ئامادەی پیشەی سیڤەر", en: "Programming Department - Sivar Vocational High School" },
+    { selector: "title", ku: "بەشی پڕۆگرامسازی - ئامادەیی پیشەیی سیڤەر", en: "Programming Department - Sivar Vocational High School" },
     { selector: ".nav-list a[href='index.html']", html: true, ku: "<i class='fas fa-house'></i> سەرەکی", en: "<i class='fas fa-house'></i> Home" },
     { selector: ".nav-list a[href='#about-dept']", html: true, ku: "<i class='fas fa-circle-info'></i> دەربارەی بەش", en: "<i class='fas fa-circle-info'></i> About department" },
     { selector: ".nav-list a[href='#online-lessons']", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-video'></i> Online lessons" },
@@ -1711,7 +1758,7 @@ const pageTranslations = {
     { selector: "#teachers .department-btn span", ku: "گەڕانەوە بۆ سەرەکی", en: "Back to home" }
   ],
   "department-architecture": [
-    { selector: "title", ku: "بەشی بیناسازی - ئامادەی پیشەی سیڤەر", en: "Architecture Department - Sivar Vocational High School" },
+    { selector: "title", ku: "بەشی بیناسازی - ئامادەیی پیشەیی سیڤەر", en: "Architecture Department - Sivar Vocational High School" },
     { selector: ".hero-content h1", ku: "بەشی بیناسازی", en: "Architecture department" },
     { selector: ".hero-content p", ku: "فێربوونی دیزاین، پلانکردن و دروستکردنی پڕۆژەی بیناسازی، هەروەها بەردەستکردنی وانە ئۆنلاین", en: "Study design, planning, and architectural projects with online lessons available for every subject." },
     { selector: "#about-dept .section-title", html: true, ku: "<i class='fas fa-building'></i> دەربارەی بەش", en: "<i class='fas fa-building'></i> About the department" },
@@ -1721,17 +1768,17 @@ const pageTranslations = {
     { selector: "#teachers .department-btn span", ku: "گەڕانەوە بۆ سەرەکی", en: "Back to home" }
   ],
   "department-veterinary": [
-    { selector: "title", ku: "بەشی ڤێتێرنەری - ئامادەی پیشەی سیڤەر", en: "Veterinary Department - Sivar Vocational High School" },
-    { selector: ".hero-content h1", ku: "بەشی ڤێتێرنەری", en: "Veterinary department" },
+    { selector: "title", ku: "بەشی ڤێتەرنەری - ئامادەیی پیشەیی سیڤەر", en: "Veterinary Department - Sivar Vocational High School" },
+    { selector: ".hero-content h1", ku: "بەشی ڤێتەرنەری", en: "Veterinary department" },
     { selector: ".hero-content p", ku: "پزیشکی ئاژەڵ و پاراستنی تەندروستیان، هەروەها بەردەستکردنی وانە ئۆنلاین", en: "Learn animal health and veterinary care with online lessons available across the department." },
     { selector: "#about-dept .section-title", html: true, ku: "<i class='fas fa-paw'></i> دەربارەی بەش", en: "<i class='fas fa-paw'></i> About the department" },
     { selector: "#about-dept .section-subtitle", ku: "ئەم بەشە پەیوەندیدارە بە پزیشکی ئاژەڵ، توێکاری و پاراستنی تەندروستی ئاژەڵان.", en: "This department focuses on animal medicine, diagnosis, and animal health care." },
-    { selector: "#online-lessons .section-title", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکانی ڤێتێرنەری", en: "<i class='fas fa-video'></i> Veterinary online lessons" },
+    { selector: "#online-lessons .section-title", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکانی ڤێتەرنەری", en: "<i class='fas fa-video'></i> Veterinary online lessons" },
     { selector: "#teachers .section-title", html: true, ku: "<i class='fas fa-chalkboard-teacher'></i> مامۆستایانی بەش", en: "<i class='fas fa-chalkboard-teacher'></i> Department teachers" },
     { selector: "#teachers .department-btn span", ku: "گەڕانەوە بۆ سەرەکی", en: "Back to home" }
   ],
   "activity-programming": [
-    { selector: "title", ku: "وانە و چالاکییەکانی پڕۆگرامسازی - ئامادەی پیشەی سیڤەر", en: "Programming Lessons and Activities - Sivar Vocational High School" },
+    { selector: "title", ku: "وانە و چالاکییەکانی پڕۆگرامسازی - ئامادەیی پیشەیی سیڤەر", en: "Programming Lessons and Activities - Sivar Vocational High School" },
     { selector: ".nav-list a[href='activities.html']", html: true, ku: "<i class='fas fa-arrow-right'></i> گەڕانەوە", en: "<i class='fas fa-arrow-right'></i> Back" },
     { selector: ".hero-content h1", ku: "وانە و چالاکییەکانی پڕۆگرامسازی", en: "Programming lessons and activities" },
     { selector: ".hero-content p", ku: "هەموو ڤیدیۆ و وانەکان بۆ بەشی پڕۆگرامسازی", en: "All videos and lessons for the programming department." },
@@ -1740,7 +1787,7 @@ const pageTranslations = {
     { selector: ".video-card p", ku: "چالاکی یەکەم", en: "Activity one" }
   ],
   "activity-architecture": [
-    { selector: "title", ku: "وانە و چالاکییەکانی بیناسازی - ئامادەی پیشەی سیڤەر", en: "Architecture Lessons and Activities - Sivar Vocational High School" },
+    { selector: "title", ku: "وانە و چالاکییەکانی بیناسازی - ئامادەیی پیشەیی سیڤەر", en: "Architecture Lessons and Activities - Sivar Vocational High School" },
     { selector: ".nav-list a[href='activities.html']", html: true, ku: "<i class='fas fa-arrow-right'></i> گەڕانەوە", en: "<i class='fas fa-arrow-right'></i> Back" },
     { selector: ".hero-content h1", ku: "وانە و چالاکییەکانی بیناسازی", en: "Architecture lessons and activities" },
     { selector: ".hero-content p", ku: "هەموو ڤیدیۆ و وانەکان بۆ بەشی بیناسازی", en: "All videos and lessons for the architecture department." },
@@ -1749,10 +1796,10 @@ const pageTranslations = {
     { selector: ".video-card p", ku: "چالاکی یەکەم", en: "Activity one" }
   ],
   "activity-veterinary": [
-    { selector: "title", ku: "وانە و چالاکییەکانی ڤێتێرنەری - ئامادەی پیشەی سیڤەر", en: "Veterinary Lessons and Activities - Sivar Vocational High School" },
+    { selector: "title", ku: "وانە و چالاکییەکانی ڤێتەرنەری - ئامادەیی پیشەیی سیڤەر", en: "Veterinary Lessons and Activities - Sivar Vocational High School" },
     { selector: ".nav-list a[href='activities.html']", html: true, ku: "<i class='fas fa-arrow-right'></i> گەڕانەوە", en: "<i class='fas fa-arrow-right'></i> Back" },
-    { selector: ".hero-content h1", ku: "وانە و چالاکییەکانی ڤێتێرنەری", en: "Veterinary lessons and activities" },
-    { selector: ".hero-content p", ku: "هەموو ڤیدیۆ و وانەکان بۆ بەشی ڤێتێرنەری", en: "All videos and lessons for the veterinary department." },
+    { selector: ".hero-content h1", ku: "وانە و چالاکییەکانی ڤێتەرنەری", en: "Veterinary lessons and activities" },
+    { selector: ".hero-content p", ku: "هەموو ڤیدیۆ و وانەکان بۆ بەشی ڤێتەرنەری", en: "All videos and lessons for the veterinary department." },
     { selector: "main .section:nth-child(1) .section-title", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-video'></i> Online lessons" },
     { selector: "main .section:nth-child(2) .section-title", html: true, ku: "<i class='fas fa-star'></i> نموونەی چالاکی", en: "<i class='fas fa-star'></i> Sample activity" },
     { selector: ".video-card p", ku: "چالاکی یەکەم", en: "Activity one" }
@@ -1768,11 +1815,13 @@ function applyTranslations() {
   (pageTranslations.common || []).forEach(applyRule);
   (pageTranslations[pageKey] || []).forEach(applyRule);
   const heroTitle = qs("#heroTitle");
-  if (heroTitle) heroTitle.setAttribute("data-text", currentLang === "en" ? "Sivar Vocational High School" : "ئامادەی پیشەی سیڤەر");
+  if (heroTitle) heroTitle.setAttribute("data-text", currentLang === "en" ? "Sivar Vocational High School" : "ئامادەیی پیشەیی سیڤەر");
   updateLangButtonsUI();
 }
 
 function initLanguageSystem() {
+  currentLang = "ku";
+  localStorage.setItem("sivar_lang", "ku");
   qsa(".lang-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const nextLang = btn.getAttribute("data-lang") === "en" ? "en" : "ku";
@@ -1802,7 +1851,7 @@ function initLanguageSystem() {
 function mapDepartmentName(value) {
   if (value === "programming") return currentLang === "en" ? "Programming" : "پڕۆگرامسازی";
   if (value === "architecture") return currentLang === "en" ? "Architecture" : "بیناسازی";
-  if (value === "veterinary") return currentLang === "en" ? "Veterinary" : "ڤێتێرنەری";
+  if (value === "veterinary") return currentLang === "en" ? "Veterinary" : "ڤێتەرنەری";
   return value;
 }
 
@@ -1979,23 +2028,31 @@ function renderLessonCard(data, options = {}) {
   const createdAt = data.createdAt?.toDate?.();
   const showDelete = options.showDelete === true;
   const lessonId = options.lessonId || "";
+  const openUrl = String(data.videoUrl || '').trim();
+  const compactMedia = options.compactMedia === true;
   return `
-    <article class="lesson-card">
-      <video controls preload="metadata">
-        <source src="${data.videoUrl}" type="video/mp4">
-        <source src="${data.videoUrl}" type="video/webm">
-      </video>
-      <div>
-        <h3>${escapeHtml(data.title || (currentLang === "en" ? "Lesson" : "وانە"))}</h3>
-        ${data.description ? `<p>${escapeHtml(data.description)}</p>` : ""}
-        <div class="lesson-meta">
-          <span class="lesson-badge"><i class="fas fa-book"></i>${t("badge_subject")}: ${escapeHtml(data.subject || t("badge_subject"))}</span>
-          <span class="lesson-badge"><i class="fas fa-user"></i>${t("badge_teacher")}: ${escapeHtml(data.teacher || t("badge_teacher"))}</span>
-          <span class="lesson-badge"><i class="fas fa-building"></i>${t("badge_department")}: ${escapeHtml(mapDepartmentName(data.department || ""))}</span>
+    <article class="lesson-card${compactMedia ? ' compact-media' : ''}">
+      <div class="lesson-card-media">
+        ${renderLessonMedia(data, options)}
+      </div>
+      <div class="lesson-card-body">
+        <div>
+          <h3>${escapeHtml(data.title || (currentLang === "en" ? "Lesson" : "وانە"))}</h3>
+          ${data.description ? `<p>${escapeHtml(data.description)}</p>` : ""}
+          <div class="lesson-meta">
+            <span class="lesson-badge"><i class="fas fa-book"></i>${t("badge_subject")}: ${escapeHtml(data.subject || t("badge_subject"))}</span>
+            <span class="lesson-badge"><i class="fas fa-user"></i>${t("badge_teacher")}: ${escapeHtml(data.teacher || t("badge_teacher"))}</span>
+            <span class="lesson-badge"><i class="fas fa-building"></i>${t("badge_department")}: ${escapeHtml(mapDepartmentName(data.department || ""))}</span>
+          </div>
+        </div>
+        <div class="lesson-card-footer">
+          <div class="lesson-date">${createdAt ? formatRelativeTime(createdAt) : ""}</div>
+          <div class="lesson-card-actions">
+            ${openUrl ? `<a class="outline-btn small" href="${escapeHtml(openUrl)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-up-right-from-square"></i> ${currentLang === 'en' ? 'Open' : 'کردنەوە'}</a>` : ""}
+            ${showDelete ? `<button class="danger-btn" data-delete-lesson="${lessonId}"><i class="fas fa-trash"></i> ${t("delete_text")}</button>` : ""}
+          </div>
         </div>
       </div>
-      <div class="lesson-date">${createdAt ? formatRelativeTime(createdAt) : ""}</div>
-      ${showDelete ? `<div class="dashboard-item-actions"><button class="danger-btn" data-delete-lesson="${lessonId}"><i class="fas fa-trash"></i> ${t("delete_text")}</button></div>` : ""}
     </article>
   `;
 }
@@ -2007,14 +2064,20 @@ function loadDepartmentLessons() {
   const department = container.getAttribute("data-department") || document.body?.dataset.department || "";
   if (!department) return;
   if (departmentLessonsUnsubscribe) departmentLessonsUnsubscribe();
-  departmentLessonsUnsubscribe = db.collection("lessons").where("department", "==", department).orderBy("createdAt", "desc").onSnapshot(
+  departmentLessonsUnsubscribe = db.collection("lessons").where("department", "==", department).onSnapshot(
     (snapshot) => {
-      const lessons = snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() || {}) }));
+      const lessons = snapshot.docs
+        .map((doc) => ({ id: doc.id, ...(doc.data() || {}) }))
+        .sort((a, b) => {
+          const aTime = a.createdAt?.toDate?.()?.getTime?.() || 0;
+          const bTime = b.createdAt?.toDate?.()?.getTime?.() || 0;
+          return bTime - aTime;
+        });
       if (!lessons.length) {
         container.innerHTML = renderEmptyState(t("empty_lessons"));
         return;
       }
-      container.innerHTML = lessons.map((lesson) => renderLessonCard(lesson)).join("");
+      container.innerHTML = lessons.map((lesson) => renderLessonCard(lesson, { compactMedia: true })).join("");
     },
     () => {
       container.innerHTML = renderEmptyState(currentLang === "en" ? "Unable to load lessons." : "نەتوانرا وانەکان باربکرێن.");
@@ -2296,7 +2359,7 @@ function uploadMedia() {
 function initHeroTyping() {
   const title = qs("#heroTitle");
   if (!title) return;
-  const text = title.getAttribute("data-text") || (currentLang === "en" ? "Sivar Vocational High School" : "ئامادەی پیشەی سیڤەر");
+  const text = title.getAttribute("data-text") || (currentLang === "en" ? "Sivar Vocational High School" : "ئامادەیی پیشەیی سیڤەر");
   let index = 0;
   title.textContent = "";
   const type = () => {
@@ -2395,119 +2458,156 @@ if (pageTranslations.index) {
 /* =====================================================
    2026-03-31 teacher lesson pages upgrade
    ===================================================== */
+
 const teacherDirectory = {
-  "programming": [
+  programming: [
     {
-      "slug": "xanda",
-      "name": "مامۆستا خەندە صدیق محمد",
-      "subject": "C++ - SECURITY",
-      "image": "assets/images/Staff/teachers/xanda.jpg"
+      slug: 'xanda',
+      name: 'مامۆستا خەندە صدیق محمد',
+      subject: 'C++ / Security / Database',
+      image: 'assets/images/Staff/teachers/xanda.jpg'
     },
     {
-      "slug": "helin",
-      "name": "مامۆستا هێلین ابراهیم",
-      "subject": "IT - MS",
-      "image": "assets/images/Staff/teachers/helin.jpg"
+      slug: 'delvin',
+      name: 'مامۆستا دلڤین ڕەشید محمد',
+      subject: 'Human Rights',
+      image: 'assets/images/Staff/teachers/delvin.jpg'
     },
     {
-      "slug": "hunar",
-      "name": "مامۆستا هونەر معسن",
-      "subject": "English",
-      "image": "assets/images/Staff/teachers/hunar.jpg"
+      slug: 'faridun',
+      name: 'مامۆستا فەریدون',
+      subject: 'Arabic / Religion',
+      image: 'assets/images/Staff/teachers/faridun.jpg'
     },
     {
-      "slug": "delvin",
-      "name": "مامۆستا دلڤین رەشید محمد",
-      "subject": "Human Rights",
-      "image": "assets/images/Staff/teachers/delvin.jpg"
+      slug: 'hassan',
+      name: 'مامۆستا حەسەن جەبار حاجی',
+      subject: 'Kurdish',
+      image: 'assets/images/Staff/teachers/hassan.jpg'
     },
     {
-      "slug": "shoxan",
-      "name": "مامۆستا شۆخان عمر",
-      "subject": "Programming",
-      "image": "assets/images/Staff/teachers/shoxan.jpg"
+      slug: 'helin',
+      name: 'مامۆستا هێلین ابراهیم',
+      subject: 'IT / MS',
+      image: 'assets/images/Staff/teachers/helin.jpg'
     },
     {
-      "slug": "arain",
-      "name": "مامۆستا ئارین",
-      "subject": "Practical Programming",
-      "image": "assets/images/Staff/teachers/arain.jpg"
+      slug: 'hunar',
+      name: 'مامۆستا هونەر محسن',
+      subject: 'English',
+      image: 'assets/images/Staff/teachers/hunar.jpg'
     },
     {
-      "slug": "kamran",
-      "name": "مامۆستا کامران",
-      "subject": "Security",
-      "image": "assets/images/Staff/teachers/kamran.jpg"
+      slug: 'shoxan',
+      name: 'مامۆستا شۆخان عومەر',
+      subject: 'Physics',
+      image: 'assets/images/Staff/teachers/shoxan.jpg'
+    },
+    {
+      slug: 'yusra',
+      name: 'مامۆستا یسرا',
+      subject: 'Math',
+      image: 'assets/images/Staff/teachers/yusra.jpg'
     }
   ],
-  "architecture": [
+  veterinary: [
     {
-      "slug": "sapan",
-      "name": "مامۆستا سەپان جەمیل علی",
-      "subject": "بیناسازی",
-      "image": "assets/images/Staff/teachers/sapan.jpg"
+      slug: 'hazhar',
+      name: 'مامۆستا هەژار خوادا غلام',
+      subject: 'توێکارزانی',
+      image: 'assets/images/Staff/teachers/hazhar.jpg'
     },
     {
-      "slug": "shoxan",
-      "name": "مامۆستا شۆخان عمر",
-      "subject": "فیزیک",
-      "image": "assets/images/Staff/teachers/shoxan.jpg"
+      slug: 'sarab',
+      name: 'مامۆستا سراب',
+      subject: 'Veterinary',
+      image: 'assets/images/Staff/teachers/sarab.jpg'
     },
     {
-      "slug": "hunar",
-      "name": "مامۆستا هونەر",
-      "subject": "زمانی ئینگلیزی",
-      "image": "assets/images/Staff/teachers/hunar.jpg"
+      slug: 'faridun',
+      name: 'مامۆستا فەریدون',
+      subject: 'Arabic / Religion',
+      image: 'assets/images/Staff/teachers/faridun.jpg'
     },
     {
-      "slug": "hassan",
-      "name": "مامۆستا حەسەن",
-      "subject": "زمانی کوردی",
-      "image": "assets/images/Staff/teachers/hassan.jpg"
+      slug: 'hassan',
+      name: 'مامۆستا حەسەن جەبار حاجی',
+      subject: 'Kurdish',
+      image: 'assets/images/Staff/teachers/hassan.jpg'
     },
     {
-      "slug": "diar",
-      "name": "مامۆستا دیار",
-      "subject": "بیناسازی",
-      "image": "assets/images/Staff/teachers/diar.jpg"
+      slug: 'shoxan',
+      name: 'مامۆستا شۆخان عومەر',
+      subject: 'Chemistry',
+      image: 'assets/images/Staff/teachers/shoxan.jpg'
     },
     {
-      "slug": "arain",
-      "name": "مامۆستا ئارین",
-      "subject": "بیناسازی",
-      "image": "assets/images/Staff/teachers/arain.jpg"
+      slug: 'hunar',
+      name: 'مامۆستا هونەر محسن',
+      subject: 'English',
+      image: 'assets/images/Staff/teachers/hunar.jpg'
+    },
+    {
+      slug: 'delvin',
+      name: 'مامۆستا دلڤین ڕەشید محمد',
+      subject: 'Human Rights',
+      image: 'assets/images/Staff/teachers/delvin.jpg'
+    },
+    {
+      slug: 'helin',
+      name: 'مامۆستا هێلین ابراهیم',
+      subject: 'IT',
+      image: 'assets/images/Staff/teachers/helin.jpg'
     }
   ],
-  "veterinary": [
+  architecture: [
     {
-      "slug": "sarab",
-      "name": "مامۆستا سراب",
-      "subject": "ڤێتێرنەری",
-      "image": "assets/images/Staff/teachers/sarab.jpg"
+      slug: 'sapan',
+      name: 'مامۆستا سەپان جەمیل علی',
+      subject: 'Architecture',
+      image: 'assets/images/Staff/teachers/sapan.jpg'
     },
     {
-      "slug": "faridun",
-      "name": "مامۆستا فەریدون",
-      "subject": "زمانی عەرەبی",
-      "image": "assets/images/Staff/teachers/faridun.jpg"
+      slug: 'wanawsha',
+      name: 'مامۆستا وەنەوشە',
+      subject: 'Design / Drawing / S.F',
+      image: 'assets/images/Staff/teachers/wanawsha.svg'
     },
     {
-      "slug": "hazhar",
-      "name": "مامۆستا هەژار خوادا غلام",
-      "subject": "توێکارزانی",
-      "image": "assets/images/Staff/teachers/hazhar.jpg"
+      slug: 'yusra',
+      name: 'مامۆستا یسرا',
+      subject: 'Math',
+      image: 'assets/images/Staff/teachers/yusra.jpg'
     },
     {
-      "slug": "hassan-jabar-haji",
-      "name": "مامۆستا حسن جبار حاجی",
-      "subject": "زمانی کوردی",
-      "image": "assets/images/Staff/teachers/hassan.jpg"
+      slug: 'xanda',
+      name: 'مامۆستا خەندە صدیق محمد',
+      subject: 'IT',
+      image: 'assets/images/Staff/teachers/xanda.jpg'
     },
     {
-      "slug": "diar",
-      "name": "مامۆستا دیار",
-      "subject": "ڤێتێرنەری",
-      "image": "assets/images/Staff/teachers/diar.jpg"
+      slug: 'shoxan',
+      name: 'مامۆستا شۆخان عومەر',
+      subject: 'Physics',
+      image: 'assets/images/Staff/teachers/shoxan.jpg'
+    },
+    {
+      slug: 'hunar',
+      name: 'مامۆستا هونەر محسن',
+      subject: 'English',
+      image: 'assets/images/Staff/teachers/hunar.jpg'
+    },
+    {
+      slug: 'faridun',
+      name: 'مامۆستا فەریدون',
+      subject: 'Arabic / Religion',
+      image: 'assets/images/Staff/teachers/faridun.jpg'
+    },
+    {
+      slug: 'hassan',
+      name: 'مامۆستا حەسەن جەبار حاجی',
+      subject: 'Kurdish',
+      image: 'assets/images/Staff/teachers/hassan.jpg'
     }
   ]
 };
@@ -2529,18 +2629,57 @@ function normalizeTeacherToken(value) {
     .toLowerCase()
     .normalize('NFKD')
     .replace(/[ً-ٰٟ‌‏]/g, '')
+    .replace(/[يى]/g, 'ی')
+    .replace(/ك/g, 'ک')
+    .replace(/ة/g, 'ه')
+    .replace(/ؤ/g, 'و')
+    .replace(/ئ/g, '')
+    .replace(/ە/g, 'ه')
+    .replace(/\bمامۆستا\b|\bماموستا\b|\bteacher\b/gu, '')
     .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .trim()
     .replace(/\s+/g, ' ');
 }
 
+function canonicalTeacherKey(value) {
+  return normalizeTeacherToken(value).replace(/\s+/g, '');
+}
+
 function lessonMatchesTeacher(lesson, teacherData) {
   if (!teacherData) return false;
+
+  const teacherSlug = String(teacherData.slug || '').trim();
   const lessonSlug = String(lesson.teacherSlug || '').trim();
-  if (lessonSlug && lessonSlug === teacherData.slug) return true;
-  const tokens = [teacherData.name, teacherData.slug, teacherData.subject].map(normalizeTeacherToken).filter(Boolean);
-  const lessonTokens = [lesson.teacher, lesson.uploadedByName].map(normalizeTeacherToken).filter(Boolean);
-  return lessonTokens.some((item) => tokens.includes(item));
+  if (teacherSlug && lessonSlug && lessonSlug === teacherSlug) return true;
+
+  const teacherKeys = new Set([
+    canonicalTeacherKey(teacherData.name),
+    canonicalTeacherKey(teacherData.subject),
+    canonicalTeacherKey(teacherData.slug)
+  ].filter(Boolean));
+
+  const lessonKeys = [
+    lesson.teacherKey,
+    lesson.teacher,
+    lesson.uploadedByName,
+    lesson.subject,
+    lesson.teacherSlug
+  ].map(canonicalTeacherKey).filter(Boolean);
+
+  if (teacherData.image && lesson.teacherImage && String(lesson.teacherImage).trim() === String(teacherData.image).trim()) {
+    return true;
+  }
+
+  return lessonKeys.some((lessonKey) => {
+    if (!lessonKey) return false;
+    for (const teacherKey of teacherKeys) {
+      if (!teacherKey) continue;
+      if (lessonKey === teacherKey || lessonKey.includes(teacherKey) || teacherKey.includes(lessonKey)) {
+        return true;
+      }
+    }
+    return false;
+  });
 }
 
 function populateLessonTeacherOptions(preferredSlug = '') {
@@ -2565,9 +2704,9 @@ function populateLessonTeacherOptions(preferredSlug = '') {
   if (teacherInput) teacherInput.readOnly = true;
   syncTeacherSelectionFields();
 
-  if (subjectInput && !subjectInput.value.trim() && targetSlug) {
+  if (subjectInput && targetSlug) {
     const selected = findTeacherData(department, targetSlug);
-    if (selected?.subject) subjectInput.value = selected.subject;
+    subjectInput.value = selected?.subject || '';
   }
 }
 
@@ -2587,8 +2726,8 @@ function syncTeacherSelectionFields() {
 
   teacherInput.value = teacherData.name || '';
   teacherInput.readOnly = true;
-  if (subjectInput && !subjectInput.value.trim() && teacherData.subject) {
-    subjectInput.value = teacherData.subject;
+  if (subjectInput) {
+    subjectInput.value = teacherData.subject || '';
   }
 }
 
@@ -2625,7 +2764,7 @@ function syncTeacherPageContent() {
   const teacherSubject = teacherData?.subject || (currentLang === 'en' ? 'Department teacher' : 'مامۆستای بەش');
   const departmentName = mapDepartmentName(department);
 
-  document.title = currentLang === 'en' ? `${teacherName} - Lessons | Sivar Vocational High School` : `${teacherName} - وانەکان | ئامادەی پیشەی سیڤەر`;
+  document.title = currentLang === 'en' ? `${teacherName} - Lessons | Sivar Vocational High School` : `${teacherName} - وانەکان | ئامادەیی پیشەیی سیڤەر`;
   if (pageName) pageName.textContent = teacherName;
   if (pagePhoto) {
     pagePhoto.src = teacherData?.image || 'assets/images/Staff/teachers/shoxan.jpg';
@@ -2656,23 +2795,36 @@ function loadTeacherLessonsPage() {
   if (!db || document.body?.dataset.page !== 'teacher-lessons') return;
   const container = qs('#teacherLessonsList');
   if (!container) return;
-  const { department, teacherData } = getTeacherPageState();
+  const { department, teacherSlug, teacherData } = getTeacherPageState();
   if (!department || !teacherData) {
     container.innerHTML = renderEmptyState(currentLang === 'en' ? 'Teacher page data is missing.' : 'زانیاری مامۆستا تەواو نییە.');
     return;
   }
 
   if (departmentLessonsUnsubscribe) departmentLessonsUnsubscribe();
-  departmentLessonsUnsubscribe = db.collection('lessons').where('department', '==', department).orderBy('createdAt', 'desc').onSnapshot(
+  departmentLessonsUnsubscribe = db.collection('lessons').where('department', '==', department).onSnapshot(
     (snapshot) => {
-      const lessons = snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() || {}) })).filter((lesson) => lessonMatchesTeacher(lesson, teacherData));
+      const lessons = snapshot.docs
+        .map((doc) => ({ id: doc.id, ...(doc.data() || {}) }))
+        .filter((lesson) => {
+          if (lesson.teacherSlug && teacherSlug && String(lesson.teacherSlug).trim() === teacherSlug) return true;
+          return lessonMatchesTeacher(lesson, teacherData);
+        })
+        .sort((a, b) => {
+          const aTime = a.createdAt?.toDate?.()?.getTime?.() || 0;
+          const bTime = b.createdAt?.toDate?.()?.getTime?.() || 0;
+          return bTime - aTime;
+        });
+
       if (!lessons.length) {
         container.innerHTML = renderEmptyState(currentLang === 'en' ? 'No lessons have been uploaded for this teacher yet.' : 'هێشتا هیچ وانەیەک بۆ ئەم مامۆستایە بارنەکراوە.');
         return;
       }
-      container.innerHTML = lessons.map((lesson) => renderLessonCard(lesson)).join('');
+
+      container.innerHTML = lessons.map((lesson) => renderLessonCard(lesson, { compactMedia: true })).join('');
     },
-    () => {
+    (error) => {
+      console.error('Teacher lessons load error:', error);
       container.innerHTML = renderEmptyState(currentLang === 'en' ? 'Unable to load teacher lessons.' : 'نەتوانرا وانەکانی مامۆستا باربکرێن.');
     }
   );
@@ -2760,6 +2912,7 @@ async function postLesson(event) {
       department,
       teacher,
       teacherSlug: teacherMeta?.slug || teacherSlug || '',
+      teacherKey: canonicalTeacherKey(teacherMeta?.name || teacher),
       teacherImage: teacherMeta?.image || '',
       title,
       subject,
@@ -2798,7 +2951,7 @@ function applyTranslations() {
   (pageTranslations.common || []).forEach(applyRule);
   (pageTranslations[pageKey] || []).forEach(applyRule);
   const heroTitle = qs('#heroTitle');
-  if (heroTitle) heroTitle.setAttribute('data-text', currentLang === 'en' ? 'Sivar Vocational High School' : 'ئامادەی پیشەی سیڤەر');
+  if (heroTitle) heroTitle.setAttribute('data-text', currentLang === 'en' ? 'Sivar Vocational High School' : 'ئامادەیی پیشەیی سیڤەر');
   updateLangButtonsUI();
   syncTeacherPageContent();
   populateLessonTeacherOptions(qs('#lessonTeacherSelect')?.value || '');
@@ -2814,277 +2967,3 @@ document.addEventListener('DOMContentLoaded', () => {
   loadTeacherLessonsPage();
   populateLessonTeacherOptions();
 });
-
-
-/* =====================================================
-   2026-03-31 v5 polish + upload reliability patch
-   ===================================================== */
-(function () {
-  function getStorageCandidatesV5() {
-    const candidates = [];
-    const seen = new Set();
-    const pushBucket = (bucket) => {
-      if (!bucket || seen.has(bucket)) return;
-      seen.add(bucket);
-      candidates.push(bucket);
-    };
-    pushBucket(firebaseConfig.storageBucket);
-    pushBucket('sivarvocationalhighschoo-513aa.appspot.com');
-    pushBucket('sivarvocationalhighschoo-513aa.firebasestorage.app');
-    return candidates;
-  }
-
-  function getStorageInstanceV5(bucketName) {
-    if (typeof firebase === 'undefined') return null;
-    try {
-      return firebase.app().storage('gs://' + bucketName);
-    } catch (error) {
-      try { return firebase.storage(); } catch (e) { return null; }
-    }
-  }
-
-  function syncHeaderAuthVisibilityV5(user = auth?.currentUser || null) {
-    const loginButton = qs('#loginButton');
-    const desktopProfile = qs('#userProfile');
-    const mobileProfile = qs('#userProfileMobile');
-    const wide = window.innerWidth > 992;
-    if (loginButton) loginButton.style.display = user ? 'none' : 'inline-flex';
-    if (desktopProfile) desktopProfile.style.display = user && wide ? 'flex' : 'none';
-    if (mobileProfile) mobileProfile.style.display = user && !wide ? 'flex' : 'none';
-    document.body?.classList.toggle('has-auth-user', !!user);
-  }
-
-  window.addEventListener('resize', () => syncHeaderAuthVisibilityV5());
-
-  applyUserDataToUI = function (user, userData) {
-    const roleText = userData?.role === 'admin' ? t('role_admin') : userData?.role === 'teacher' ? t('role_teacher') : t('role_student');
-    const nameText = user?.displayName || userData?.name || (currentLang === 'en' ? 'User' : 'بەکارهێنەر');
-    const avatarUrl = user?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(nameText)}&background=1e4ea8&color=fff&size=160`;
-    [["#userDisplayName", nameText], ["#userRole", roleText], ["#userAvatar", avatarUrl, true], ["#userDisplayNameMobile", nameText], ["#userRoleMobile", roleText], ["#userAvatarMobile", avatarUrl, true]].forEach(([selector, value, isSrc]) => {
-      const el = qs(selector);
-      if (!el) return;
-      if (isSrc) el.src = value;
-      else el.textContent = value;
-    });
-    syncHeaderAuthVisibilityV5(user);
-  };
-
-  function buildTeacherPageUrlV5(department, teacherSlug) {
-    return `teacher-lessons.html?department=${encodeURIComponent(department)}&teacher=${encodeURIComponent(teacherSlug)}`;
-  }
-
-  function updateLessonTargetPreviewV5() {
-    const preview = qs('#lessonTargetPreview');
-    if (!preview) return;
-    const department = qs('#lessonDepartment')?.value || '';
-    const teacherSlug = qs('#lessonTeacherSelect')?.value || '';
-    const teacherMeta = findTeacherData(department, teacherSlug);
-    if (!department || !teacherSlug || !teacherMeta) {
-      preview.textContent = currentLang === 'en' ? 'Choose a department and teacher to target the lesson page.' : 'بەش و مامۆستا هەڵبژێرە بۆ دیاریکردنی پەڕەی وانەکان.';
-      return;
-    }
-    const departmentName = mapDepartmentName(department);
-    preview.innerHTML = `${currentLang === 'en' ? 'Target page' : 'پەڕەی ئامانج'}: <strong>${escapeHtml(teacherMeta.name)}</strong> — ${escapeHtml(departmentName)}<br><span>${escapeHtml(buildTeacherPageUrlV5(department, teacherSlug))}</span>`;
-  }
-
-  const _oldPopulateLessonTeacherOptions = populateLessonTeacherOptions;
-  populateLessonTeacherOptions = function (preferredSlug = '') {
-    _oldPopulateLessonTeacherOptions(preferredSlug);
-    updateLessonTargetPreviewV5();
-  };
-
-  const _oldSyncTeacherSelectionFields = syncTeacherSelectionFields;
-  syncTeacherSelectionFields = function () {
-    _oldSyncTeacherSelectionFields();
-    updateLessonTargetPreviewV5();
-  };
-
-  uploadLessonVideo = async function (file, department, teacherSlug = 'general') {
-    const safeName = sanitizeFilename(file.name || 'lesson-video.mp4');
-    const buckets = getStorageCandidatesV5();
-    let lastError = null;
-
-    for (const bucketName of buckets) {
-      const storageInstance = getStorageInstanceV5(bucketName);
-      if (!storageInstance) continue;
-      const path = `lessons/${department}/${teacherSlug}/${Date.now()}-${safeName}`;
-      const ref = storageInstance.ref(path);
-      try {
-        const result = await new Promise((resolve, reject) => {
-          let lastProgressAt = Date.now();
-          const timeout = setInterval(() => {
-            if (Date.now() - lastProgressAt > 120000) {
-              clearInterval(timeout);
-              reject(new Error('upload-timeout'));
-            }
-          }, 5000);
-          const task = ref.put(file, {
-            contentType: file.type || 'video/mp4',
-            customMetadata: { department: department || '', teacherSlug: teacherSlug || 'general' }
-          });
-          task.on('state_changed', (snapshot) => {
-            lastProgressAt = Date.now();
-            const progress = snapshot.totalBytes ? Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100) : 0;
-            setLessonUploadStatus(`${t('lesson_upload_progress')}: ${progress}%`, 'info');
-          }, (error) => {
-            clearInterval(timeout);
-            reject(error);
-          }, async () => {
-            clearInterval(timeout);
-            try {
-              const url = await task.snapshot.ref.getDownloadURL();
-              resolve({ url, path });
-            } catch (error) {
-              reject(error);
-            }
-          });
-        });
-        return result;
-      } catch (error) {
-        lastError = error;
-        if (error?.code === 'storage/unauthorized' || error?.message === 'upload-timeout') {
-          break;
-        }
-      }
-    }
-    throw lastError || new Error('storage-unavailable');
-  };
-
-  postLesson = async function (event) {
-    event?.preventDefault();
-    if (!db || !auth) return showNotification(t('not_ready'), 'error');
-    const user = auth.currentUser;
-    if (!user) return showNotification(t('need_login'), 'error');
-
-    const department = qs('#lessonDepartment')?.value || '';
-    const teacherSelect = qs('#lessonTeacherSelect');
-    const teacherSlug = teacherSelect?.value || '';
-    const teacherMeta = findTeacherData(department, teacherSlug);
-    const title = qs('#lessonTitle')?.value.trim() || '';
-    const teacher = (teacherMeta?.name || qs('#lessonTeacher')?.value.trim() || user.displayName || '').trim();
-    const subject = qs('#lessonSubject')?.value.trim() || teacherMeta?.subject || '';
-    const description = qs('#lessonDescription')?.value.trim() || '';
-    const videoFile = qs('#lessonVideo')?.files?.[0] || null;
-    const videoUrlInput = qs('#lessonVideoUrl')?.value.trim() || '';
-
-    if (!department || !title || !teacher || !subject || !teacherSlug || (!videoFile && !videoUrlInput)) {
-      showNotification(currentLang === 'en' ? 'Please complete department, teacher, title, subject, and video.' : 'تکایە بەش، مامۆستا، ناونیشان، بابەت و ڤیدیۆ پڕ بکەوە.', 'error');
-      return;
-    }
-    if (videoFile && videoFile.size > 350 * 1024 * 1024) {
-      const tooLarge = currentLang === 'en' ? 'Please choose a video smaller than 350 MB.' : 'تکایە ڤیدیۆیەک هەڵبژێرە کە بچووکتر بێت لە ٣٥٠ مێگابایت.';
-      setLessonUploadStatus(tooLarge, 'error');
-      return showNotification(tooLarge, 'error');
-    }
-
-    const btn = qs('#postLessonBtn');
-    const old = btn?.innerHTML;
-    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="loading"></span>'; }
-    setLessonUploadStatus(videoFile ? t('lesson_uploading') : t('lesson_url_mode'), 'info');
-
-    try {
-      let finalUrl = videoUrlInput;
-      let storagePath = '';
-      if (videoFile) {
-        const uploaded = await uploadLessonVideo(videoFile, department, teacherSlug);
-        finalUrl = uploaded.url;
-        storagePath = uploaded.path;
-      } else if (!/^https?:\/\//i.test(finalUrl)) {
-        throw new Error('invalid-video-link');
-      }
-
-      await db.collection('lessons').add({
-        department,
-        teacher,
-        teacherSlug,
-        teacherImage: teacherMeta?.image || '',
-        title,
-        subject,
-        description,
-        videoUrl: finalUrl,
-        storagePath,
-        uploadedBy: user.uid,
-        uploadedByName: user.displayName || teacher,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      qs('#lessonForm')?.reset();
-      populateLessonTeacherOptions();
-      setLessonUploadStatus(t('lesson_upload_done'), 'success');
-      showNotification(currentLang === 'en' ? 'Lesson uploaded to the teacher page successfully.' : 'وانەکە بە سەرکەوتوویی بۆ پەڕەی مامۆستا زیادکرا.');
-    } catch (error) {
-      console.error('Lesson upload error:', error);
-      let message = currentLang === 'en' ? 'There was a problem uploading the lesson.' : 'هەڵە لە بارکردنی وانەکە.';
-      if (error.message === 'upload-timeout') message = currentLang === 'en' ? 'The upload took too long. Check your internet or paste a direct video link.' : 'بارکردنەکە زۆر درێژەی کێشا. ئینتەرنێت بپشکنە یان بەستەری ڤیدیۆ دابنێ.';
-      if (error.code === 'storage/unauthorized') message = currentLang === 'en' ? 'Firebase Storage rejected the upload. Check the storage bucket and rules.' : 'Firebase Storage بارکردنەکە ڕەت کرد. storage bucket و rules بپشکنە.';
-      if (error.code === 'storage/unknown') message = currentLang === 'en' ? 'Unknown storage error. Confirm the storage bucket name and that Storage is enabled.' : 'هەڵەی نەناسراوی storage. دڵنیابە لە ناوی storage bucket و چالاکبوونی Storage.';
-      if (error.message === 'invalid-video-link') message = t('invalid_video_link');
-      setLessonUploadStatus(message, 'error');
-      showNotification(message, 'error');
-    } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = old || btn.innerHTML; }
-    }
-  };
-
-  applyTranslations = function () {
-    const pageKey = document.body?.dataset.page || 'index';
-    document.documentElement.lang = currentLang;
-    document.documentElement.dir = 'rtl';
-    document.body?.classList.toggle('lang-en', currentLang === 'en');
-    document.body?.classList.toggle('lang-ku', currentLang !== 'en');
-    (pageTranslations.common || []).forEach(applyRule);
-    (pageTranslations[pageKey] || []).forEach(applyRule);
-    const heroTitle = qs('#heroTitle');
-    if (heroTitle) heroTitle.setAttribute('data-text', currentLang === 'en' ? 'Sivar Vocational High School' : 'ئامادەی پیشەی سیڤەر');
-    updateLangButtonsUI();
-    syncTeacherPageContent();
-    populateLessonTeacherOptions(qs('#lessonTeacherSelect')?.value || '');
-    loadTeacherLessonsPage();
-    qsa('[data-ku][data-en]').forEach((element) => {
-      const next = currentLang === 'en' ? element.getAttribute('data-en') : element.getAttribute('data-ku');
-      if (next) element.textContent = next;
-    });
-    updateLessonTargetPreviewV5();
-    syncHeaderAuthVisibilityV5();
-  };
-
-  if (pageTranslations.index) {
-    pageTranslations.index.push(
-      { selector: '.principal-content p:nth-of-type(1)', ku: 'بەخێرهاتن بۆ ئامادەیی پیشەیی سیڤەر، ئێمە باوەڕمان وایە کە زانست بنچینەی هەر سەرکەوتنێکی پیشەییە، لەم ڕووەوە ئەم پلاتفۆرمە دامەزراوە بۆ گرنگی دان لە نێوان فێربوونی ئەکادیمی و داواکارییەکانی جیهانی کار.', en: 'Welcome to Sivar Vocational High School. We believe knowledge is the foundation of every professional success, so this platform bridges academic learning with the real needs of work life.' },
-      { selector: '.principal-content p:nth-of-type(2)', ku: 'ئامانجمان پێشکەشکردنی ژینگەیەکی فێربوونی ڕێکخراو و متمانەپێکراوە، بۆ ئەوەی قوتابیان بتوانن زانیاری بگۆڕن بۆ توانا و سەرکەوتنی پیشەیی.', en: 'Our goal is to offer an organized and trusted learning environment so students can turn knowledge into skill and professional success.' },
-      { selector: '.principal-name', ku: 'بەڕێوەبەری گشتی - شێروان جبار حاجی', en: 'General Principal - Sherwan Jabar Haji' },
-      { selector: '#media .media-item:nth-child(1) h3', ku: 'بینینی نموونەی میدیای ئامادەیی پیشەیی سیڤەر', en: 'Sample media from Sivar Vocational High School' },
-      { selector: '#media .media-item:nth-child(2) h3', ku: 'خوێندن لە ئامادەیی پیشەیی سیڤەر', en: 'Learning at Sivar Vocational High School' },
-      { selector: '#media .media-item:nth-child(3) h3', ku: 'مامۆستا وانە دەڵێتەوە', en: 'Teacher giving a lesson' },
-      { selector: 'footer .footer-section:nth-child(1) h3', html: true, ku: '<i class="fas fa-graduation-cap"></i> ئامادەیی پیشەیی سیڤەر', en: '<i class="fas fa-graduation-cap"></i> Sivar Vocational High School' },
-      { selector: 'footer .footer-section:nth-child(1) p:nth-of-type(1)', ku: 'لە سەرکەوتنەکانت مەترسە، تۆ لە ئامادەیی پیشەیی سیڤەری .', en: 'Do not fear your success, you are with Sivar Vocational High School.' },
-      { selector: 'footer .footer-section:nth-child(1) p:nth-of-type(2)', ku: 'سەرجەم بابەتەکان بە زمانی کوردی و بە شێوەیەکی سادە و ڕوون ڕێکخراون', en: 'All subjects are organized clearly and simply.' },
-      { selector: '.map-details .map-info-row:nth-child(1) p', ku: 'ناونیشان / هەولێر - شەقامی ٦٠مەتری نزیک سوپەرمارکێتی نیوستی', en: 'Address / Erbil - 60 Meter Street near New East Supermarket' },
-      { selector: 'footer .footer-section:nth-child(2) p:nth-of-type(1)', html: true, ku: '<i class="fas fa-map-pin"></i> ناونیشان / هەولێر - شەقامی ٦٠مەتری نزیک سوپەرمارکێتی نیوستی', en: '<i class="fas fa-map-pin"></i> Address / Erbil - 60 Meter Street near New East Supermarket' },
-      { selector: '#departments .department-card:nth-child(3) h3', html: true, ku: '<i class="fas fa-paw"></i> ڤێتێرنەری', en: '<i class="fas fa-paw"></i> Veterinary' },
-      { selector: '#departments .department-card:nth-child(3) .muted', ku: 'بەشی ڤێتێرنەری پێک دێت لە توێکاری، نەخۆشییەکان و پزیشکی ئاژەڵ.', en: 'The veterinary department covers animal health, diseases, and practical veterinary care.' },
-      { selector: '#online-lessons .quick-card:nth-child(4) h3', html: true, ku: '<i class="fas fa-paw"></i> ڤێتێرنەری', en: '<i class="fas fa-paw"></i> Veterinary' },
-      { selector: '#online-lessons .quick-card:nth-child(4) p', ku: 'وانە ئۆنلاینەکانی ڤێتێرنەری بە جیا لە پەڕەی بەشەکەدا دەنرێن.', en: 'Veterinary online lessons are listed separately on the department page.' }
-    );
-  }
-  if (pageTranslations['department-programming']) {
-    pageTranslations['department-programming'].push(
-      { selector: '#about-dept .section-subtitle', ku: 'بەشی پرۆگرامسازی بۆ قوتابیان و فێرخوازان دامەزراوە بۆ پەروەردەی توانا و زانستەکانی پرۆگرامسازی، لە ڕووی کۆد و لۆجیکەوە. ئەم بەشە پەیوەندییەکی ڕاستەقینە دروست دەکات نێوان فێربوونی ئەکادیمی بۆ جیهانی دیجیتاڵ و پیشەیی. قوتابیان لێرە فێر دەبن لە بواری پرۆگرامسازی، وێب سایت، مۆبایل، داتابەیس و سیکیوریتی کار بکەن.', en: 'The programming department develops student skills in coding and logic, linking academic learning to the digital and professional world through programming, websites, mobile apps, databases, and security.' }
-    );
-  }
-  ['department-veterinary','activity-veterinary'].forEach((key) => {
-    if (pageTranslations[key]) {
-      pageTranslations[key].push(
-        { selector: 'title', ku: key === 'department-veterinary' ? 'بەشی ڤێتێرنەری - ئامادەی پیشەی سیڤەر' : 'وانە و چالاکییەکانی ڤێتێرنەری - ئامادەی پیشەی سیڤەر', en: key === 'department-veterinary' ? 'Veterinary Department - Sivar Vocational High School' : 'Veterinary Lessons and Activities - Sivar Vocational High School' },
-        { selector: '.hero-content h1', ku: key === 'department-veterinary' ? 'بەشی ڤێتێرنەری' : 'وانە و چالاکییەکانی ڤێتێرنەری', en: key === 'department-veterinary' ? 'Veterinary department' : 'Veterinary lessons and activities' }
-      );
-    }
-  });
-
-  document.addEventListener('DOMContentLoaded', () => {
-    qs('#lessonDepartment')?.addEventListener('change', updateLessonTargetPreviewV5);
-    qs('#lessonTeacherSelect')?.addEventListener('change', updateLessonTargetPreviewV5);
-    updateLessonTargetPreviewV5();
-    syncHeaderAuthVisibilityV5();
-  });
-})();

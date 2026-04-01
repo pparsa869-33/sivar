@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ستافی ئامادەیی پیشەیی سیڤەر</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+</head>
+<body class="staff-directory-page lang-ku" data-page="staff">
+  <header>
+    <div class="container header-container">
+      <a class="logo" href="index.html">
+        <img src="logo.png" alt="Logo" class="logo-img">
+        <div class="logo-text">ئامادەیی پیشەیی سیڤەر<span>پەروەردەی شارەزایانەی داهاتوو</span></div>
+      </a>
+      <nav class="main-nav" id="mainNav">
+        <ul class="nav-list">
+          <li><a href="index.html"><i class="fas fa-house"></i> سەرەکی</a></li>
+          <li><a href="#principal-message"><i class="fas fa-user-tie"></i> بەڕێوەبەر</a></li>
+          <li><a href="#staff-list"><i class="fas fa-users"></i> ستاف</a></li>
+        </ul>
+      </nav>
+      <button class="menu-toggle" type="button" aria-label="کردنەوەی مێنو"><i class="fas fa-bars"></i></button>
+      <div class="header-actions">
+        <a class="login-btn" href="login.html"><i class="fas fa-chalkboard-user"></i> داشبۆرد</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero staff-page-hero">
+    <div class="floating-shapes"><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1>بەڕێوەبەر و ستافی ئامادەیی پیشەیی سیڤەر</h1>
+      <p>لەم پەڕەیەدا دەتوانیت زانیاریی بەڕێوەبەر و ئەندامانی ستافی قوتابخانە ببینیت بە شێوەیەکی ڕێکخراو و سادە.</p>
+      <div class="hero-actions">
+        <a href="#staff-list" class="hero-btn"><i class="fas fa-users"></i> بینینی ستاف</a>
+        <a href="index.html" class="secondary-btn"><i class="fas fa-arrow-left"></i> گەڕانەوە بۆ سەرەکی</a>
+      </div>
+    </div>
+  </section>
+
+  <main class="container">
+    <section id="principal-message" class="section">
+      <div class="lesson-section-head">
+        <h2 class="section-title"><i class="fas fa-user-tie"></i> پەیامی بەڕێوەبەر</h2>
+        <a href="#staff-list" class="outline-btn"><i class="fas fa-users"></i> بینینی ستاف</a>
+      </div>
+      <div class="staff-feature-card principal-feature-card">
+        <img src="assets/images/Staff/principal/principal.png" alt="بەڕێوەبەر" class="staff-feature-photo principal-feature-photo">
+        <div class="staff-feature-body">
+          <span class="teacher-page-chip"><i class="fas fa-user-tie"></i> بەڕێوەبەری گشتی</span>
+          <h3>شێروان جەبار حاجی</h3>
+<p>بەخێرهاتن بۆ ئامادەیی پیشەیی سیڤەر، ئێمە باوەڕمان وایە کە زانست بنچینەی هەر سەرکەوتنێکی پیشەییە، لەم ڕووەوە ئەم پلاتفۆرمە دامەزراوە بۆ گرنگی دان لە نێوان فێربوونی ئەکادیمی و داواکارییەکانی جیهانی کار.</p>
+
+<p>ئامانجمان پێشکەشکردنی ژینگەیەکی فێربوونی ڕێکخراو و متمانەپێکراوە، بۆ ئەوەی قوتابیان بتوانن زانیاری بگۆڕن بۆ توانا و سەرکەوتنی پیشەیی.</p>
+          <div class="principal-name">— بەڕێوەبەری گشتی، شێروان جەبار حاجی</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="staff-list" class="section">
+      <div class="lesson-section-head">
+        <h2 class="section-title"><i class="fas fa-users-gear"></i> ستافی قوتابخانە</h2>
+        <a href="index.html#announcements" class="outline-btn"><i class="fas fa-arrow-left"></i> گەڕانەوە بۆ سەرەکی</a>
+      </div>
+      <p class="section-subtitle">ئەندامانی ستاف بە شێوەیەکی تایبەت ڕێکخراون تا خوێندکاران و سەردانیکاران بتوانن بە ئاسانیان بناسن.</p>
+      <div class="staff-grid staff-directory-grid">
+        <article class="staff-card">
+          <img src="assets/images/Staff/staff/hazhar-khwada.png" alt="هەژار خوادە" class="staff-photo">
+          <div class="staff-body"><h3>هەژار خوادە</h3><p class="staff-role">یاریدەدەری بەڕێوەبەر</p></div>
+        </article>
+        <article class="staff-card">
+          <img src="assets/images/Staff/staff/ikhlas-amin.png" alt="اخلاص امین عزیز" class="staff-photo">
+          <div class="staff-body"><h3>اخلاص امین عزیز</h3><p class="staff-role">یاریدەری بەڕێوەبەر</p></div>
+        </article>
+        <article class="staff-card">
+          <img src="assets/images/Staff/staff/suhayba-amin.png" alt="سهیبا امین عزیز" class="staff-photo">
+          <div class="staff-body"><h3>سهیبا امین عزیز</h3><p class="staff-role">ژمێریاری</p></div>
+        </article>
+        <article class="staff-card">
+          <img src="assets/images/Staff/staff/intsar-amin.png" alt="انتصار امین عزیز" class="staff-photo">
+          <div class="staff-body"><h3>انتصار امین عزیز</h3><p class="staff-role">تۆمار</p></div>
+        </article>
+        <article class="staff-card">
+          <img src="assets/images/Staff/staff/bashdar-jawad.png" alt="بەشدار جواد" class="staff-photo">
+          <div class="staff-body"><h3>بەشدار جواد</h3><p class="staff-role">م ژمێریاری و کارگێڕی</p></div>
+        </article>
+        <article class="staff-card">
+          <img src="assets/images/Staff/staff/hemin-mohammad.png" alt="هێمن محمد رسول" class="staff-photo">
+          <div class="staff-body"><h3>هێمن محمد رسول</h3><p class="staff-role">تۆمار</p></div>
+        </article>
+        <article class="staff-card">
+          <img src="assets/images/Staff/staff/delvin-rashid.png" alt="دلڤین رشید" class="staff-photo">
+          <div class="staff-body"><h3>دلڤین رشید</h3><p class="staff-role">ڕێنمایکاری پەروەردەیی</p></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3><i class="fas fa-graduation-cap"></i> سیڤەر ئامادەی پیشەیی</h3>
+          <p>لە سەرکەوتنەکانت مەترسە، تۆ لە ئامادەی سیڤەری.</p>
+          <p>هەموو بابەتەکان بە زمانی کوردی و بە شێوەیەکی سادە و ڕوون ڕێکخراون.</p>
+          <div class="social-links">
+            <a href="https://www.facebook.com/sivarschool/albums/122096576486293505/" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+            <a href="https://www.instagram.com/sivar_vocational_high/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://www.youtube.com/@SivarSchool" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h3><i class="fas fa-address-book"></i> پەیوەندی</h3>
+          <p><i class="fas fa-map-pin"></i> هەولێر - شەقامی ٦٠مەتری نزیک سوپەرمارکێتی نیوستی</p>
+          <p><i class="fas fa-phone"></i> ٠٧٥٠٣٢٩٢٩٠٧ - ٠٧٥٠٩٧٣٧٧٧٣</p>
+          <p><i class="fas fa-envelope"></i> sivarvocationalhighschool@gmail.com</p>
+        </div>
+        <div class="footer-section">
+          <h3><i class="fas fa-link"></i> بەستەرە خێراکان</h3>
+          <p><a href="index.html#home"><i class="fas fa-house"></i> سەرەتا</a></p>
+          <p><a href="index.html#departments"><i class="fas fa-book"></i> بەشەکان</a></p>
+          <p><a href="index.html#online-lessons"><i class="fas fa-video"></i> وانە ئۆنلاینەکان</a></p>
+          <p><a href="staff.html"><i class="fas fa-users"></i> ستاف</a></p>
+          <p><a href="index.html#comments"><i class="fas fa-comments"></i> کۆمێنت</a></p>
+          <p><a href="index.html#about"><i class="fas fa-circle-info"></i> دەربارە</a></p>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>© ٢٠٢٦ هەموو مافەکان پارێزراون بۆ ئامادەیی پیشەیی سیڤەر.</p>
+        <p>هەرێمی کوردستان - هەولێر</p>
+      </div>
+    </div>
+  </footer>
+
+  <button id="scrollTopBtn" type="button" aria-label="گەڕانەوە بۆ سەرەوە"><i class="fas fa-arrow-up"></i></button>
+  <script src="script.js"></script>
+</body>
+</html>

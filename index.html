@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ئامادەی پیشەی سیڤەر</title>
+  <title>ئامادەیی پیشەیی سیڤەر</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -103,7 +103,7 @@
       <a class="logo" href="index.html" aria-label="سەرەکی">
         <img src="logo.png" class="logo-img" alt="School Logo">
         <div class="logo-text">
-          ئامادەی پیشەی سیڤەر
+          ئامادەیی پیشەیی سیڤەر
           <span>پەروەردەی شارەزایانەی داهاتوو</span>
         </div>
       </a>
@@ -122,23 +122,20 @@
             </button>
             <ul id="departmentsSubmenu" class="submenu">
               <li><a href="department-programming.html">پڕۆگرامسازی</a></li>
+              <li><a href="department-veterinary.html">ڤێتەرنەری</a></li>
               <li><a href="department-architecture.html">بیناسازی</a></li>
-              <li><a href="department-veterinary.html">ڤێتێرنەری</a></li>
             </ul>
           </li>
           <li><a href="#online-lessons"><i class="fas fa-video"></i> وانە ئۆنلاینەکان</a></li>
           <li><a href="#announcements"><i class="fas fa-bullhorn"></i> ڕاگەیاندن</a></li>
+          <li><a href="staff.html"><i class="fas fa-users"></i> ستاف</a></li>
           <li><a href="#comments"><i class="fas fa-comments"></i> کۆمێنت</a></li>
           <li><a href="#about"><i class="fas fa-circle-info"></i> دەربارە</a></li>
         </ul>
       </nav>
 
       <div class="header-actions">
-        <div class="lang-switch" role="group" aria-label="Language switch">
-          <button class="lang-btn active" type="button" data-lang="ku">KU</button>
-          <button class="lang-btn" type="button" data-lang="en">EN</button>
-        </div>
-        <div id="userProfileMobile" class="user-profile mobile-profile">
+<div id="userProfileMobile" class="user-profile mobile-profile">
           <img src="" alt="User" class="user-avatar" id="userAvatarMobile">
           <div class="user-info">
             <div class="user-name" id="userDisplayNameMobile"></div>
@@ -171,7 +168,7 @@
     </div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <h1 id="heroTitle" data-text="ئامادەی پیشەی سیڤەر"></h1>
+      <h1 id="heroTitle" data-text="ئامادەیی پیشەیی سیڤەر"></h1>
       <p>پەروەردەی شارەزایانەی داهاتوو لە بواری تەکنەلۆژیا، پیشەسازی و فێربوونی کارا</p>
       <div class="hero-actions">
         <a href="#departments" class="hero-btn"><i class="fas fa-book-open"></i> بەشەکان ببینە</a>
@@ -180,34 +177,43 @@
     </div>
   </section>
 
-  <section class="principal-section">
-    <div class="container principal-wrap">
-      <div class="principal-image">
-        <img src="assets/images/Staff/principal/principal.png" alt="بەڕێوەبەر" class="principal-img">
-      </div>
-      <div class="section principal-content">
-        <h2 class="section-title"><i class="fas fa-user-tie"></i> پەیامی بەڕێوەبەر</h2>
-        <p>بەخێرهاتن بۆ ئامادەیی پیشەیی سیڤەر، ئێمە باوەڕمان وایە کە زانست بنچینەی هەر سەرکەوتنێکی پیشەییە، لەم ڕووەوە ئەم پلاتفۆرمە دامەزراوە بۆ گرنگی دان لە نێوان فێربوونی ئەکادیمی و داواکارییەکانی جیهانی کار.</p>
-        <p>ئامانجمان پێشکەشکردنی ژینگەیەکی فێربوونی ڕێکخراو و متمانەپێکراوە، بۆ ئەوەی قوتابیان بتوانن زانیاری بگۆڕن بۆ توانا و سەرکەوتنی پیشەیی.</p>
-        <div class="principal-name">بەڕێوەبەری گشتی - شێروان جبار حاجی</div>
-      </div>
-    </div>
-  </section>
 
   <main class="container">
     <section id="announcements" class="section">
       <div class="lesson-section-head">
         <h2 class="section-title"><i class="fas fa-bullhorn"></i> ڕاگەیاندنەکان</h2>
-        <a href="login.html" class="outline-btn"><i class="fas fa-chalkboard-user"></i> چوونە ناو داشبۆرد</a>
+        <div class="section-actions">
+          <a href="staff.html" class="outline-btn"><i class="fas fa-users"></i> بینینی ستاف</a>
+          <a href="login.html" class="outline-btn"><i class="fas fa-chalkboard-user"></i> چوونە ناو داشبۆرد</a>
+        </div>
       </div>
       <p class="section-subtitle">ڕاگەیاندنەکان و هەواڵی نوێ لێرە بە شێوەی ئۆتۆماتیکی نیشان دەدرێن.</p>
       <div id="announcementPublicList" class="quick-grid"></div>
     </section>
 
+
+
+<section id="staff-portal" class="section">
+  <div class="lesson-section-head">
+    <h2 class="section-title"><i class="fas fa-users-gear"></i> ستاف و بەڕێوەبەر</h2>
+    <a href="staff.html" class="outline-btn"><i class="fas fa-arrow-left"></i> چوونە پەڕەی ستاف</a>
+  </div>
+  <p class="section-subtitle">بۆ بینینی بەڕێوەبەر و هەموو ستافی قوتابخانە، پەڕەی تایبەتی ستاف بکەرەوە.</p>
+  <div class="quick-grid">
+    <a class="quick-card staff-entry-card" href="staff.html">
+      <div class="staff-entry-icon"><i class="fas fa-users-gear"></i></div>
+      <h3>پەڕەی تایبەتی ستاف</h3>
+      <p>زانیاریی بەڕێوەبەر، ئەندامانی ستاف و خزمەتگوزارییەکانیان لەم پەڕەیەدا بە شێوەیەکی ڕێکخراو نیشان دەدرێن.</p>
+      <span class="outline-btn small"><i class="fas fa-arrow-left"></i> بینینی ستاف</span>
+    </a>
+  </div>
+</section>
+
+
     <section class="section">
-      <h2 class="section-title"><i class="fas fa-graduation-cap"></i> بەخێربێیت بۆ ئامادەی پیشەی سیڤەر</h2>
+      <h2 class="section-title"><i class="fas fa-graduation-cap"></i> بەخێربێیت بۆ ئامادەیی پیشەیی سیڤەر</h2>
       <div class="welcome-wrap">
-        <p class="welcome-quote"><i class="fas fa-quote-right"></i> ئامانجەکەت لە ئامادەی پیشەی سیڤەر بەدی بهێنە <i class="fas fa-quote-left"></i></p>
+        <p class="welcome-quote"><i class="fas fa-quote-right"></i> ئامانجەکەت لە ئامادەیی پیشەیی سیڤەر بەدی بهێنە <i class="fas fa-quote-left"></i></p>
         <div class="welcome-goals">
           <h3><i class="fas fa-bullseye"></i> ئامانجەکانی ئێمە</h3>
           <ul>
@@ -222,7 +228,7 @@
 
     <section id="departments" class="section">
       <h2 class="section-title"><i class="fas fa-book"></i> بەشەکانی ئامادەی سیڤەر</h2>
-      <p class="section-subtitle">هەر بەشێک پەڕەی تایبەتی خۆی هەیە و وانە ئۆنلاینەکانیش لە هەمان پەڕەدا نیشان دەدرێن.</p>
+      <p class="section-subtitle">هەر بەشێک پەڕەی تایبەتی خۆی هەیە و وانەکانیش لە پەڕەی تایبەتی هەر مامۆستایەکدا نیشان دەدرێن.</p>
       <div class="departments-grid">
         <article class="department-card">
           <div class="department-icon"><i class="fas fa-code"></i></div>
@@ -239,6 +245,20 @@
         </article>
 
         <article class="department-card">
+          <div class="department-icon"><i class="fas fa-paw"></i></div>
+          <div class="department-info">
+            <h3><i class="fas fa-paw"></i> ڤێتەرنەری</h3>
+            <p class="muted">بەشی ڤێتەرنەری پێک دێت لە توێکاری، نەخۆشییەکان و پزیشکی ئاژەڵ.</p>
+            <ul class="dept-meta">
+              <li><i class="fas fa-check"></i> ماوەی خوێندن: ٣ ساڵ</li>
+              <li><i class="fas fa-check"></i> بابەتەکان: ١٥ بابەت</li>
+              <li><i class="fas fa-check"></i> وانە ئۆنلاین: بەردەست</li>
+            </ul>
+            <button class="department-btn" type="button" onclick="openDepartmentPage('veterinary')"><span>بڕۆ بۆ پەڕەی بەش</span><i class="fas fa-arrow-left"></i></button>
+          </div>
+        </article>
+
+        <article class="department-card">
           <div class="department-icon"><i class="fas fa-building"></i></div>
           <div class="department-info">
             <h3><i class="fas fa-building"></i> بیناسازی</h3>
@@ -251,26 +271,12 @@
             <button class="department-btn" type="button" onclick="openDepartmentPage('architecture')"><span>بڕۆ بۆ پەڕەی بەش</span><i class="fas fa-arrow-left"></i></button>
           </div>
         </article>
-
-        <article class="department-card">
-          <div class="department-icon"><i class="fas fa-paw"></i></div>
-          <div class="department-info">
-            <h3><i class="fas fa-paw"></i> ڤێتێرنەری</h3>
-            <p class="muted">بەشی ڤێتێرنەری پێک دێت لە توێکاری، نەخۆشییەکان و پزیشکی ئاژەڵ.</p>
-            <ul class="dept-meta">
-              <li><i class="fas fa-check"></i> ماوەی خوێندن: ٣ ساڵ</li>
-              <li><i class="fas fa-check"></i> بابەتەکان: ١٥ بابەت</li>
-              <li><i class="fas fa-check"></i> وانە ئۆنلاین: بەردەست</li>
-            </ul>
-            <button class="department-btn" type="button" onclick="openDepartmentPage('veterinary')"><span>بڕۆ بۆ پەڕەی بەش</span><i class="fas fa-arrow-left"></i></button>
-          </div>
-        </article>
       </div>
     </section>
 
     <section id="online-lessons" class="section">
       <h2 class="section-title"><i class="fas fa-video"></i> سیستەمی وانە ئۆنلاینەکان</h2>
-      <p class="section-subtitle">مامۆستاکان دەتوانن لە داشبۆردەوە وانە باربکەن. هەر وانەیەک بەش، ناونیشان، بابەت و ناوی مامۆستا دەبێت و لە پەڕەی بەشی خۆیدا خۆکارانە دەردەکەوێت.</p>
+      <p class="section-subtitle">مامۆستاکان دەتوانن لە داشبۆردەوە وانە باربکەن. هەر وانەیەک بەش، ناونیشان، بابەت و ناوی مامۆستا دەبێت و لە پەڕەی تایبەتی هەمان مامۆستادا نیشان دەدرێت.</p>
       <div class="quick-grid">
         <article class="quick-card">
           <h3><i class="fas fa-chalkboard-user"></i> بۆ مامۆستاکان</h3>
@@ -279,18 +285,18 @@
         </article>
         <article class="quick-card">
           <h3><i class="fas fa-code"></i> پڕۆگرامسازی</h3>
-          <p>هەموو وانە ئۆنلاینەکانی بەشی پڕۆگرامسازی لە پەڕەی بەشەکەدا نیشان دەدرێن.</p>
-          <a href="department-programming.html" class="outline-btn mt-24"><i class="fas fa-arrow-left"></i> بینینی وانەکان</a>
+          <p>وانەکانی پڕۆگرامسازی لە پەڕەی تایبەتی هەر مامۆستایەکدا نیشان دەدرێن.</p>
+          <a href="department-programming.html" class="outline-btn mt-24"><i class="fas fa-arrow-left"></i> بینینی مامۆستاکان</a>
+        </article>
+        <article class="quick-card">
+          <h3><i class="fas fa-paw"></i> ڤێتەرنەری</h3>
+          <p>وانە ئۆنلاینەکانی ڤێتەرنەری لە پەڕەی تایبەتی هەر مامۆستایەکدا نیشان دەدرێن.</p>
+          <a href="department-veterinary.html" class="outline-btn mt-24"><i class="fas fa-arrow-left"></i> بینینی مامۆستاکان</a>
         </article>
         <article class="quick-card">
           <h3><i class="fas fa-building"></i> بیناسازی</h3>
-          <p>وانە و ڤیدیۆکانی بیناسازی بە شێوەی ڕێکخراو لە پەڕەی بەشەکەدا هەن.</p>
-          <a href="department-architecture.html" class="outline-btn mt-24"><i class="fas fa-arrow-left"></i> بینینی وانەکان</a>
-        </article>
-        <article class="quick-card">
-          <h3><i class="fas fa-paw"></i> ڤێتێرنەری</h3>
-          <p>وانە ئۆنلاینەکانی ڤێتێرنەری بە جیا لە پەڕەی بەشەکەدا دەنرێن.</p>
-          <a href="department-veterinary.html" class="outline-btn mt-24"><i class="fas fa-arrow-left"></i> بینینی وانەکان</a>
+          <p>وانە و ڤیدیۆکانی بیناسازی لە پەڕەی تایبەتی هەر مامۆستایەکدا بە شێوەی ڕێکخراو هەن.</p>
+          <a href="department-architecture.html" class="outline-btn mt-24"><i class="fas fa-arrow-left"></i> بینینی مامۆستاکان</a>
         </article>
       </div>
     </section>
@@ -321,9 +327,9 @@
       <p class="section-subtitle">نمونەیەک لە وێنە و ڤیدیۆکانی خوێندکاران و ژیانی خوێندن لە قوتابخانە.</p>
       <div class="media-container">
         <article class="media-item">
-          <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80" alt="خوێندن لە قوتابخانە">
+          <img src="https://media.licdn.com/dms/image/v2/D4D12AQEm8P5f1e9ylg/article-cover_image-shrink_600_2000/article-cover_image-shrink_600_2000/0/1672748202959?e=2147483647&v=beta&t=emuLCabBC3hb6O5BkLgME4RtgPptOZ_UPQwNgU5nrhc" alt="خوێندن لە قوتابخانە">
           <div class="media-info">
-            <h3>بینینی نموونەی میدیای ئامادەیی پیشەیی سیڤەر</h3>
+            <h3>خوێندن لە ئامادەیەکەمان</h3>
             <p>خوێندکاران لە کاتی وانە و ئەنجامدانی چاڵاکییەکان.</p>
           </div>
         </article>
@@ -332,14 +338,14 @@
             <source src="https://assets.mixkit.co/videos/preview/mixkit-group-of-students-sharing-a-video-42565-large.mp4" type="video/mp4">
           </video>
           <div class="media-info">
-            <h3>خوێندن لە ئامادەیی پیشەیی سیڤەر</h3>
+            <h3>خوێندکاران وانە دەگرنەوە</h3>
             <p>بەشی پرۆژە و کارە عملییەکانی خوێندکاران.</p>
           </div>
         </article>
         <article class="media-item">
           <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80" alt="مامۆستا وانە دەڵێت">
           <div class="media-info">
-            <h3>مامۆستا وانە دەڵێتەوە</h3>
+            <h3>مامۆستا وانە دەڵێت</h3>
             <p>مامۆستایان لە کاتی وانەوتن و ڕاهێناندا.</p>
           </div>
         </article>
@@ -370,17 +376,11 @@
         <p>ئامادەیی پیشەیی سیڤەر لە ساڵی 2025 دامەزراوە و وەک دامەزراوەیەکی ئەکادیمی ئامانجی پەرەپێدانی قوتابیان هەیە بە بنەمای زانستی و پێویستییە ڕاستەقینەکانی بازاڕی کار.</p>
         <p>پڕۆگرامەکانمان لەسەر تێکەڵکردنی زانیاری ئەکادیمی، توانا پیشەیی و دروستکردنی کەسایەتییەکی پیشەیی سەقامگیر و توانا‌دار دامەزرابووە.</p>
         <div class="quick-grid mt-24">
-          <article class="quick-card">
-            <h3><i class="fas fa-award"></i> خەڵاتەکان</h3>
-            <p>خەڵاتی باشترین پەیمانگای پێشەنگی لە هەرێمی کوردستان.</p>
-          </article>
-          <article class="quick-card">
-            <h3><i class="fas fa-handshake"></i> هاوپەیمانییەکان</h3>
-            <p>هاوپەیمانی لەگەڵ ٢٠+ کۆمپانیای تەکنەلۆژیا.</p>
-          </article>
+          
+        
           <article class="quick-card">
             <h3><i class="fas fa-briefcase"></i> ڕێژەی کار</h3>
-            <p>٨٥٪ی خوێندکاران دوای تەواوکردن کار دەکەنەوە.</p>
+            <p>٩٠٪ی خوێندکاران دوای تەواوکردن کار دەکەنەوە.</p>
           </article>
         </div>
       </div>
@@ -391,13 +391,13 @@
       <p class="section-subtitle">نەخشەکە پێش پایی ویب‌سایت زیادکراوە بۆ ئەوەی شوێنی قوتابخانە بە ئاشکرا نیشان بدرێت.</p>
       <div class="map-grid">
         <article class="map-card">
-          <iframe src="https://www.google.com/maps?q=%D9%87%DB%95%D9%88%D9%84%DB%8E%D8%B1%20-%20%D8%B4%DB%95%D9%82%D8%A7%D9%85%DB%8C%20%DB%B6%DB%B0%D9%85%DB%95%D8%AA%D8%B1%DB%8C%20%D9%86%D8%B2%DB%8C%DA%A9%20%D8%B3%D9%88%D9%BE%DB%95%D8%B1%D9%85%D8%A7%D8%B1%DA%A9%DB%8E%D8%AA%DB%8C%20%D9%86%DB%8C%D9%88%D8%B3%D8%AA&z=17&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Map"></iframe>
+          <iframe src="https://www.google.com/maps?q=36.181827,44.026254&z=17&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Map"></iframe>
         </article>
         <article class="map-card map-details">
-          <div class="map-info-row"><i class="fas fa-location-dot"></i><div><strong>ناونیشان</strong><p>ناونیشان / هەولێر - شەقامی ٦٠مەتری نزیک سوپەرمارکێتی نیوستی</p></div></div>
+          <div class="map-info-row"><i class="fas fa-location-dot"></i><div><strong>ناونیشان</strong><p>هەولێر - شەقامی ٦٠مەتری نزیک سوپەرمارکێتی نیوستی</p></div></div>
           <div class="map-info-row"><i class="fas fa-phone"></i><div><strong>پەیوەندی</strong><p>٠٧٥٠٣٢٩٢٩٠٧ - ٠٧٥٠٩٧٣٧٧٧٣</p></div></div>
-          <div class="map-info-row"><i class="fas fa-envelope"></i><div><strong>ئیمەیڵ</strong><p>info@savar.edu.krd</p></div></div>
-          <a class="primary-btn" href="https://maps.app.goo.gl/LeR7njKiYo51Gv8Q9" target="_blank" rel="noopener noreferrer"><i class="fas fa-diamond-turn-right"></i> کردنەوەی نەخشە</a>
+          <div class="map-info-row"><i class="fas fa-envelope"></i><div><strong>ئیمەیڵ</strong><p>sivarvocationalhighschool@gmail.com</p></div></div>
+          <a class="primary-btn" href="https://www.google.com/maps/search/?api=1&query=36.181827,44.026254" target="_blank" rel="noopener noreferrer"><i class="fas fa-diamond-turn-right"></i> کردنەوەی نەخشە</a>
         </article>
       </div>
     </section>
@@ -424,33 +424,33 @@
     <div class="container">
       <div class="footer-content">
         <div class="footer-section">
-          <h3><i class="fas fa-graduation-cap"></i> ئامادەیی پیشەیی سیڤەر</h3>
-          <p>لە سەرکەوتنەکانت مەترسە، تۆ لە ئامادەیی پیشەیی سیڤەری .</p>
-          <p>سەرجەم بابەتەکان بە زمانی کوردی و بە شێوەیەکی سادە و ڕوون ڕێکخراون</p>
+          <h3><i class="fas fa-graduation-cap"></i> سیڤەر ئامادەی پیشەیی</h3>
+          <p>لە سەرکەوتنەکانت مەترسە، تۆ لە ئامادەی سیڤەری.</p>
+          <p>هەموو بابەتەکان بە زمانی کوردی و بە شێوەیەکی سادە و ڕوون ڕێکخراون.</p>
           <div class="social-links">
-            <a href="https://www.tiktok.com/@sivar_vocationa_school1?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" aria-label="Tiktok"><i class="fab fa-tiktok"></i></a>
             <a href="https://www.facebook.com/sivarschool/albums/122096576486293505/" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
             <a href="https://www.instagram.com/sivar_vocational_high/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-            <a href="https://www.youtube.com/@SivarSchool" target="_blank" rel="noopener noreferrer" aria-label="Youtube"><i class="fab fa-youtube"></i></a>
+            <a href="https://www.youtube.com/@SivarSchool" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
           </div>
         </div>
         <div class="footer-section">
           <h3><i class="fas fa-address-book"></i> پەیوەندی</h3>
-          <p><i class="fas fa-map-pin"></i> ناونیشان / هەولێر - شەقامی ٦٠مەتری نزیک سوپەرمارکێتی نیوستی</p>
+          <p><i class="fas fa-map-pin"></i> هەولێر - شەقامی ٦٠مەتری نزیک سوپەرمارکێتی نیوستی</p>
           <p><i class="fas fa-phone"></i> ٠٧٥٠٣٢٩٢٩٠٧ - ٠٧٥٠٩٧٣٧٧٧٣</p>
-          <p><i class="fas fa-envelope"></i> info@savar.edu.krd</p>
+          <p><i class="fas fa-envelope"></i> sivarvocationalhighschool@gmail.com</p>
         </div>
         <div class="footer-section">
           <h3><i class="fas fa-link"></i> بەستەرە خێراکان</h3>
           <p><a href="#home"><i class="fas fa-house"></i> سەرەتا</a></p>
           <p><a href="#departments"><i class="fas fa-book"></i> بەشەکان</a></p>
           <p><a href="#online-lessons"><i class="fas fa-video"></i> وانە ئۆنلاینەکان</a></p>
+          <p><a href="staff.html"><i class="fas fa-users"></i> ستاف</a></p>
           <p><a href="#comments"><i class="fas fa-comments"></i> کۆمێنت</a></p>
           <p><a href="#about"><i class="fas fa-circle-info"></i> دەربارە</a></p>
         </div>
       </div>
       <div class="copyright">
-        <p>© ٢٠٢٦ هەموو مافەکان پارێزراون بۆ ئامادەی پیشەی سیڤەر.</p>
+        <p>© ٢٠٢٦ هەموو مافەکان پارێزراون بۆ ئامادەیی پیشەیی سیڤەر.</p>
         <p>هەرێمی کوردستان - هەولێر</p>
       </div>
     </div>
