@@ -1565,7 +1565,7 @@ const pageTranslations = {
     { selector: ".welcome-goals li:nth-child(2)", html: true, ku: "<i class='fas fa-check-circle'></i> دابینکردنی سەرچاوەی نوێ بۆ خوێندکاران", en: "<i class='fas fa-check-circle'></i> Provide modern learning resources for students" },
     { selector: ".welcome-goals li:nth-child(3)", html: true, ku: "<i class='fas fa-check-circle'></i> پەیوەندی بە بازاڕی کارەوە لە ڕێگەی پراکتیک", en: "<i class='fas fa-check-circle'></i> Connect learning with the job market through practice" },
     { selector: ".welcome-goals li:nth-child(4)", html: true, ku: "<i class='fas fa-check-circle'></i> دابینکردنی ژینگەیەکی سەردەمی بۆ خوێندن", en: "<i class='fas fa-check-circle'></i> Create a modern and supportive learning environment" },
-    { selector: "#departments .section-title", html: true, ku: "<i class='fas fa-book'></i> بەشەکانی ئامادەی سیڤەر", en: "<i class='fas fa-book'></i> School departments" },
+    { selector: "#departments .section-title", html: true, ku: "<i class='fas fa-book'></i> بەشەکانی ئامادەیی پیشەیی سیڤەر", en: "<i class='fas fa-book'></i> School departments" },
     { selector: "#departments .department-card:nth-child(1) h3", html: true, ku: "<i class='fas fa-code'></i> پڕۆگرامسازی", en: "<i class='fas fa-code'></i> Programming" },
     { selector: "#departments .department-card:nth-child(1) .muted", ku: "بەشی پڕۆگرامسازی پێک دێت لە خوێندنی پڕۆگرامسازی، داتابەیس، سیکیوریتی، و IT.", en: "The programming department focuses on software development, databases, security, and IT." },
     { selector: "#departments .department-card:nth-child(1) .dept-meta li:nth-child(1)", html: true, ku: "<i class='fas fa-check'></i> ماوەی خوێندن: ٣ ساڵ", en: "<i class='fas fa-check'></i> Study duration: 3 years" },
@@ -1585,7 +1585,7 @@ const pageTranslations = {
     { selector: "#online-lessons .section-title", html: true, ku: "<i class='fas fa-video'></i> وانە ئۆنلاینەکان", en: "<i class='fas fa-video'></i> Online lessons" },
     { selector: "#online-lessons .section-subtitle", ku: "ڤیدیۆی وانەکان لێرە بە شێوەی ئۆتۆماتیکی نیشان دەدرێن. مامۆستاکان دەتوانن لە داشبۆرددا وانەکان بەپێی بەش زیاد بکەن.", en: "Lesson videos appear here automatically. Teachers can add lessons from the dashboard by department." },
     { selector: "#media .section-title", html: true, ku: "<i class='fas fa-photo-video'></i> وێنە و ڤیدیۆ", en: "<i class='fas fa-photo-video'></i> Photos and videos" },
-    { selector: "#media .section-subtitle", ku: "ئێرە دەتوانیت نموونەی میدیای قوتابخانە ببینیت. بۆ وانەکان، بەشی وانە ئۆنلاینەکان بەکاربهێنە.", en: "Here you can view sample school media. For class videos, please use the online lessons section." },
+    { selector: "#media .section-subtitle", ku: "لێرە دەتوانی نموونەی میدیای ئامادەیی پیشەیی سیڤەر ببینی.", en: "Here you can view sample school media. For class videos, please use the online lessons section." },
     { selector: "#media .media-item:nth-child(1) h3", ku: "خوێندن لە ئامادەیەکەمان", en: "Learning at our school" },
     { selector: "#media .media-item:nth-child(1) p", ku: "خوێندکاران لە قوتابخانە لە کاتی وانەدا", en: "Students during an in-person lesson" },
     { selector: "#media .media-item:nth-child(2) h3", ku: "خوێندکاران وانە دەگرنەوە", en: "Students reviewing a lesson" },
@@ -1608,8 +1608,8 @@ const pageTranslations = {
     { selector: ".highlight-card:nth-child(2) p", ku: "هاوپەیمانی لەگەڵ ٢٠+ کۆمپانیای تەکنەلۆژیا", en: "Partnerships with 20+ technology companies" },
     { selector: ".highlight-card:nth-child(3) h4", html: true, ku: "<i class='fas fa-briefcase'></i> ڕێژەی کار", en: "<i class='fas fa-briefcase'></i> Employment rate" },
     { selector: ".highlight-card:nth-child(3) p", ku: "٨٥٪ی خوێندکاران دوای تەواوکردن کار دەکەنەوە", en: "85% of students move into work after graduation" },
-    { selector: ".map-grid .section-title", html: true, ku: "<i class='fas fa-map-location-dot'></i> شوێنی قوتابخانە", en: "<i class='fas fa-map-location-dot'></i> School location" },
-    { selector: "main .section:nth-last-of-type(1) .section-subtitle", ku: "نەخشەکە پێش پایی ویب‌سایت زیادکراوە بۆ ئەوەی شوێنی قوتابخانە بە ئاشکرا نیشان بدرێت.", en: "The map is placed near the bottom of the website so visitors can find the school easily." },
+    { selector: ".map-grid .section-title", html: true, ku: "<i class='fas fa-map-location-dot'></i> شوێنی ئامادەیی پیشەیی سیڤەر", en: "<i class='fas fa-map-location-dot'></i> School location" },
+    { selector: "main .section:nth-last-of-type(1) .section-subtitle", ku: "ئەم نەخشە بەکاربهێنە بۆ گەیشتن بە ئامادەیی پیشەیی سیڤەر", en: "The map is placed near the bottom of the website so visitors can find the school easily." },
     { selector: ".map-info-row:nth-child(1) strong", ku: "ناونیشان", en: "Address" },
     { selector: ".map-info-row:nth-child(1) p", ku: "هەولێر - شەقامی ٦٠مەتری نزیک سوپەرمارکێتی نیوستی", en: "Sivar Vocational High School - Erbil, Kurdistan Region" },
     { selector: ".map-info-row:nth-child(2) strong", ku: "پەیوەندی", en: "Phone" },
@@ -1623,7 +1623,7 @@ const pageTranslations = {
     { selector: ".goal-card:nth-child(5) span", ku: "بەشداری کارا لە تیم و کۆمەڵگا", en: "Encourage teamwork and community participation" },
     { selector: ".goal-card:nth-child(6) span", ku: "فێربوونی بەرپرسیارێتی", en: "Teach responsibility" },
     { selector: ".goal-card:nth-child(7) span", ku: "داهاتوویەکی سەقامگیر و توانا‌دار", en: "Build a strong and stable future" },
-    { selector: "footer .footer-section:nth-child(1) h3", html: true, ku: "<i class='fas fa-graduation-cap'></i> سیڤەر ئامادەی پیشەیی", en: "<i class='fas fa-graduation-cap'></i> Sivar Vocational High School" },
+    { selector: "footer .footer-section:nth-child(1) h3", html: true, ku: "<i class='fas fa-graduation-cap'></i> ئامادەیی پیشەیی سیڤەر", en: "<i class='fas fa-graduation-cap'></i> Sivar Vocational High School" },
     { selector: "footer .footer-section:nth-child(1) p:nth-of-type(1)", ku: "لە سەرکەوتنەکانت مەترسە، تۆ لە ئامادەی سیڤەری.", en: "Shape your success at Sivar Vocational High School." },
     { selector: "footer .footer-section:nth-child(1) p:nth-of-type(2)", ku: "هەموو بابەتەکان بە زمانی کوردی و بە شێوەیەکی سادە و ڕوون ڕێکخراون.", en: "All school content is organized clearly and accessibly for students and families." },
     { selector: "footer .footer-section:nth-child(2) h3", html: true, ku: "<i class='fas fa-address-book'></i> پەیوەندی", en: "<i class='fas fa-address-book'></i> Contact" },
@@ -2449,8 +2449,8 @@ if (pageTranslations["department-veterinary"]) {
 }
 if (pageTranslations.index) {
   pageTranslations.index.push(
-    { selector: "main .section:nth-last-of-type(1) .section-title", html: true, ku: "<i class='fas fa-map-location-dot'></i> شوێنی قوتابخانە", en: "<i class='fas fa-map-location-dot'></i> School location" },
-    { selector: "main .section:nth-last-of-type(1) .section-subtitle", ku: "نەخشەکە پێش پایی ویب‌سایت زیادکراوە بۆ ئەوەی شوێنی قوتابخانە بە ئاشکرا نیشان بدرێت.", en: "The map is placed near the bottom of the website so visitors can find the school easily." }
+    { selector: "main .section:nth-last-of-type(1) .section-title", html: true, ku: "<i class='fas fa-map-location-dot'></i> شوێنی ئامادەیی پیشەیی سیڤەر", en: "<i class='fas fa-map-location-dot'></i> School location" },
+    { selector: "main .section:nth-last-of-type(1) .section-subtitle", ku: "ئەم نەخشە بەکاربهێنە بۆ گەیشتن بە ئامادەیی پیشەیی سیڤەر", en: "The map is placed near the bottom of the website so visitors can find the school easily." }
   );
 }
 
@@ -2767,8 +2767,20 @@ function syncTeacherPageContent() {
   document.title = currentLang === 'en' ? `${teacherName} - Lessons | Sivar Vocational High School` : `${teacherName} - وانەکان | ئامادەیی پیشەیی سیڤەر`;
   if (pageName) pageName.textContent = teacherName;
   if (pagePhoto) {
-    pagePhoto.src = teacherData?.image || 'assets/images/Staff/teachers/shoxan.jpg';
+    const resolvedPhoto = teacherData?.image || window.__teacherPageInitialData?.image || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
     pagePhoto.alt = teacherName;
+    if (pagePhoto.getAttribute('src') !== resolvedPhoto) {
+      pagePhoto.classList.add('is-loading');
+      pagePhoto.classList.remove('is-ready');
+      pagePhoto.onload = () => {
+        pagePhoto.classList.remove('is-loading');
+        pagePhoto.classList.add('is-ready');
+      };
+      pagePhoto.src = resolvedPhoto;
+    } else {
+      pagePhoto.classList.remove('is-loading');
+      pagePhoto.classList.add('is-ready');
+    }
   }
   if (subject) subject.textContent = teacherSubject;
   if (deptBadge) deptBadge.textContent = `${currentLang === 'en' ? 'Department' : 'بەش'}: ${departmentName}`;

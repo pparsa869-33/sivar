@@ -44,11 +44,72 @@
     </div>
   </section>
 
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var department = params.get('department') || '';
+      var teacher = params.get('teacher') || '';
+      var teacherMap = {
+        programming: {
+          xanda: { name: 'مامۆستا خەندە صدیق محمد', subject: 'C++ / Security / Database', image: 'assets/images/Staff/teachers/xanda.jpg' },
+          delvin: { name: 'مامۆستا دڵڤین رشید', subject: 'Human Rights', image: 'assets/images/Staff/teachers/delvin.jpg' },
+          faridun: { name: 'مامۆستا فەریدون', subject: 'Arabic / Religion', image: 'assets/images/Staff/teachers/faridun.jpg' },
+          hassan: { name: 'مامۆستا حەسەن', subject: 'Kurdish', image: 'assets/images/Staff/teachers/hassan.jpg' },
+          helin: { name: 'مامۆستا هێلین', subject: 'IT / MS', image: 'assets/images/Staff/teachers/helin.jpg' },
+          hunar: { name: 'مامۆستا هونەر', subject: 'English', image: 'assets/images/Staff/teachers/hunar.jpg' },
+          shoxan: { name: 'مامۆستا شۆخان عومەر', subject: 'Physics', image: 'assets/images/Staff/teachers/shoxan.jpg' },
+          yusra: { name: 'مامۆستا یسری محمد عبدالله', subject: 'Math', image: 'assets/images/Staff/teachers/yusra.jpg' }
+        },
+        veterinary: {
+          hazhar: { name: 'مامۆستا هەژار خوادە', subject: 'توێکارزانی', image: 'assets/images/Staff/teachers/hazhar.jpg' },
+          sarab: { name: 'مامۆستا سەراب', subject: 'Veterinary', image: 'assets/images/Staff/teachers/sarab.jpg' },
+          faridun: { name: 'مامۆستا فەریدون', subject: 'Arabic / Religion', image: 'assets/images/Staff/teachers/faridun.jpg' },
+          hassan: { name: 'مامۆستا حەسەن', subject: 'Kurdish', image: 'assets/images/Staff/teachers/hassan.jpg' },
+          shoxan: { name: 'مامۆستا شۆخان عومەر', subject: 'Chemistry', image: 'assets/images/Staff/teachers/shoxan.jpg' },
+          hunar: { name: 'مامۆستا هونەر', subject: 'English', image: 'assets/images/Staff/teachers/hunar.jpg' },
+          delvin: { name: 'مامۆستا دڵڤین رشید', subject: 'Human Rights', image: 'assets/images/Staff/teachers/delvin.jpg' },
+          helin: { name: 'مامۆستا هێلین', subject: 'IT', image: 'assets/images/Staff/teachers/helin.jpg' }
+        },
+        architecture: {
+          sapan: { name: 'مامۆستا ساپان', subject: 'Architecture', image: 'assets/images/Staff/teachers/sapan.jpg' },
+          wanawsha: { name: 'مامۆستا وەنەوشە', subject: 'Design / Drawing / S.F', image: 'assets/images/Staff/teachers/wanawsha.svg' },
+          yusra: { name: 'مامۆستا یسری محمد عبدالله', subject: 'Math', image: 'assets/images/Staff/teachers/yusra.jpg' },
+          xanda: { name: 'مامۆستا خەندە صدیق محمد', subject: 'IT', image: 'assets/images/Staff/teachers/xanda.jpg' },
+          shoxan: { name: 'مامۆستا شۆخان عومەر', subject: 'Physics', image: 'assets/images/Staff/teachers/shoxan.jpg' },
+          hunar: { name: 'مامۆستا هونەر', subject: 'English', image: 'assets/images/Staff/teachers/hunar.jpg' },
+          faridun: { name: 'مامۆستا فەریدون', subject: 'Arabic / Religion', image: 'assets/images/Staff/teachers/faridun.jpg' },
+          hassan: { name: 'مامۆستا حەسەن', subject: 'Kurdish', image: 'assets/images/Staff/teachers/hassan.jpg' }
+        }
+      };
+      var departmentLabels = { programming: 'بەش: پڕۆگرامسازی', veterinary: 'بەش: ڤێتەرنەری', architecture: 'بەش: بیناسازی' };
+      var data = teacherMap[department] && teacherMap[department][teacher];
+      if (!data) return;
+      window.__teacherPageInitialData = data;
+      document.addEventListener('DOMContentLoaded', function () {
+        var img = document.getElementById('teacherPagePhoto');
+        var name = document.getElementById('teacherPageName');
+        var subject = document.getElementById('teacherPageSubject');
+        var badge = document.getElementById('teacherDepartmentBadge');
+        var heading = document.getElementById('teacherPageHeading');
+        if (img) {
+          img.src = data.image;
+          img.alt = data.name;
+          img.classList.add('is-loading');
+          img.onload = function () { img.classList.remove('is-loading'); img.classList.add('is-ready'); };
+        }
+        if (name) name.textContent = data.name;
+        if (subject) subject.textContent = data.subject;
+        if (badge && departmentLabels[department]) badge.textContent = departmentLabels[department];
+        if (heading) heading.textContent = 'وانەکانی ' + data.name;
+      });
+    })();
+  </script>
+
   <main class="container">
     <section id="teacher-overview" class="section teacher-overview-section">
       <div class="teacher-profile-card">
         <div class="teacher-profile-media">
-          <img id="teacherPagePhoto" src="assets/images/Staff/teachers/shoxan.jpg" alt="Teacher photo" class="teacher-profile-photo">
+          <img id="teacherPagePhoto" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="Teacher photo" class="teacher-profile-photo">
         </div>
         <div class="teacher-profile-content">
           <div class="teacher-page-chip" id="teacherDepartmentBadge">بەش</div>
