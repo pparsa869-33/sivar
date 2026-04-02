@@ -172,28 +172,31 @@
       </div>
     </div>
   </div>
-<script>
-  firebase.auth().onAuthStateChanged(async (user) => {
-    if (!user) {
-      window.location.href = "login.html";
-      return;
-    }
 
-    try {
-      const doc = await firebase.firestore().collection("users").doc(user.uid).get();
-
-      if (!doc.exists || doc.data().isAdmin !== true) {
-        window.location.href = "index.html";
+  <script src="script.js"></script>
+  <script>
+  window.addEventListener("load", () => {
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
         return;
       }
 
-      document.body.style.display = "block";
-    } catch (error) {
-      console.error("Admin check failed:", error);
-      window.location.href = "index.html";
-    }
+      try {
+        const doc = await firebase.firestore().collection("users").doc(user.uid).get();
+
+        if (!doc.exists || doc.data().isAdmin !== true) {
+          window.location.href = "index.html";
+          return;
+        }
+
+        document.body.style.display = "block";
+      } catch (error) {
+        console.error("Admin check failed:", error);
+        window.location.href = "index.html";
+      }
+    });
   });
 </script>
-  <script src="script.js"></script>
 </body>
 </html>
