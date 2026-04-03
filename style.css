@@ -2731,3 +2731,41 @@ body[data-page='admin'] .admin-btn {
     margin-inline:auto;
   }
 }
+/* Fix teacher lessons mixing/overlapping */
+body[data-page='teacher-lessons'] #teacherLessonsList {
+  display: grid;
+  grid-template-columns: 1fr !important;
+  gap: 22px;
+}
+
+body[data-page='teacher-lessons'] .lesson-card {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+body[data-page='teacher-lessons'] .lesson-card.compact-media {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  align-items: start;
+  gap: 18px;
+}
+
+body[data-page='teacher-lessons'] .lesson-card-media,
+body[data-page='teacher-lessons'] .lesson-card-body,
+body[data-page='teacher-lessons'] .lesson-meta,
+body[data-page='teacher-lessons'] .lesson-card-actions {
+  min-width: 0;
+}
+
+body[data-page='teacher-lessons'] .lesson-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (max-width: 900px) {
+  body[data-page='teacher-lessons'] .lesson-card.compact-media {
+    grid-template-columns: 1fr;
+  }
+}
